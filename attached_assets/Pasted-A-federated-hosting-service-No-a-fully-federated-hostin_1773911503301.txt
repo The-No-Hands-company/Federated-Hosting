@@ -1,0 +1,26 @@
+A federated hosting service.
+
+No, a fully federated hosting provider isn't impossible — it's actually a very cool and logical extension of exactly what you're describing with Nexus. The idea of server-to-server federation (like Nexus uses) for web hosting is theoretically solid and aligns perfectly with the decentralized, community-owned ethos. But right now, in practice, no ready-made, turnkey "federated web hosting provider" exists that works the same way Nexus does for chat.
+Quick recap on Nexus (from its GitHub)
+Nexus is an open-source, Matrix-compatible federated chat platform (Discord alternative). It lets independent servers talk to each other directly via signed HTTP requests, Ed25519 keys, and .well-known discovery. It federates users, messages, channels, presence, and even files (via S3/MinIO). Everything is self-hostable (Docker or single binary), AGPL-licensed, and privacy-first. No central company controls it — any server admin can join the federation.
+You want the same model but for websites: multiple independent hosting nodes that federate content, user sites, domains/subdomains, traffic routing, etc., so your site isn't tied to one provider. Load balancing, redundancy, and discovery all happen server-to-server. No single point of failure, no bills, no owning hardware.
+Why it doesn't exist yet as a "provider"
+Federation works great for social/chat (ActivityPub for Mastodon/Fediverse, Matrix for chat) because it's mostly push-based events (posts, messages). Web hosting is pull-based HTTP serving — dynamic pages, databases, real-time requests — which is much harder to federate cleanly without huge bandwidth and security headaches.
+No mature open protocol or project has bridged that gap for general websites yet. Searches for "federated web hosting + Matrix/ActivityPub" only turn up social tools or pure decentralized (not federated) options.
+The economic problem remains: someone still has to pay for bandwidth/storage. In a true federation, that "someone" is a community of volunteer node operators — exactly like how public Mastodon or Matrix servers stay free. But hosting full websites (especially dynamic ones) eats way more resources than text posts, so free public nodes are rare or heavily rate-limited.
+But the concept is 100% possible — and there are close approximations you can use today
+Here are the real-world paths that get you as close as possible to "federated hosting provider" without paying or owning servers:
+Pure Decentralized (closest to federation spirit, no central provider at all)
+IPFS (InterPlanetary File System): Upload your static site (HTML, JS, React, etc.), get a permanent CID hash. Anyone in the world can "pin" (host) it. Public gateways give you free HTTPS URLs like https://yourhash.ipfs.dweb.link.
+Truly distributed — no single server. Community pinning networks keep it alive for free. Works great for portfolios, blogs, docs. Dynamic parts need extra (e.g., combine with OrbitDB). Zero cost, no signup.
+Peergos or Hostr (on Nostr): Encrypted decentralized hosting where content lives on a P2P network. Nostr relays act a bit like federated servers.
+Ghostcloud / many-ghostcloud (open-source project): Blockchain-backed decentralized web hosting platform. Nodes host pieces of your site.
+Fediverse-style for content sites (actual server-to-server federation)
+If your "websites" are blogs or simple content: Use WriteFreely, Plume, or BookWyrm instances. These are federated (ActivityPub) — sign up on any public instance for free, your posts are discoverable across the entire Fediverse. Many public servers accept new users with no cost.
+Not full arbitrary websites, but very close to what many people actually want.
+Hybrid: Run your own tiny node + join federation networks
+Take Nexus's self-hosting ease and combine with something like Yggdrasil (mesh network) or IPFS Cluster. Or fork the Nexus federation crate and add web-serving. But this is developer territory — you'd be building the thing you want.
+Bottom line for your goal (100% free, no servers owned, no costs)
+For static/modern sites: IPFS + a free gateway is the closest you’ll get to "federated hosting" right now. It’s genuinely server-to-server distributed (any node can serve your content), permanent, and costs you nothing. You can have a live public site in minutes.
+For dynamic/PHP/WordPress/full apps: Stick with the options I gave last time (InfinityFree, Cloudflare Pages, Oracle Always Free VM + DuckDNS). They’re not federated, but they deliver exactly the "public website without paying" result.
+True Nexus-style federated hosting for arbitrary websites would be awesome — and someone (maybe you?) could build it by extending Matrix or creating a new protocol. The tech exists; the missing piece is community adoption and node operators.
