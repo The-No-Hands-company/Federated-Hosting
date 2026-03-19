@@ -110,7 +110,18 @@ export default function NodeDetail() {
               <DialogHeader>
                 <DialogTitle>Configure Node: {node.name}</DialogTitle>
               </DialogHeader>
-              <NodeForm initialData={node} onSuccess={() => setIsEditOpen(false)} />
+              <NodeForm initialData={{
+                  id: node.id,
+                  name: node.name,
+                  domain: node.domain,
+                  description: node.description ?? undefined,
+                  region: node.region,
+                  operatorName: node.operatorName,
+                  operatorEmail: node.operatorEmail,
+                  storageCapacityGb: node.storageCapacityGb,
+                  bandwidthCapacityGb: node.bandwidthCapacityGb,
+                  publicKey: node.publicKey ?? undefined,
+                }} onSuccess={() => setIsEditOpen(false)} />
             </DialogContent>
           </Dialog>
 
@@ -153,7 +164,7 @@ export default function NodeDetail() {
                   <span className="text-muted-foreground flex items-center gap-2"><HardDrive className="w-4 h-4" /> Storage Allocation</span>
                   <span className="text-white">{usedStorage.toFixed(1)} GB / {formatGb(node.storageCapacityGb)}</span>
                 </div>
-                <Progress value={storagePercent} className="h-2 bg-white/5" indicatorClassName="bg-primary" />
+                <Progress value={storagePercent} className="h-2 bg-white/5" />
               </div>
               
               <div className="grid grid-cols-2 gap-4 pt-2">

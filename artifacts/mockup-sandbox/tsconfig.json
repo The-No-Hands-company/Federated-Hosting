@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*", "mockupPreviewPlugin.ts", "vite.config.ts"],
+  "include": ["src/**/*", "src/.generated/**/*", "mockupPreviewPlugin.ts", "vite.config.ts"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
+    "composite": false,
     "noEmit": true,
     "lib": ["es2022", "dom", "dom.iterable"],
     "jsx": "preserve",

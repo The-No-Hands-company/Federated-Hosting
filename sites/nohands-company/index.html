@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The No Hands Company — building tools that give power back to people. Open-source software for everyone." />
+  <title>The No Hands Company</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <svg class="logo-mark" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="17" stroke="url(#lg)" stroke-width="2"/>
+          <path d="M10 18 Q18 8 26 18 Q18 28 10 18Z" fill="url(#lg)" opacity="0.8"/>
+          <circle cx="18" cy="18" r="3" fill="white"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="36" y2="36">
+              <stop offset="0%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#ec4899"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>No Hands Co.</span>
+      </a>
+      <div class="nav-links">
+        <a href="#projects">Projects</a>
+        <a href="#about">About</a>
+        <a href="https://github.com/The-No-Hands-company" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="mobileMenu">
+      <a href="#projects" onclick="toggleMenu()">Projects</a>
+      <a href="#about" onclick="toggleMenu()">About</a>
+      <a href="https://github.com/The-No-Hands-company" target="_blank" rel="noopener" onclick="toggleMenu()">GitHub ↗</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <p class="hero-eyebrow">The No Hands Company</p>
+      <h1 class="hero-title">
+        Building tools that give<br/>
+        <span class="gradient-text">power back to people.</span>
+      </h1>
+      <p class="hero-sub">
+        We make open-source software that anyone can use, run, and improve.
+        No subscriptions to a single provider. No lock-in. Just tools that work.
+      </p>
+      <div class="hero-cta">
+        <a href="#projects" class="btn btn-primary btn-lg">See our projects</a>
+        <a href="https://github.com/The-No-Hands-company" class="btn btn-outline btn-lg" target="_blank" rel="noopener">
+          GitHub →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="section" id="projects">
+    <div class="container">
+      <div class="section-label">Our work</div>
+      <h2 class="section-title">Projects</h2>
+      <p class="section-sub">Everything we build is open source and free to use.</p>
+      <div class="projects">
+
+        <a href="https://fedhosting.app" class="project featured" target="_blank" rel="noopener">
+          <div class="project-badge">Featured</div>
+          <div class="project-icon">⬡</div>
+          <div class="project-body">
+            <h3>Federated Hosting</h3>
+            <p>Host your website on a network that nobody owns. Upload once, replicated across independent servers worldwide. No single company can take you down.</p>
+            <div class="project-tags">
+              <span class="tag">Hosting</span>
+              <span class="tag">Decentralised</span>
+              <span class="tag">Open Source</span>
+            </div>
+            <div class="project-status">
+              <span class="dot green"></span> Live — open beta
+            </div>
+          </div>
+          <div class="project-arrow">→</div>
+        </a>
+
+        <div class="project coming-soon">
+          <div class="project-badge muted">Coming soon</div>
+          <div class="project-icon">🔐</div>
+          <div class="project-body">
+            <h3>No Hands Auth</h3>
+            <p>A federated identity system. Log in to any app in the network using one account — without handing your data to a single company.</p>
+            <div class="project-tags">
+              <span class="tag">Identity</span>
+              <span class="tag">Privacy</span>
+            </div>
+            <div class="project-status">
+              <span class="dot yellow"></span> In development
+            </div>
+          </div>
+        </div>
+
+        <div class="project coming-soon">
+          <div class="project-badge muted">Coming soon</div>
+          <div class="project-icon">📝</div>
+          <div class="project-body">
+            <h3>Open Pages</h3>
+            <p>A simple publishing platform for long-form writing. Write once, distribute across the network. Your words, on your terms.</p>
+            <div class="project-tags">
+              <span class="tag">Publishing</span>
+              <span class="tag">Writing</span>
+            </div>
+            <div class="project-status">
+              <span class="dot yellow"></span> Planned
+            </div>
+          </div>
+        </div>
+
+        <div class="project coming-soon">
+          <div class="project-badge muted">Coming soon</div>
+          <div class="project-icon">📦</div>
+          <div class="project-body">
+            <h3>Fed Store</h3>
+            <p>A decentralised file and media store. Store your photos, documents, and files across a network you can trust — not inside one company's cloud.</p>
+            <div class="project-tags">
+              <span class="tag">Storage</span>
+              <span class="tag">Files</span>
+            </div>
+            <div class="project-status">
+              <span class="dot gray"></span> Concept
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUES -->
+  <section class="section section-dark">
+    <div class="container">
+      <div class="section-label">What we believe</div>
+      <h2 class="section-title">Software for everyone, forever</h2>
+      <div class="values">
+        <div class="value">
+          <div class="value-icon">🌐</div>
+          <h3>The internet should be open</h3>
+          <p>Too much of the internet runs on servers owned by a handful of companies. We are building an alternative where many independent operators share the responsibility.</p>
+        </div>
+        <div class="value">
+          <div class="value-icon">🤝</div>
+          <h3>No lock-in, ever</h3>
+          <p>Every piece of software we make can be self-hosted by anyone. If we disappear tomorrow, you keep your data and the code is still there.</p>
+        </div>
+        <div class="value">
+          <div class="value-icon">🔓</div>
+          <h3>Open source by default</h3>
+          <p>All of our code is public on GitHub under permissive licenses. You are free to read it, fork it, run it, and contribute to it.</p>
+        </div>
+        <div class="value">
+          <div class="value-icon">👤</div>
+          <h3>Designed for real people</h3>
+          <p>Our tools are not just for developers. We design for people who want to publish a website, share a file, or log in without a PhD in computer science.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="about">
+    <div class="container about-container">
+      <div>
+        <div class="section-label">Who we are</div>
+        <h2 class="section-title">A small team<br/>with a big idea</h2>
+        <p class="about-text">
+          The No Hands Company is an independent software studio. We build tools for a healthier internet — one where no single organisation has too much control.
+        </p>
+        <p class="about-text">
+          We are small on purpose. Every project we release is something we use ourselves. We do not chase growth metrics or venture capital. We chase good software.
+        </p>
+        <div class="about-links">
+          <a href="https://github.com/The-No-Hands-company" target="_blank" rel="noopener" class="btn btn-outline">GitHub</a>
+          <a href="mailto:hello@nohands.company" class="btn btn-ghost">hello@nohands.company</a>
+        </div>
+      </div>
+      <div class="about-visual">
+        <div class="orbit-visual">
+          <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+          <div class="orbit orbit-2"><div class="orbit-dot"></div></div>
+          <div class="orbit orbit-3"><div class="orbit-dot"></div></div>
+          <div class="orbit-core">
+            <svg viewBox="0 0 36 36" fill="none" width="48" height="48">
+              <circle cx="18" cy="18" r="17" stroke="url(#lg2)" stroke-width="2"/>
+              <path d="M10 18 Q18 8 26 18 Q18 28 10 18Z" fill="url(#lg2)" opacity="0.8"/>
+              <circle cx="18" cy="18" r="3" fill="white"/>
+              <defs>
+                <linearGradient id="lg2" x1="0" y1="0" x2="36" y2="36">
+                  <stop offset="0%" stop-color="#f97316"/>
+                  <stop offset="100%" stop-color="#ec4899"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <a href="#" class="logo">
+          <svg class="logo-mark" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="17" stroke="url(#lgf)" stroke-width="2"/>
+            <path d="M10 18 Q18 8 26 18 Q18 28 10 18Z" fill="url(#lgf)" opacity="0.8"/>
+            <circle cx="18" cy="18" r="3" fill="white"/>
+            <defs>
+              <linearGradient id="lgf" x1="0" y1="0" x2="36" y2="36">
+                <stop offset="0%" stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#ec4899"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span>The No Hands Company</span>
+        </a>
+        <p>Building open, federated software for everyone.</p>
+      </div>
+      <div class="footer-grid">
+        <div class="footer-col">
+          <strong>Projects</strong>
+          <a href="https://fedhosting.app" target="_blank" rel="noopener">Federated Hosting</a>
+          <a href="#projects">No Hands Auth</a>
+          <a href="#projects">Open Pages</a>
+          <a href="#projects">Fed Store</a>
+        </div>
+        <div class="footer-col">
+          <strong>Company</strong>
+          <a href="#about">About</a>
+          <a href="https://github.com/The-No-Hands-company" target="_blank" rel="noopener">GitHub</a>
+          <a href="mailto:hello@nohands.company">Contact</a>
+        </div>
+        <div class="footer-col">
+          <strong>Legal</strong>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/SECURITY.md" target="_blank" rel="noopener">Security policy</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 The No Hands Company. All projects open source under MIT.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

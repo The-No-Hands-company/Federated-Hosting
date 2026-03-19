@@ -91,7 +91,7 @@ router.post("/federation/handshake", federationLimiter, asyncHandler(async (req,
     const discoveryRes = await fetch(`${targetNodeUrl}/.well-known/federation`, {
       signal: AbortSignal.timeout(10_000),
     });
-    if (discoveryRes.ok) discoveryData = await discoveryRes.json();
+    if (discoveryRes.ok) discoveryData = await discoveryRes.json() as Record<string, unknown>;
 
     const pingRes = await fetch(`${targetNodeUrl}/api/federation/ping`, {
       method: "POST",
@@ -101,7 +101,7 @@ router.post("/federation/handshake", federationLimiter, asyncHandler(async (req,
     });
 
     if (pingRes.ok) {
-      pingResult = await pingRes.json();
+      pingResult = await pingRes.json() as Record<string, unknown>;
     } else {
       error = `Remote node rejected ping: ${pingRes.status}`;
     }
@@ -122,7 +122,7 @@ router.post("/federation/handshake", federationLimiter, asyncHandler(async (req,
 }));
 
 router.post("/nodes/:id/generate-keys", asyncHandler(async (req, res) => {
-  const nodeId = parseInt(req.params.id, 10);
+  const nodeId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(nodeId)) throw AppError.badRequest("Invalid node ID");
 
   const [node] = await db.select().from(nodesTable).where(eq(nodesTable.id, nodeId));

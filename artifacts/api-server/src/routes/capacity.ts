@@ -6,7 +6,7 @@ import { serializeDates } from "../lib/serialize";
 const router: IRouter = Router();
 
 router.get("/nodes/:id/capacity", async (req: Request, res: Response) => {
-  const nodeId = parseInt(req.params.id, 10);
+  const nodeId = parseInt(req.params.id as string, 10);
   const [node] = await db.select().from(nodesTable).where(eq(nodesTable.id, nodeId));
 
   if (!node) {
@@ -89,7 +89,7 @@ router.get("/capacity/summary", async (_req: Request, res: Response) => {
 });
 
 router.post("/nodes/:id/update-capacity", async (req: Request, res: Response) => {
-  const nodeId = parseInt(req.params.id, 10);
+  const nodeId = parseInt(req.params.id as string, 10);
   const { storageCapacityGb, bandwidthCapacityGb, status } = req.body;
 
   const updates: Record<string, any> = {};

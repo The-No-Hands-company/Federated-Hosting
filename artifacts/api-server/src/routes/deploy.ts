@@ -35,7 +35,7 @@ function sanitizeFilePath(filePath: string): string {
 router.post("/sites/:id/files/upload-url", uploadLimiter, asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
-  const siteId = parseInt(req.params.id, 10);
+  const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
 
   const parsed = GetSiteFileUploadUrlBody.safeParse(req.body);
@@ -62,7 +62,7 @@ router.post("/sites/:id/files/upload-url", uploadLimiter, asyncHandler(async (re
 router.post("/sites/:id/files", asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
-  const siteId = parseInt(req.params.id, 10);
+  const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
 
   const parsed = RegisterSiteFileBody.safeParse(req.body);
@@ -88,7 +88,7 @@ router.post("/sites/:id/files", asyncHandler(async (req: Request, res: Response)
 }));
 
 router.get("/sites/:id/files", asyncHandler(async (req: Request, res: Response) => {
-  const siteId = parseInt(req.params.id, 10);
+  const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
 
   const files = await db
@@ -102,7 +102,7 @@ router.get("/sites/:id/files", asyncHandler(async (req: Request, res: Response) 
 router.post("/sites/:id/deploy", asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
-  const siteId = parseInt(req.params.id, 10);
+  const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
 
   const [site] = await db.select().from(sitesTable).where(eq(sitesTable.id, siteId));
@@ -217,7 +217,7 @@ router.post("/sites/:id/deploy", asyncHandler(async (req: Request, res: Response
 }));
 
 router.get("/sites/:id/deployments", asyncHandler(async (req: Request, res: Response) => {
-  const siteId = parseInt(req.params.id, 10);
+  const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
 
   const deployments = await db
@@ -230,8 +230,8 @@ router.get("/sites/:id/deployments", asyncHandler(async (req: Request, res: Resp
 }));
 
 router.get("/sites/serve/:domain/*filePath", asyncHandler(async (req: Request, res: Response) => {
-  const domain = req.params.domain;
-  const rawPath = req.params.filePath;
+  const domain = req.params.domain as string;
+  const rawPath = req.params.filePath as string;
   const filePath = Array.isArray(rawPath) ? rawPath.join("/") : (rawPath || "index.html");
   const resolvedPath = sanitizeFilePath(filePath) || "index.html";
 

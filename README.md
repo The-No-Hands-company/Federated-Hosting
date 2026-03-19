@@ -190,6 +190,24 @@ Browser → Federated Hosting UI (Vite/React)
 
 ---
 
+## Bundled Sites
+
+Two production-ready websites are included in the `sites/` directory. They can be deployed into your node automatically:
+
+```bash
+# Start the API server first (creates the local node), then:
+pnpm --filter @workspace/scripts run seed:sites
+```
+
+| Site | Domain | Description |
+|------|--------|-------------|
+| **Federated Hosting** | `fedhosting.app` | Landing page explaining what Federated Hosting is, for everyday users — not developers. Includes animated network visualisation, live node/site stats, and a guided "how it works" section. |
+| **The No Hands Company** | `nohands.company` | Company portfolio — all No Hands Company projects, values, and contact information. |
+
+Both sites are plain HTML/CSS/JS — no build step required. They are stored in `sites/fedhosting-landing/` and `sites/nohands-company/`.
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get started, code style, and the PR process.

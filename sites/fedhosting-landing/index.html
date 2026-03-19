@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Federated Hosting — your website, hosted everywhere. No single company controls it. Upload once, live everywhere." />
+  <title>Federated Hosting — Your website, everywhere</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-icon">⬡</span>
+        <span>Federated Hosting</span>
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#nodes">The network</a>
+        <a href="/api/login" class="btn btn-sm">Get started free</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="mobileMenu">
+      <a href="#how-it-works" onclick="toggleMenu()">How it works</a>
+      <a href="#features" onclick="toggleMenu()">Features</a>
+      <a href="#nodes" onclick="toggleMenu()">The network</a>
+      <a href="/api/login" class="btn" onclick="toggleMenu()">Get started free</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="container">
+      <div class="badge">Now in open beta</div>
+      <h1 class="hero-title">
+        Your website,<br />
+        <span class="gradient-text">hosted everywhere.</span>
+      </h1>
+      <p class="hero-sub">
+        Federated Hosting is a network of independent servers that host your website together.
+        No single company can take your site down. No lock-in. No surprises.
+      </p>
+      <div class="hero-cta">
+        <a href="/api/login" class="btn btn-primary btn-lg">Start hosting for free</a>
+        <a href="#how-it-works" class="btn btn-ghost btn-lg">See how it works →</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num" data-target="12">0</span><span>nodes worldwide</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" data-target="99.9">0</span><span>% uptime SLA</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num" data-target="500">0</span><span>MB free storage</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-label">Simple by design</div>
+      <h2 class="section-title">Three steps to go live</h2>
+      <p class="section-sub">You do not need to be technical. If you can drag and drop files, you can publish a website.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-icon">📁</div>
+          <h3>Upload your files</h3>
+          <p>Drag your HTML, images, and other files into the uploader. Any static website works — personal pages, portfolios, blogs, small businesses.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-icon">🚀</div>
+          <h3>Hit deploy</h3>
+          <p>One click and your site is live. We handle everything behind the scenes — storage, caching, distribution across the network.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-icon">🌍</div>
+          <h3>Share your link</h3>
+          <p>Your site gets a permanent address. Share it anywhere. Even if one server goes offline, the others keep your site running.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section section-dark" id="features">
+    <div class="container">
+      <div class="section-label">Why it is different</div>
+      <h2 class="section-title">Built so no one can take you down</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🔗</div>
+          <h3>Federated network</h3>
+          <p>Your website lives on multiple independent servers around the world. If one goes down, the others keep serving your site without interruption.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔑</div>
+          <h3>You own your content</h3>
+          <p>There is no central company with the power to remove your website. The network is run by many independent operators, not one corporation.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>Fast everywhere</h3>
+          <p>Because your site is replicated across the network, visitors get served from the closest node. Pages load quickly no matter where your audience is.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🆓</div>
+          <h3>Free to start</h3>
+          <p>Upload up to 500 MB and deploy as many times as you like — no credit card required. Larger plans are available when you need more.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🛡️</div>
+          <h3>Secure by default</h3>
+          <p>Every server in the network uses HTTPS. Every node verifies the identity of every other node using cryptographic signatures — like passkeys for servers.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📦</div>
+          <h3>Simple file format</h3>
+          <p>No complicated setup. Just upload HTML, CSS, JavaScript, images, and fonts. If it runs in a browser, it works here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NETWORK VISUALISATION -->
+  <section class="section" id="nodes">
+    <div class="container">
+      <div class="section-label">The network</div>
+      <h2 class="section-title">Run by many, controlled by none</h2>
+      <p class="section-sub">Anyone can run a hosting node. The more nodes there are, the stronger and more resilient the network becomes.</p>
+      <div class="network-visual">
+        <canvas id="networkCanvas" width="800" height="400"></canvas>
+      </div>
+      <div class="network-stats">
+        <div class="nstat"><strong id="liveNodes">12</strong><span>Active nodes</span></div>
+        <div class="nstat"><strong>6</strong><span>Countries</span></div>
+        <div class="nstat"><strong id="liveSites">0</strong><span>Sites hosted</span></div>
+      </div>
+      <p class="node-cta-text">Want to support the network?</p>
+      <a href="https://github.com/The-No-Hands-company/Federated-Hosting" class="btn btn-outline" target="_blank" rel="noopener">
+        Run your own node →
+      </a>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section class="cta-banner">
+    <div class="container">
+      <h2>Ready to publish your first site?</h2>
+      <p>It takes about two minutes. No credit card. No technical knowledge required.</p>
+      <a href="/api/login" class="btn btn-primary btn-xl">Create your free account</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <span class="logo-icon">⬡</span>
+            <span>Federated Hosting</span>
+          </a>
+          <p>A project by <a href="https://nohands.company" target="_blank" rel="noopener">The No Hands Company</a>.</p>
+        </div>
+        <div class="footer-col">
+          <strong>Product</strong>
+          <a href="#how-it-works">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#nodes">The network</a>
+          <a href="/api/login">Get started</a>
+        </div>
+        <div class="footer-col">
+          <strong>Technical</strong>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting" target="_blank" rel="noopener">Source code</a>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/docs/API.md" target="_blank" rel="noopener">API reference</a>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/docs/FEDERATION_PROTOCOL.md" target="_blank" rel="noopener">Federation protocol</a>
+        </div>
+        <div class="footer-col">
+          <strong>Company</strong>
+          <a href="https://nohands.company" target="_blank" rel="noopener">The No Hands Company</a>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/SECURITY.md" target="_blank" rel="noopener">Security policy</a>
+          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 The No Hands Company. Open source under the MIT License.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

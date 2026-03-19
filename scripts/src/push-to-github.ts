@@ -24,7 +24,7 @@ try {
   execSync(`git remote add github "${repoUrl}"`, { stdio: "inherit", cwd: "/home/runner/workspace" });
 
   // Push to main branch
-  execSync("git push github master:main --force", { stdio: "inherit", cwd: "/home/runner/workspace" });
+  execSync("git push github master:main", { stdio: "inherit", cwd: "/home/runner/workspace" });
 
   console.log("✅ Successfully pushed to GitHub!");
 } catch (err) {

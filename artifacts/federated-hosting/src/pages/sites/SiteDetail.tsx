@@ -82,7 +82,16 @@ export default function SiteDetail() {
               <DialogHeader>
                 <DialogTitle>Edit Site: {site.name}</DialogTitle>
               </DialogHeader>
-              <SiteForm initialData={site} onSuccess={() => setIsEditOpen(false)} />
+              <SiteForm initialData={{
+                  id: site.id,
+                  name: site.name,
+                  domain: site.domain,
+                  description: site.description ?? undefined,
+                  siteType: site.siteType,
+                  ownerName: site.ownerName,
+                  ownerEmail: site.ownerEmail,
+                  primaryNodeId: site.primaryNodeId ?? undefined,
+                }} onSuccess={() => setIsEditOpen(false)} />
             </DialogContent>
           </Dialog>
 

@@ -104,16 +104,6 @@ router.patch("/sites/:id", asyncHandler(async (req, res) => {
   const parsed = UpdateSiteBody.safeParse(req.body);
   if (!parsed.success) throw AppError.badRequest(parsed.error.message);
 
-  if (parsed.data.domain) {
-    const [conflict] = await db
-      .select({ id: sitesTable.id })
-      .from(sitesTable)
-      .where(eq(sitesTable.domain, parsed.data.domain));
-    if (conflict && conflict.id !== params.data.id) {
-      throw AppError.conflict(`Domain '${parsed.data.domain}' is already in use`);
-    }
-  }
-
   const [updated] = await db
     .update(sitesTable)
     .set(parsed.data)
