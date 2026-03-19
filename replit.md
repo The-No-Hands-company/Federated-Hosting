@@ -16,6 +16,13 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## GitHub Push Note
+The GitHub OAuth integration requires a paid Replit plan. To push to GitHub, use a Personal Access Token (PAT) stored as the secret `GITHUB_TOKEN`. Then run:
+```
+git remote add origin https://<username>:$GITHUB_TOKEN@github.com/The-No-Hands-company/Federated-Hosting.git
+git push -u origin master
+```
+
 ## Project: Federated Hosting
 
 A web platform for managing a federated web hosting network — inspired by the Matrix/Mastodon federation model but for hosting websites across independent nodes.
