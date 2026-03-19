@@ -19,11 +19,28 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ## GitHub
 
 Repository: https://github.com/The-No-Hands-company/Federated-Hosting
-To push future changes from the Shell tab:
+Token stored as secret: `GITHUB_PERSONAL_ACCESS_TOKEN`
+
+### Pushing changes — always follow this order:
+
+1. Check for and remove any stale lock files first:
+```bash
+rm -f .git/index.lock .git/refs/remotes/github/main.lock
 ```
+2. Verify git is clean:
+```bash
+git status
+```
+3. Push:
+```bash
 git push github master:main
 ```
-Token stored as secret: `GITHUB_PERSONAL_ACCESS_TOKEN`
+
+**Before every push**, check for lock files with:
+```bash
+ls .git/*.lock .git/refs/remotes/github/*.lock 2>/dev/null
+```
+If any exist, delete them with `rm -f` before proceeding.
 
 ## Project: Federated Hosting Service
 
