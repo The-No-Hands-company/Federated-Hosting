@@ -3,6 +3,7 @@ import { db, nodesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { generateKeyPair } from "./lib/federation";
 import { startHealthMonitor } from "./lib/healthMonitor";
+import { seedBundledSites } from "./lib/seedBundledSites";
 import logger from "./lib/logger";
 import http from "http";
 
@@ -83,6 +84,7 @@ ensureLocalNode()
     });
 
     startHealthMonitor();
+    seedBundledSites();
 
     process.on("SIGTERM", () => gracefulShutdown(server, "SIGTERM"));
     process.on("SIGINT", () => gracefulShutdown(server, "SIGINT"));
