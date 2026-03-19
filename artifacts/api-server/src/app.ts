@@ -23,6 +23,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const app: Express = express();
 
+// ── Trust proxy (Replit / reverse-proxy environments) ─────────────────────────
+// Required so express-rate-limit can correctly read X-Forwarded-For
+app.set("trust proxy", 1);
+
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(
   helmet({

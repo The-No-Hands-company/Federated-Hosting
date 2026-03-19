@@ -162,6 +162,22 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Phase 5 — UX Polish + Protocol Spec ✅
+
+### My Sites (improved)
+- Inline "Register Site" modal — no navigation away
+- Hit count (visits) displayed per site card
+- Last-updated timestamp via `date-fns`
+- Animated card grid with staggered entry
+- Improved empty state with step-by-step guidance
+
+### Bug fixes
+- `trust proxy` set to `1` in `app.ts` — fixes `express-rate-limit` `X-Forwarded-For` errors in all proxy environments
+- Pagination unwrapping — `useNodes()` / `useSites()` wrappers in `apiHooks.ts` correctly handle `{ data, meta }` shape from all list endpoints
+
+### Federation Protocol Spec
+- `FEDERATION.md` — language-agnostic spec covering node identity, Ed25519 signing, discovery endpoint, handshake protocol, site sync notifications, capability strings, security considerations, and interoperability notes
+
 ## Production Hardening (Phase 4) ✅
 
 ### Security middleware stack (app.ts)
