@@ -20,7 +20,34 @@ function getPasswordGateHtml(): string {
   return _passwordGateHtml;
 }
 
-function isKnownInfraHost(host: string): boolean {
+function getCacheControl(contentType: string): string {
+  // HTML: always revalidate — users must see fresh content
+  if (contentType.includes("text/html")) return "public, max-age=0, must-revalidate";
+  // Hashed assets (JS/CSS bundles, fonts, images) — immutable 1 year
+  if (
+    contentType.includes("javascript") ||
+    contentType.includes("text/css") ||
+    contentType.includes("font/") ||
+    contentType.includes("image/webp") ||
+    contentType.includes("image/avif")
+  ) return "public, max-age=31536000, immutable";
+  // Images and other media — 1 week
+  if (contentType.startsWith("image/") || contentType.startsWith("video/") || contentType.startsWith("audio/"))
+    return "public, max-age=604800";
+  // JSON/XML data — 5 minutes
+  if (contentType.includes("json") || contentType.includes("xml"))
+    return "public, max-age=300";
+  // Default — 1 hour
+  return "public, max-age=3600";
+}
+
+function buildETag(objectPath: string, sizeBytes: number): string {
+  // Weak ETag based on objectPath (unique per content) + size
+  const raw = `${objectPath}:${sizeBytes}`;
+  let h = 0;
+  for (let i = 0; i < raw.length; i++) { h = Math.imul(31, h) + raw.charCodeAt(i) | 0; }
+  return `W/"${Math.abs(h).toString(16)}"`;
+}
   if (!host) return true;
   if (host.startsWith("localhost")) return true;
   if (PUBLIC_DOMAIN && host.includes(PUBLIC_DOMAIN)) return true;
@@ -239,6 +266,44 @@ export async function hostRouter(req: Request, res: Response, next: NextFunction
 
   const requestedPath = req.path === "/" ? "index.html" : req.path.replace(/^\//, "");
 
+  // ── Auto-generated files ──────────────────────────────────────────────────
+  // Serve dynamic sitemap.xml if the site doesn't have one
+  if (requestedPath === "sitemap.xml") {
+    const siteFiles = await db.select({ filePath: siteFilesTable.filePath })
+      .from(siteFilesTable)
+      .where(and(eq(siteFilesTable.siteId, site.id),
+        eq(siteFilesTable.contentType, "text/html")));
+
+    const baseUrl = `https://${host}`;
+    const urls = siteFiles
+      .map(f => f.filePath.replace(/\/?(index\.html)$/, "/").replace(/^([^/])/, "/$1"))
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .map(p => `  <url><loc>${baseUrl}${p}</loc></url>`)
+      .join("\n");
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(xml);
+    return;
+  }
+
+  // Serve minimal robots.txt if the site doesn't have one
+  if (requestedPath === "robots.txt") {
+    const [existing] = await db.select({ filePath: siteFilesTable.filePath })
+      .from(siteFilesTable)
+      .where(and(eq(siteFilesTable.siteId, site.id), eq(siteFilesTable.filePath, "robots.txt")));
+    if (!existing) {
+      res.setHeader("Content-Type", "text/plain");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.send(`User-agent: *\nAllow: /\nSitemap: https://${host}/sitemap.xml\n`);
+      return;
+    }
+  }
+
   // ── Redirect rules ────────────────────────────────────────────────────────
   // Evaluate in position order. First match wins.
   // Status 200 = rewrite (serve dest transparently), all others = redirect.
@@ -292,10 +357,18 @@ export async function hostRouter(req: Request, res: Response, next: NextFunction
     if (!fileRecord) return false;
     try {
       applyCustomHeaders(res, req.path, customHeaders);
-      res.setHeader("Content-Type", fileRecord.contentType);
-      res.setHeader("X-Served-By", "federated-hosting");
+      res.setHeader("Content-Type",  fileRecord.contentType);
+      res.setHeader("X-Served-By",   "federated-hosting");
       res.setHeader("X-Site-Domain", site!.domain);
-      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.setHeader("Cache-Control", getCacheControl(fileRecord.contentType));
+
+      // ETag for conditional GET — avoids re-downloading unchanged files
+      const etag = buildETag(fileRecord.objectPath, fileRecord.sizeBytes ?? 0);
+      res.setHeader("ETag", etag);
+      if (req.headers["if-none-match"] === etag) {
+        res.status(304).end();
+        return true;
+      }
       await storage.streamToResponse(fileRecord.objectPath, res);
       recordHit(site!.id, filePath, req, fileRecord.sizeBytes ?? 0);
       return true;

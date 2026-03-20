@@ -471,3 +471,15 @@ CREATE INDEX IF NOT EXISTS "site_env_vars_site_idx" ON "site_env_vars"("site_id"
 
 -- ─── Per-site password gate customisation ────────────────────────────────────
 ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "unlock_message" TEXT;
+
+-- ─── Webhooks ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "webhooks" (
+  "id"         SERIAL PRIMARY KEY,
+  "site_id"    INTEGER NOT NULL REFERENCES "sites"("id") ON DELETE CASCADE,
+  "url"        TEXT    NOT NULL,
+  "secret"     TEXT,
+  "events"     TEXT    NOT NULL DEFAULT '*',
+  "enabled"    INTEGER NOT NULL DEFAULT 1,
+  "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS "webhooks_site_idx" ON "webhooks"("site_id");
