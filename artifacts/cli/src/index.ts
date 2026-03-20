@@ -16,6 +16,7 @@ import { formsCommand }     from "./commands/forms.js";
 import { completionCommand } from "./commands/completion.js";
 import { envCommand }        from "./commands/env.js";
 import { watchCommand }      from "./commands/watch.js";
+import { createCommand }     from "./commands/create.js";
 
 const program = new Command();
 
@@ -25,6 +26,7 @@ program
   .version("0.1.0");
 
 program.addCommand(initCommand);
+program.addCommand(createCommand);
 program.addCommand(loginCommand);
 program.addCommand(logoutCommand);
 program.addCommand(whoamiCommand);

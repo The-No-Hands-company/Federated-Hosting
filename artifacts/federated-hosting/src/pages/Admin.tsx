@@ -442,6 +442,24 @@ function SiteHealthTab() {
           })}
         </div>
       )}
+
+      {/* ── Secondary tabs: Audit Log + Site Health ── */}
+      <Tabs defaultValue="audit">
+        <TabsList className="bg-muted/30 border border-white/5">
+          <TabsTrigger value="audit" className="gap-1.5">
+            <ClipboardList className="w-3.5 h-3.5" />Audit Log
+          </TabsTrigger>
+          <TabsTrigger value="health" className="gap-1.5">
+            <HeartPulse className="w-3.5 h-3.5" />Site Health
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="audit" className="mt-4">
+          <AuditLogTab />
+        </TabsContent>
+        <TabsContent value="health" className="mt-4">
+          <SiteHealthTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

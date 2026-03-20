@@ -34,6 +34,16 @@ fh completion fish > ~/.config/fish/completions/fh.fish
 | `fh whoami` | Show current user and node |
 | `fh init` | Init site config in current directory |
 
+### Creating new projects
+```bash
+fh create my-site              # interactive template picker
+fh create my-site --template vite    # React + Vite
+fh create my-site --template astro   # Astro
+fh create my-site --template nextjs  # Next.js static export
+fh create my-site --template svelte  # SvelteKit
+fh create my-site --template html    # Plain HTML
+```
+
 ### Deploying
 | `fh deploy <dir>` | Upload files and deploy |
 | `fh deploy <dir> --staging` | Deploy to staging |

@@ -1,3 +1,4 @@
+import { requireScope } from "../middleware/tokenAuth";
 /**
  * Site environment variables.
  *
@@ -53,7 +54,7 @@ router.get("/sites/:id/env", asyncHandler(async (req: Request, res: Response) =>
   })));
 }));
 
-router.post("/sites/:id/env", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
+router.post("/sites/:id/env", writeLimiter, requireScope("write"), asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
   const siteId = parseInt(req.params.id as string, 10);
   if (isNaN(siteId)) throw AppError.badRequest("Invalid site ID");

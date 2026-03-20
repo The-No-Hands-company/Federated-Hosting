@@ -1,3 +1,4 @@
+import { requireScope } from "../middleware/tokenAuth";
 import { Router, type IRouter } from "express";
 import { eq, count, ilike, or, sql } from "drizzle-orm";
 import { db, sitesTable, nodesTable } from "@workspace/db";
@@ -100,7 +101,7 @@ router.get("/sites/:id", asyncHandler(async (req, res) => {
   res.json(GetSiteResponse.parse(serializeDates(site)));
 }));
 
-router.patch("/sites/:id", writeLimiter, asyncHandler(async (req, res) => {
+router.patch("/sites/:id", writeLimiter, requireScope("write"), asyncHandler(async (req, res) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
   const params = UpdateSiteParams.safeParse(req.params);
@@ -135,7 +136,7 @@ router.patch("/sites/:id", writeLimiter, asyncHandler(async (req, res) => {
   res.json(UpdateSiteResponse.parse(serializeDates(joined)));
 }));
 
-router.delete("/sites/:id", writeLimiter, asyncHandler(async (req, res) => {
+router.delete("/sites/:id", writeLimiter, requireScope("write"), asyncHandler(async (req, res) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
   const params = DeleteSiteParams.safeParse(req.params);

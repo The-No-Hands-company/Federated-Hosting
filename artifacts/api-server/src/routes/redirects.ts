@@ -1,3 +1,4 @@
+import { requireScope } from "../middleware/tokenAuth";
 /**
  * Site redirect rules and custom response headers.
  *
@@ -68,7 +69,7 @@ router.get("/sites/:id/redirects", asyncHandler(async (req: Request, res: Respon
   res.json(rules);
 }));
 
-router.post("/sites/:id/redirects", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
+router.post("/sites/:id/redirects", writeLimiter, requireScope("write"), asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
   const siteId = parseInt(req.params.id as string, 10);
   if (isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
@@ -85,7 +86,7 @@ router.post("/sites/:id/redirects", writeLimiter, asyncHandler(async (req: Reque
   res.status(201).json(rule);
 }));
 
-router.put("/sites/:id/redirects", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
+router.put("/sites/:id/redirects", writeLimiter, requireScope("write"), asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
   const siteId = parseInt(req.params.id as string, 10);
   if (isNaN(siteId)) throw AppError.badRequest("Invalid site ID");

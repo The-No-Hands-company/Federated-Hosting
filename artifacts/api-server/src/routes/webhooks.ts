@@ -1,3 +1,4 @@
+import { requireScope } from "../middleware/tokenAuth";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod/v4";
 import { db, sitesTable, webhooksTable, webhookDeliveriesTable } from "@workspace/db";
@@ -34,7 +35,7 @@ router.get("/sites/:id/webhooks", asyncHandler(async (req: Request, res: Respons
   res.json(hooks.map(h => ({ ...h, secret: h.secret ? "***" : null })));
 }));
 
-router.post("/sites/:id/webhooks", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
+router.post("/sites/:id/webhooks", writeLimiter, requireScope("write"), asyncHandler(async (req: Request, res: Response) => {
   const siteId = parseInt(req.params.id as string, 10);
   if (isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
   await requireSiteOwner(req, siteId);

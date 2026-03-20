@@ -175,6 +175,12 @@ router.post("/sites/:id/deploy", deployLimiter, requireScope("deploy"), asyncHan
       .from(siteDeploymentsTable)
       .where(eq(siteDeploymentsTable.siteId, siteId));
 
+    const environment = (req.body as any)?.environment ?? "production";
+    const publicDomain = process.env.PUBLIC_DOMAIN ?? "";
+    const previewUrl = environment !== "production" && publicDomain
+      ? `https://${environment}-${siteId}-v${Number(depCount) + 1}.${publicDomain}`
+      : null;
+
     const [dep] = await tx
       .insert(siteDeploymentsTable)
       .values({
@@ -184,7 +190,8 @@ router.post("/sites/:id/deploy", deployLimiter, requireScope("deploy"), asyncHan
         status: "active",
         fileCount: pendingFiles.length,
         totalSizeMb,
-        environment: (req.body as any)?.environment ?? "production",
+        environment,
+        previewUrl,
       })
       .returning();
 

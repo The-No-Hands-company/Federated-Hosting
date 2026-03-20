@@ -1,3 +1,4 @@
+import { requireScope } from "../middleware/tokenAuth";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, sitesTable, siteMembersTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -138,7 +139,7 @@ router.delete("/sites/:id/members/:memberId", writeLimiter, asyncHandler(async (
 
 // ── Site visibility + password ────────────────────────────────────────────────
 
-router.patch("/sites/:id/visibility", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
+router.patch("/sites/:id/visibility", writeLimiter, requireScope("write"), asyncHandler(async (req: Request, res: Response) => {
   const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
   await requireSiteOwner(req, siteId);
