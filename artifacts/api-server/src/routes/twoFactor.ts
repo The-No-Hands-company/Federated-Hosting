@@ -48,7 +48,35 @@ function hashBackupCode(code: string): string {
   return crypto.createHash("sha256").update(code.replace(/-/g, "").toUpperCase()).digest("hex");
 }
 
-// ── Status ────────────────────────────────────────────────────────────────────
+// Per-user TOTP attempt tracking — lockout after 5 failures in 10 minutes
+const MAX_TOTP_FAILURES = 5;
+const TOTP_LOCKOUT_WINDOW_S = 10 * 60;
+const TOTP_LOCKOUT_KEY = (userId: string) => `totp_failures:${userId}`;
+
+async function checkAndRecordTotpFailure(userId: string): Promise<{ locked: boolean; remaining: number }> {
+  const redis = (await import("../lib/redis")).getRedisClient();
+  if (!redis) return { locked: false, remaining: MAX_TOTP_FAILURES };
+
+  const key = TOTP_LOCKOUT_KEY(userId);
+  const count = await redis.incr(key);
+  if (count === 1) await redis.expire(key, TOTP_LOCKOUT_WINDOW_S);
+
+  const locked   = count >= MAX_TOTP_FAILURES;
+  const remaining = Math.max(0, MAX_TOTP_FAILURES - count);
+  return { locked, remaining };
+}
+
+async function clearTotpFailures(userId: string): Promise<void> {
+  const redis = (await import("../lib/redis")).getRedisClient();
+  if (redis) await redis.del(TOTP_LOCKOUT_KEY(userId)).catch(() => {});
+}
+
+async function isTotpLocked(userId: string): Promise<boolean> {
+  const redis = (await import("../lib/redis")).getRedisClient();
+  if (!redis) return false;
+  const count = parseInt(await redis.get(TOTP_LOCKOUT_KEY(userId)) ?? "0", 10);
+  return count >= MAX_TOTP_FAILURES;
+}
 
 router.get("/auth/2fa/status", asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
@@ -128,6 +156,10 @@ router.post("/auth/2fa/verify", writeLimiter, asyncHandler(async (req: Request, 
 router.post("/auth/2fa/validate", authLimiter, asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
+  if (await isTotpLocked(req.user.id)) {
+    throw AppError.badRequest("Account temporarily locked due to too many failed attempts. Try again in 10 minutes.", "TOTP_LOCKED");
+  }
+
   const { code } = z.object({ code: z.string().min(6).max(10) }).parse(req.body);
 
   const [cred] = await db.select().from(totpCredentialsTable).where(eq(totpCredentialsTable.userId, req.user.id));
@@ -137,6 +169,7 @@ router.post("/auth/2fa/validate", authLimiter, asyncHandler(async (req: Request,
   const isValid = authenticator.check(code.replace(/-/g, ""), cred.secret);
 
   if (isValid) {
+    await clearTotpFailures(req.user.id);
     res.json({ valid: true, method: "totp" });
     return;
   }
@@ -172,7 +205,11 @@ router.post("/auth/2fa/validate", authLimiter, asyncHandler(async (req: Request,
     return;
   }
 
-  throw AppError.badRequest("Invalid code.", "INVALID_TOTP");
+  const { locked, remaining } = await checkAndRecordTotpFailure(req.user.id);
+  if (locked) {
+    throw AppError.badRequest("Too many failed attempts. Account locked for 10 minutes.", "TOTP_LOCKED");
+  }
+  throw AppError.badRequest(`Invalid code. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.`, "INVALID_TOTP");
 }));
 
 // ── Disable 2FA ───────────────────────────────────────────────────────────────

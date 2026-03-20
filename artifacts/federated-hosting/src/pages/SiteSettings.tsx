@@ -13,8 +13,102 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { useAuth } from "@workspace/auth-web";
 import {
   Settings, Globe, Lock, Eye, EyeOff, ArrowRight, Plus, Trash2,
-  AlertTriangle, Save, ChevronLeft, Shield,
+  AlertTriangle, Save, ChevronLeft, Shield, KeyRound, Eye as EyeIcon, EyeOff as EyeOffIcon,
 } from "lucide-react";
+
+interface EnvVar { id: number; key: string; value: string; secret: number; }
+
+function EnvVarsPanel({ siteId }: { siteId: number }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [newKey, setNewKey]     = useState("");
+  const [newVal, setNewVal]     = useState("");
+  const [isSecret, setIsSecret] = useState(false);
+  const [revealed, setRevealed] = useState<Set<number>>(new Set());
+
+  const { data: vars = [] } = useQuery<EnvVar[]>({
+    queryKey: ["env-vars", siteId],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/env`, { credentials: "include" });
+      return r.ok ? r.json() : [];
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/env`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: newKey.toUpperCase(), value: newVal, secret: isSecret ? 1 : 0 }),
+      });
+      if (!r.ok) throw new Error((await r.json() as any).message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["env-vars", siteId] });
+      setNewKey(""); setNewVal(""); setIsSecret(false);
+      toast({ title: "Env var set" });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (key: string) => {
+      await fetch(`${BASE}/api/sites/${siteId}/env/${encodeURIComponent(key)}`, { method: "DELETE", credentials: "include" });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["env-vars", siteId] }),
+  });
+
+  return (
+    <Card className="border-white/5">
+      <CardHeader>
+        <CardTitle className="text-white text-base flex items-center gap-2"><KeyRound className="w-4 h-4" />Build Environment Variables</CardTitle>
+        <CardDescription>Injected into the build pipeline. Secret vars are masked in logs and API responses.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {vars.map(v => (
+          <div key={v.id} className="flex items-center gap-2 p-3 bg-muted/10 rounded-lg border border-white/5 text-sm font-mono">
+            <span className="text-primary w-40 truncate shrink-0">{v.key}</span>
+            <span className="flex-1 text-muted-foreground truncate">
+              {v.secret && !revealed.has(v.id) ? "***" : v.value}
+            </span>
+            {v.secret && (
+              <button className="text-muted-foreground hover:text-white" onClick={() =>
+                setRevealed(s => { const n = new Set(s); n.has(v.id) ? n.delete(v.id) : n.add(v.id); return n; })}>
+                {revealed.has(v.id) ? <EyeOffIcon className="w-3.5 h-3.5" /> : <EyeIcon className="w-3.5 h-3.5" />}
+              </button>
+            )}
+            <Button variant="ghost" size="icon" className="w-7 h-7 text-muted-foreground hover:text-red-400 shrink-0"
+              onClick={() => deleteMutation.mutate(v.key)}>
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ))}
+        {vars.length === 0 && <p className="text-muted-foreground text-sm py-1">No env vars set yet.</p>}
+
+        <div className="pt-3 border-t border-white/5 space-y-2">
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Add variable</p>
+          <div className="flex gap-2">
+            <Input placeholder="KEY_NAME" value={newKey}
+              onChange={e => setNewKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""))}
+              className="bg-muted/20 border-white/8 font-mono text-xs w-40" />
+            <Input placeholder="value" value={newVal} onChange={e => setNewVal(e.target.value)}
+              type={isSecret ? "password" : "text"}
+              className="bg-muted/20 border-white/8 font-mono text-xs flex-1" />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+              <input type="checkbox" checked={isSecret} onChange={e => setIsSecret(e.target.checked)} className="rounded" />
+              Secret (mask value)
+            </label>
+            <Button onClick={() => addMutation.mutate()} disabled={!newKey || !newVal || addMutation.isPending} className="gap-1.5 ml-auto">
+              <Plus className="w-4 h-4" />Add
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -157,6 +251,7 @@ export default function SiteSettings() {
           <TabsTrigger value="visibility">Visibility</TabsTrigger>
           <TabsTrigger value="redirects">Redirects</TabsTrigger>
           <TabsTrigger value="headers">Headers</TabsTrigger>
+          <TabsTrigger value="env">Env Vars</TabsTrigger>
           <TabsTrigger value="danger" className="text-red-400 data-[state=active]:text-red-300">Danger</TabsTrigger>
         </TabsList>
 
@@ -283,6 +378,11 @@ export default function SiteSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Env Vars ── */}
+        <TabsContent value="env" className="space-y-4 mt-4">
+          <EnvVarsPanel siteId={siteId} />
         </TabsContent>
 
         {/* ── Danger Zone ── */}

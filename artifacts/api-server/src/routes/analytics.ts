@@ -206,3 +206,56 @@ router.get("/sites/:id/analytics/referrers", asyncHandler(async (req: Request, r
 }));
 
 export default router;
+
+// ── In-memory SSE subscriptions ────────────────────────────────────────────────
+// Site owners can subscribe to a real-time event stream of hits on their sites.
+// Events are forwarded from the analytics buffer flush to all active subscribers.
+
+type SseClient = { siteId: number; res: import("express").Response; userId: string };
+const sseClients = new Set<SseClient>();
+
+export function broadcastAnalyticsHit(siteId: number, path: string, referrer: string | null): void {
+  for (const client of sseClients) {
+    if (client.siteId !== siteId) continue;
+    try {
+      client.res.write(`data: ${JSON.stringify({ path, referrer, ts: Date.now() })}\n\n`);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
+
+// Append this route to the analytics router
+router.get("/sites/:id/analytics/stream", asyncHandler(async (req, res) => {
+  if (!req.isAuthenticated()) throw AppError.unauthorized();
+  const siteId = parseInt(req.params.id as string, 10);
+  if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
+
+  const [site] = await db.select({ ownerId: sitesTable.ownerId })
+    .from(sitesTable).where(eq(sitesTable.id, siteId));
+  if (!site) throw AppError.notFound("Site not found");
+  if (site.ownerId !== req.user.id) throw AppError.forbidden();
+
+  // Set up SSE headers
+  res.setHeader("Content-Type",  "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection",    "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // disable nginx buffering
+  res.flushHeaders();
+
+  // Send initial ping so client knows connection is live
+  res.write(`data: ${JSON.stringify({ type: "connected", siteId })}\n\n`);
+
+  const client: SseClient = { siteId, res, userId: req.user.id };
+  sseClients.add(client);
+
+  // Heartbeat every 25 seconds to keep connection alive through proxies
+  const heartbeat = setInterval(() => {
+    try { res.write(": heartbeat\n\n"); } catch { clearInterval(heartbeat); }
+  }, 25_000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    sseClients.delete(client);
+  });
+}));

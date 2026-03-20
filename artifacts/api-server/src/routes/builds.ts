@@ -19,7 +19,7 @@
 
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod/v4";
-import { db, sitesTable, buildJobsTable, siteFilesTable, siteDeploymentsTable } from "@workspace/db";
+import { db, sitesTable, buildJobsTable, siteFilesTable, siteDeploymentsTable, siteEnvVarsTable } from "@workspace/db";
 import { eq, and, desc, count } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
 import { writeLimiter, deployLimiter } from "../middleware/rateLimiter";
@@ -78,10 +78,19 @@ async function runBuild(buildId: number, siteId: number, opts: {
   };
 
   // Merge user-supplied env vars (safe — values are strings, no shell expansion)
+  // Merge env vars: stored site vars → user-provided vars (user-provided take precedence)
+  const storedVars = await db
+    .select({ key: siteEnvVarsTable.key, value: siteEnvVarsTable.value })
+    .from(siteEnvVarsTable)
+    .where(eq(siteEnvVarsTable.siteId, siteId));
+
   const buildEnv: Record<string, string> = {
     ...process.env as Record<string, string>,
     NODE_ENV: "production",
     CI: "true",
+    // Stored vars (lower priority)
+    ...Object.fromEntries(storedVars.map(v => [v.key, v.value])),
+    // User-provided vars override stored vars
     ...(opts.envVars ?? {}),
   };
   // Remove server secrets from build environment

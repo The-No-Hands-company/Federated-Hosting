@@ -415,3 +415,56 @@ CREATE TABLE IF NOT EXISTS "site_health_checks" (
 );
 CREATE INDEX IF NOT EXISTS "health_checks_site_time_idx"
   ON "site_health_checks"("site_id", "checked_at" DESC);
+
+-- ─── Webhook delivery log ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "webhook_deliveries" (
+  "id"          SERIAL PRIMARY KEY,
+  "webhook_id"  INTEGER NOT NULL REFERENCES "webhooks"("id") ON DELETE CASCADE,
+  "event"       TEXT    NOT NULL,
+  "payload"     JSONB   NOT NULL,
+  "status_code" INTEGER,
+  "response"    TEXT,
+  "attempt"     INTEGER NOT NULL DEFAULT 1,
+  "duration_ms" INTEGER,
+  "success"     INTEGER NOT NULL DEFAULT 0,
+  "next_retry"  TIMESTAMP WITH TIME ZONE,
+  "created_at"  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS "webhook_deliveries_webhook_idx" ON "webhook_deliveries"("webhook_id");
+CREATE INDEX IF NOT EXISTS "webhook_deliveries_retry_idx"   ON "webhook_deliveries"("next_retry") WHERE "success" = 0 AND "attempt" < 6;
+
+-- ─── Full-text search on sites ────────────────────────────────────────────────
+ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "search_vector" TSVECTOR;
+
+UPDATE "sites" SET search_vector = to_tsvector('english',
+  coalesce(name, '') || ' ' || coalesce(domain, '') || ' ' || coalesce(description, '')
+);
+
+CREATE INDEX IF NOT EXISTS "sites_search_idx" ON "sites" USING GIN("search_vector");
+
+CREATE OR REPLACE FUNCTION sites_search_vector_update() RETURNS trigger AS $$
+BEGIN
+  NEW.search_vector := to_tsvector('english',
+    coalesce(NEW.name, '') || ' ' || coalesce(NEW.domain, '') || ' ' || coalesce(NEW.description, '')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS sites_search_vector_trigger ON "sites";
+CREATE TRIGGER sites_search_vector_trigger
+  BEFORE INSERT OR UPDATE OF name, domain, description ON "sites"
+  FOR EACH ROW EXECUTE FUNCTION sites_search_vector_update();
+
+-- ─── Site environment variables ───────────────────────────────────────────────
+-- Stored env vars injected into build pipeline jobs for this site.
+CREATE TABLE IF NOT EXISTS "site_env_vars" (
+  "id"         SERIAL PRIMARY KEY,
+  "site_id"    INTEGER NOT NULL REFERENCES "sites"("id") ON DELETE CASCADE,
+  "key"        TEXT    NOT NULL,
+  "value"      TEXT    NOT NULL,
+  "secret"     INTEGER NOT NULL DEFAULT 0,
+  "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE("site_id", "key")
+);
+CREATE INDEX IF NOT EXISTS "site_env_vars_site_idx" ON "site_env_vars"("site_id");

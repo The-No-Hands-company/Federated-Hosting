@@ -9,6 +9,17 @@
 import { db, siteAnalyticsTable, analyticsBufferTable } from "@workspace/db";
 import { lt, sql, eq, and, inArray } from "drizzle-orm";
 import logger from "./logger";
+import type { broadcastAnalyticsHit as BroadcastFn } from "../routes/analytics";
+
+// Lazy-loaded to avoid circular import at startup
+let _broadcast: typeof BroadcastFn | null = null;
+async function getBroadcast() {
+  if (!_broadcast) {
+    const mod = await import("../routes/analytics");
+    _broadcast = mod.broadcastAnalyticsHit;
+  }
+  return _broadcast;
+}
 import crypto from "crypto";
 
 const FLUSH_INTERVAL_MS = 60_000; // 1 minute

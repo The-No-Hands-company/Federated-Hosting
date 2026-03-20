@@ -10,6 +10,8 @@ import { startSyncRetryQueue, stopSyncRetryQueue } from "./lib/syncRetryQueue";
 import { startAcmeRenewalScheduler, stopAcmeRenewalScheduler } from "./lib/acme";
 import { startSiteHealthMonitor, stopSiteHealthMonitor } from "./lib/siteHealthMonitor";
 import { startMetricsCollector, stopMetricsCollector } from "./lib/metricsCollector";
+import { startWebhookRetryProcessor, stopWebhookRetryProcessor } from "./lib/webhooks";
+import { startRetentionJob, stopRetentionJob } from "./lib/retentionCleanup";
 import { startEmailQueue, stopEmailQueue } from "./lib/email";
 import { startOrphanCleanup, stopOrphanCleanup } from "./lib/orphanCleanup";
 import { db, sessionsTable } from "@workspace/db";
@@ -71,6 +73,8 @@ function gracefulShutdown(server: http.Server, signal: string): void {
       stopAcmeRenewalScheduler();
       stopSiteHealthMonitor();
       stopMetricsCollector();
+      stopWebhookRetryProcessor();
+      stopRetentionJob();
       stopEmailQueue();
       stopOrphanCleanup();
       await closeRedis();
@@ -110,6 +114,8 @@ ensureLocalNode()
     startAcmeRenewalScheduler();
     startSiteHealthMonitor();
     startMetricsCollector();
+    startWebhookRetryProcessor();
+    startRetentionJob();
     startEmailQueue();
     startOrphanCleanup();
 

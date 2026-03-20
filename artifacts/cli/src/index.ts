@@ -12,7 +12,9 @@ import { statusCommand }   from "./commands/status.js";
 import { initCommand }     from "./commands/init.js";
 import { logsCommand }     from "./commands/logs.js";
 import { buildCommand }    from "./commands/build.js";
-import { formsCommand }    from "./commands/forms.js";
+import { formsCommand }     from "./commands/forms.js";
+import { completionCommand } from "./commands/completion.js";
+import { envCommand }        from "./commands/env.js";
 
 const program = new Command();
 
@@ -34,5 +36,7 @@ program.addCommand(formsCommand);
 program.addCommand(tokensCommand);
 program.addCommand(rollbackCommand);
 program.addCommand(analyticsCommand);
+program.addCommand(envCommand);
+program.addCommand(completionCommand);
 
 program.parse(process.argv);

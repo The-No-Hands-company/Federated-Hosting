@@ -2,7 +2,20 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, sitesTable, siteMembersTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
-import { writeLimiter } from "../middleware/rateLimiter";
+import { writeLimiter, authLimiter } from "../middleware/rateLimiter";
+
+// Per-site-per-IP unlock limiter: max 5 attempts per 15 minutes
+// Prevents automated password guessing on password-protected sites
+import rateLimit from "express-rate-limit";
+const unlockLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  max: process.env.NODE_ENV === "production" ? 5 : 1000,
+  keyGenerator: (req) => `${req.ip}:${req.params.id}`,
+  handler: (_req, res) =>
+    res.status(429).json({ error: "Too many unlock attempts. Try again in 15 minutes.", code: "UNLOCK_RATE_LIMITED" }),
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
 import { z } from "zod/v4";
 import crypto from "crypto";
 import { invalidateSiteCache } from "../lib/domainCache";
@@ -159,7 +172,7 @@ router.patch("/sites/:id/visibility", writeLimiter, asyncHandler(async (req: Req
 }));
 
 /** POST /api/sites/:id/unlock — verify password, issue HMAC-signed unlock cookie */
-router.post("/sites/:id/unlock", asyncHandler(async (req: Request, res: Response) => {
+router.post("/sites/:id/unlock", unlockLimiter, asyncHandler(async (req: Request, res: Response) => {
   const siteId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(siteId)) throw AppError.badRequest("Invalid site ID");
 

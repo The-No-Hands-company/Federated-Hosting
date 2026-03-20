@@ -34,6 +34,11 @@ function recordHit(siteId: number, path: string, req: Request, bytesServed: numb
   db.insert(analyticsBufferTable)
     .values({ siteId, path, referrer, ipHash, bytesServed })
     .catch(() => {});
+
+  // Broadcast to any SSE subscribers watching this site in real-time
+  import("../routes/analytics").then(m => {
+    m.broadcastAnalyticsHit(siteId, path, referrer);
+  }).catch(() => {});
 }
 
 /** Verify HMAC-signed unlock cookie issued by POST /api/sites/:id/unlock */

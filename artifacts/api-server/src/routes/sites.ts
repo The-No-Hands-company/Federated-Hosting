@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, count, ilike, or } from "drizzle-orm";
+import { eq, count, ilike, or, sql } from "drizzle-orm";
 import { db, sitesTable, nodesTable } from "@workspace/db";
 import {
   CreateSiteBody,
@@ -43,7 +43,9 @@ router.get("/sites", asyncHandler(async (req, res) => {
   const ownerId = req.query.ownerId as string | undefined;
 
   const whereClause = search
-    ? or(ilike(sitesTable.name, `%${search}%`), ilike(sitesTable.domain, `%${search}%`))
+    ? search.length >= 3
+      ? sql`"search_vector" @@ plainto_tsquery('english', ${search})`
+      : or(ilike(sitesTable.name, `%${search}%`), ilike(sitesTable.domain, `%${search}%`))
     : statusFilter
     ? eq(sitesTable.status, statusFilter as "active" | "suspended" | "migrating")
     : ownerId
