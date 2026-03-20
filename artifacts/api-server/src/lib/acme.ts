@@ -1,22 +1,31 @@
 /**
  * ACME / Let's Encrypt TLS automation.
  *
- * Full implementation using the `acme-client` library:
- *   1. Creates/reuses an ACME account (stored in DB node settings)
- *   2. Places an HTTP-01 challenge order
- *   3. Serves challenge tokens at /.well-known/acme-challenge/<token>
- *   4. Finalises the order, downloads the certificate
- *   5. Writes cert + key to ACME_CERT_DIR/<domain>/
- *   6. Schedules renewal 30 days before expiry
+ * Full implementation using the `acme-client` library.
+ * Supports two challenge types — choose based on your infrastructure:
+ *
+ * HTTP-01 (default, ACME_CHALLENGE_TYPE=http):
+ *   - Server must be reachable on port 80 from Let's Encrypt
+ *   - Simpler setup — no DNS API credentials needed
+ *   - Set ACME_CHALLENGE_TYPE=http or leave unset
+ *
+ * DNS-01 (ACME_CHALLENGE_TYPE=dns):
+ *   - No port 80 required — works behind NAT, firewalls, private networks
+ *   - Requires DNS provider API access (see ACME_DNS_PROVIDER)
+ *   - Supports wildcard certificates
+ *   - Operators must implement DNS record creation in the challengeCreateFn
+ *   - Set ACME_CHALLENGE_TYPE=dns and ACME_DNS_PROVIDER=<provider>
  *
  * Environment variables:
- *   ACME_ENABLED=true          — activate this module
- *   ACME_EMAIL=you@example.com — Let's Encrypt account email (required)
- *   ACME_CERT_DIR=/etc/certs   — where certs are written (default: /etc/certs)
- *   ACME_STAGING=true          — use Let's Encrypt staging CA (default: false)
+ *   ACME_ENABLED=true           — activate this module
+ *   ACME_EMAIL=you@example.com  — Let's Encrypt account email (required)
+ *   ACME_CERT_DIR=/etc/certs    — where certs are written (default: /etc/certs)
+ *   ACME_STAGING=true           — use Let's Encrypt staging CA (safer for testing)
+ *   ACME_CHALLENGE_TYPE=http    — http (default) or dns
+ *   ACME_DNS_PROVIDER=          — DNS provider identifier (cloudflare, route53, etc.)
  *
- * Challenge tokens are served by the ACME challenge route in routes/tls.ts.
- * The server MUST be reachable on port 80 from Let's Encrypt servers.
+ * For DNS-01, the node operator must configure a DNS provider hook.
+ * See docs/TLS.md for per-provider setup instructions.
  */
 
 import acme from "acme-client";
@@ -92,7 +101,22 @@ export interface ProvisionResult {
   certPath?: string;
   keyPath?: string;
   expiresAt?: string;
+  challengeType?: "http-01" | "dns-01";
   error?: string;
+}
+
+// DNS-01 challenge hook type — operators implement this for their DNS provider
+export type DnsChallengeFn = (domain: string, txtValue: string) => Promise<void>;
+export type DnsCleanupFn  = (domain: string, txtValue: string) => Promise<void>;
+
+// Operator-registered DNS hooks (set before startAcmeRenewalScheduler)
+let dnsCreateHook: DnsChallengeFn | null = null;
+let dnsCleanupHook: DnsCleanupFn | null = null;
+
+export function registerDnsHooks(create: DnsChallengeFn, cleanup: DnsCleanupFn): void {
+  dnsCreateHook = create;
+  dnsCleanupHook = cleanup;
+  logger.info("[acme] DNS-01 challenge hooks registered");
 }
 
 /** Provision or renew a TLS certificate for the given domain */
@@ -104,39 +128,61 @@ export async function provisionCertificate(domain: string): Promise<ProvisionRes
     return { success: false, domain, error: "ACME_EMAIL must be set" };
   }
 
-  logger.info({ domain, staging: STAGING }, "[acme] Starting certificate provisioning");
+  const challengeType = (process.env.ACME_CHALLENGE_TYPE ?? "http") === "dns" ? "dns-01" : "http-01";
+
+  if (challengeType === "dns-01" && (!dnsCreateHook || !dnsCleanupHook)) {
+    return {
+      success: false,
+      domain,
+      error: "ACME_CHALLENGE_TYPE=dns requires DNS hooks. See docs/TLS.md for setup.",
+    };
+  }
+
+  logger.info({ domain, challengeType, staging: STAGING }, "[acme] Starting certificate provisioning");
 
   try {
     const client = await getClient();
 
-    // Generate a new key for this domain
     const [domainKey, csr] = await acme.crypto.createCsr({
       commonName: domain,
       altNames: [domain],
     });
 
     let challengeToken = "";
-    let challengeKeyAuth = "";
 
     const cert = await client.auto({
       csr,
       email: EMAIL,
       termsOfServiceAgreed: true,
+      challengePriority: [challengeType],
 
-      challengePriority: ["http-01"], // HTTP-01 only — no DNS required
-
-      challengeCreateFn: async (_authz, _challenge, keyAuthorization) => {
-        const parts = keyAuthorization.split(".");
-        challengeToken = parts[0] ?? "";
-        challengeKeyAuth = keyAuthorization;
-        // Register challenge for the challenge-serving route
-        acmeChallenges.set(challengeToken, keyAuthorization);
-        logger.debug({ domain, token: challengeToken }, "[acme] HTTP-01 challenge registered");
+      challengeCreateFn: async (_authz, challenge, keyAuthorization) => {
+        if (challenge.type === "http-01") {
+          const parts = keyAuthorization.split(".");
+          challengeToken = parts[0] ?? "";
+          acmeChallenges.set(challengeToken, keyAuthorization);
+          logger.debug({ domain, token: challengeToken }, "[acme] HTTP-01 challenge registered");
+        } else if (challenge.type === "dns-01") {
+          // DNS-01: create _acme-challenge.<domain> TXT record
+          const txtValue = (await acme.crypto.digest("SHA-256", Buffer.from(keyAuthorization)))
+            .toString("base64url");
+          await dnsCreateHook!(domain, txtValue);
+          logger.debug({ domain }, "[acme] DNS-01 TXT record created — waiting for propagation");
+          // Wait for DNS propagation (30s min — operators can increase via env)
+          const propagationWait = parseInt(process.env.ACME_DNS_PROPAGATION_WAIT ?? "30000", 10);
+          await new Promise(res => setTimeout(res, propagationWait));
+        }
       },
 
-      challengeRemoveFn: async (_authz, _challenge, _keyAuthorization) => {
-        acmeChallenges.delete(challengeToken);
-        logger.debug({ domain }, "[acme] HTTP-01 challenge removed");
+      challengeRemoveFn: async (_authz, challenge, keyAuthorization) => {
+        if (challenge.type === "http-01") {
+          acmeChallenges.delete(challengeToken);
+        } else if (challenge.type === "dns-01") {
+          const txtValue = (await acme.crypto.digest("SHA-256", Buffer.from(keyAuthorization)))
+            .toString("base64url");
+          await dnsCleanupHook!(domain, txtValue).catch(() => {});
+          logger.debug({ domain }, "[acme] DNS-01 TXT record cleaned up");
+        }
       },
     });
 
@@ -147,9 +193,8 @@ export async function provisionCertificate(domain: string): Promise<ProvisionRes
     fs.writeFileSync(keyPath(domain), domainKey, { mode: 0o600 });
 
     const expiry = getCertExpiry(domain);
-    logger.info({ domain, expiresAt: expiry?.toISOString() }, "[acme] Certificate provisioned");
+    logger.info({ domain, challengeType, expiresAt: expiry?.toISOString() }, "[acme] Certificate provisioned");
 
-    // Update domain record in DB
     await db.update(customDomainsTable)
       .set({ verifiedAt: new Date(), status: "verified", lastCheckedAt: new Date() })
       .where(eq(customDomainsTable.domain, domain));
@@ -160,6 +205,7 @@ export async function provisionCertificate(domain: string): Promise<ProvisionRes
       certPath: certPath(domain),
       keyPath: keyPath(domain),
       expiresAt: expiry?.toISOString(),
+      challengeType,
     };
 
   } catch (err: any) {

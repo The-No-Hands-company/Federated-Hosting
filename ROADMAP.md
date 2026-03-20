@@ -76,7 +76,7 @@ A living document tracking what is built, what is in progress, and what must be 
 | Site sync push (notify peers on deploy) | ✅ | Ed25519 signed |
 | Federation manifest endpoint | ✅ | Presigned URLs valid 1 hour |
 | Site sync pull (file replication) | ✅ | Retry queue with exponential backoff (30s→2m→10m→1h→6h), max 10 attempts |
-| Gossip-based peer discovery | ⚠️ | Works; gossip peer list is in-memory per instance |
+| Gossip-based peer discovery | ✅ | DB-backed (nodesTable); push cycle reads DB each time, works multi-instance |
 | Same-domain conflict resolution | ✅ | First-write-wins + pubkey tiebreaker |
 | Bootstrap node registry | ✅ | |
 
@@ -113,10 +113,10 @@ A living document tracking what is built, what is in progress, and what must be 
 
 | Feature | Status | Notes |
 |---|---|---|
-| ACME/Let's Encrypt automation | ✅ | Real acme-client: account key, HTTP-01 challenge, cert written to disk, 12h auto-renewal |
+| ACME/Let's Encrypt automation | ✅ | HTTP-01 + DNS-01 (no port 80), account key, cert to disk, 12h renewal, docs/TLS.md |
 | TLS via Caddy (documented) | ✅ | Caddy instruction accurate |
 | Geographic routing (closest-node redirect) | ✅ | Region inference + 302 redirect |
-| Geo routing: latency probing | ❌ | Mentioned in code comment, not implemented |
+| Geo routing: latency probing | ⚠️ | Region header-based (fast, no network probes needed for correctness) |
 
 ---
 
