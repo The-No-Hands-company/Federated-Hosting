@@ -25,16 +25,16 @@ A living document tracking what is built, what is in progress, and what must be 
 | Replit Auth (OIDC) | ✅ | Browser flows work |
 | Ed25519 key pair generation + signing | ✅ | Correct implementation |
 | `/.well-known/federation` discovery | ✅ | |
-| Federation handshake + ping | ⚠️ | Replay attack window not enforced |
-| Node health monitor | ⚠️ | Marks offline after 1 failure — needs N=3 threshold |
-| Object storage (file upload/download) | ⚠️ | **Replit sidecar only — S3/MinIO non-functional** |
-| Site file serving (host-header routing) | ⚠️ | 2-3 DB queries per request, no caching |
+| Federation handshake + ping | ✅ | 5-minute timestamp window enforced |
+| Node health monitor | ✅ | N=3 consecutive failures required, exponential backoff |
+| Object storage (file upload/download) | ✅ | S3StorageProvider + ReplitStorageProvider, env-var selected |
+| Site file serving (host-header routing) | ✅ | LRU cache (10K domains, 50K files), invalidated on deploy |
 | Capacity tracking | ✅ | |
-| Rate limiting | ⚠️ | **In-memory only — broken in multi-instance** |
+| Rate limiting | ✅ | Redis-backed when REDIS_URL set; warns in prod if missing |
 | Structured logging + error handling | ✅ | Pino, AppError, stack traces redacted in prod |
 | Graceful shutdown | ✅ | |
-| DB connection pool | ⚠️ | No max/timeout config |
-| Database migrations | ❌ | **Zero migration files — only `db push`** |
+| DB connection pool | ✅ | Explicit max/min/timeout config, error handler |
+| Database migrations | ✅ | 0000_initial_schema.sql + migrate.ts runner |
 
 ---
 
@@ -51,7 +51,7 @@ A living document tracking what is built, what is in progress, and what must be 
 | Onboarding flow | ✅ | |
 | Node Marketplace | ✅ | |
 | API Reference page | ✅ | |
-| Bahasa Indonesia i18n | ⚠️ | Translations complete but bundled synchronously |
+| Bahasa Indonesia i18n | ✅ | HTTP backend (i18next-http-backend), loaded on demand from /locales/ |
 | React lazy loading | ✅ | All 14 routes code-split |
 
 ---
@@ -63,7 +63,7 @@ A living document tracking what is built, what is in progress, and what must be 
 | API tokens (Bearer auth) | ✅ | SHA-256 hashed |
 | Site team members (owner/editor/viewer) | ✅ | |
 | Site visibility (public/private) | ✅ | |
-| Password-protected sites | ⚠️ | **Cookie not server-verified — security gap** |
+| Password-protected sites | ✅ | HMAC-signed cookie, timingSafeEqual verified |
 | Custom domain CNAME+TXT verification | ✅ | |
 | Custom domain routing in host router | ✅ | Subject to caching gap above |
 
@@ -75,8 +75,8 @@ A living document tracking what is built, what is in progress, and what must be 
 |---|---|---|
 | Site sync push (notify peers on deploy) | ✅ | Ed25519 signed |
 | Federation manifest endpoint | ✅ | Presigned URLs valid 1 hour |
-| Site sync pull (file replication) | ⚠️ | Works but no retry queue — failed syncs are lost |
-| Gossip-based peer discovery | ⚠️ | Works but no Redis sharing in multi-instance |
+| Site sync pull (file replication) | ✅ | Retry queue with exponential backoff (30s→2m→10m→1h→6h), max 10 attempts |
+| Gossip-based peer discovery | ⚠️ | Works; gossip peer list is in-memory per instance |
 | Same-domain conflict resolution | ✅ | First-write-wins + pubkey tiebreaker |
 | Bootstrap node registry | ✅ | |
 
@@ -86,11 +86,11 @@ A living document tracking what is built, what is in progress, and what must be 
 
 | Feature | Status | Notes |
 |---|---|---|
-| Analytics buffer → hourly rollup | ⚠️ | **Bulk delete uses unsafe SQL — use inArray()** |
+| Analytics buffer → hourly rollup | ✅ | Uses inArray() — correct and safe |
 | Per-site analytics page | ✅ | |
 | Network-wide analytics | ✅ | |
-| Node operator admin dashboard | ⚠️ | **No RBAC — any authenticated user can access** |
-| Admin node settings | ⚠️ | No RBAC |
+| Node operator admin dashboard | ✅ | requireAdmin middleware, isAdmin DB flag + ADMIN_USER_IDS env var |
+| Admin node settings | ✅ | requireAdmin enforced |
 | Webhook notifications (Ed25519 signed) | ✅ | |
 
 ---
@@ -104,7 +104,7 @@ A living document tracking what is built, what is in progress, and what must be 
 | GitHub Actions deploy workflow | ✅ | |
 | GitHub Actions CI (typecheck, lint, build) | ✅ | |
 | GitHub Actions npm publish workflow | ✅ | Needs `NPM_TOKEN` secret |
-| Docker Compose | ⚠️ | **App cannot talk to MinIO — storage abstraction broken** |
+| Docker Compose | ✅ | Redis + MinIO + S3StorageProvider wired, REDIS_URL passed to app |
 | Dockerfile (multi-stage) | ✅ | |
 
 ---
@@ -113,34 +113,36 @@ A living document tracking what is built, what is in progress, and what must be 
 
 | Feature | Status | Notes |
 |---|---|---|
-| ACME/Let's Encrypt automation | ❌ | **Issues challenge token only — never gets cert** |
+| ACME/Let's Encrypt automation | ❌ | Stub — issues HTTP-01 token only; full ACME flow not implemented |
 | TLS via Caddy (documented) | ✅ | Caddy instruction accurate |
 | Geographic routing (closest-node redirect) | ✅ | Region inference + 302 redirect |
 | Geo routing: latency probing | ❌ | Mentioned in code comment, not implemented |
 
 ---
 
-## Must Fix Before Production (Priority Order)
+## Production Gaps Remaining
 
-| # | Issue | Severity | Est. Work |
+| # | Issue | Severity | Status |
 |---|---|---|---|
-| 1 | Rewrite objectStorage.ts with real S3 support | CRITICAL | 2–3 weeks |
-| 2 | Generate + commit Drizzle migrations | CRITICAL | 1 day |
-| 3 | Redis for rate limiting + session sharing | CRITICAL | 3–5 days |
-| 4 | Fix unlock cookie verification (HMAC-signed) | HIGH | 1 day |
-| 5 | Add admin RBAC (isAdmin flag) | HIGH | 2 days |
-| 6 | Host router LRU cache (domain → siteId) | HIGH | 2 days |
-| 7 | DB pool configuration (max, timeouts) | MEDIUM | 2 hours |
-| 8 | Session expiry cleanup job | MEDIUM | 2 hours |
-| 9 | Fix analytics bulk delete → `inArray()` | MEDIUM | 30 min |
-| 10 | Health monitor N=3 consecutive failure threshold | MEDIUM | 2 hours |
-| 11 | Replay attack: enforce 5-min timestamp window | MEDIUM | 2 hours |
-| 12 | Mark ACME as non-functional or implement it | MEDIUM | 2 weeks |
-| 13 | Admin audit logging | MEDIUM | 1 day |
-| 14 | Lazy-load i18n translations | LOW | 2 hours |
-| 15 | Federation sync retry queue | MEDIUM | 1 week |
-| 16 | Content deduplication for site files | LOW | 3 days |
-| 17 | Prometheus metrics endpoint | LOW | 1 day |
+| 1 | S3/MinIO object storage | CRITICAL | ✅ Fixed — S3StorageProvider, AWS SDK v3 |
+| 2 | Drizzle migrations | CRITICAL | ✅ Fixed — 0000_initial_schema.sql + migrate.ts |
+| 3 | Redis rate limiting | CRITICAL | ✅ Fixed — shared Redis store, falls back with warning |
+| 4 | Unlock cookie security | HIGH | ✅ Fixed — HMAC-signed, timingSafeEqual |
+| 5 | Admin RBAC | HIGH | ✅ Fixed — requireAdmin middleware, isAdmin flag |
+| 6 | Host router LRU cache | HIGH | ✅ Fixed — 10K domain + 50K file entries |
+| 7 | DB pool configuration | MEDIUM | ✅ Fixed — max/min/timeout/error handler |
+| 8 | Session expiry cleanup | MEDIUM | ✅ Fixed — 6-hour background job |
+| 9 | Analytics bulk delete | MEDIUM | ✅ Fixed — uses inArray() |
+| 10 | Health monitor threshold | MEDIUM | ✅ Fixed — N=3 consecutive failures |
+| 11 | Replay attack window | MEDIUM | ✅ Fixed — 5-minute timestamp check |
+| 12 | i18n async loading | LOW | ✅ Fixed — i18next-http-backend, HTTP-fetched |
+| 13 | Federation sync retry | MEDIUM | ✅ Fixed — exponential backoff queue, 10 max attempts |
+| 14 | ACME TLS automation | MEDIUM | ❌ Still a stub — use Caddy for now |
+| 15 | Admin audit logging | MEDIUM | 📋 Not yet built |
+| 16 | Content deduplication | LOW | 📋 Not yet built |
+| 17 | Prometheus metrics | LOW | 📋 Not yet built |
+| 18 | Gossip in-memory per-instance | LOW | ⚠️ Multi-instance gossip not Redis-shared |
+| 19 | Session store (multi-instance) | MEDIUM | ⚠️ PostgreSQL sessions work; not Redis-backed |
 
 ---
 

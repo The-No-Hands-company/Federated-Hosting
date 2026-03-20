@@ -7,6 +7,7 @@ import { asyncHandler, AppError } from "../lib/errors";
 import { uploadLimiter } from "../middleware/rateLimiter";
 import { webhookDeploy, webhookDeployFailed } from "../lib/webhooks";
 import { invalidateSiteCache } from "../lib/domainCache";
+import { enqueueSyncRetry } from "../lib/syncRetryQueue";
 import {
   GetSiteFileUploadUrlBody,
   RegisterSiteFileBody,
@@ -196,12 +197,17 @@ router.post("/sites/:id/deploy", asyncHandler(async (req: Request, res: Response
           headers: {
             "Content-Type": "application/json",
             ...(signature ? { "X-Federation-Signature": signature } : {}),
+            ...(localNode?.domain ? { "X-Federation-From": localNode.domain } : {}),
           },
           body: payload,
           signal: AbortSignal.timeout(5000),
         });
 
         replicationResults.push({ node: peer.domain, success: syncRes.ok });
+
+        if (!syncRes.ok) {
+          enqueueSyncRetry({ siteDomain: site.domain, deploymentId: deployment.id, targetNodeDomain: peer.domain, error: `HTTP ${syncRes.status}` });
+        }
 
         await db.insert(federationEventsTable).values({
           eventType: "site_sync",
@@ -212,7 +218,8 @@ router.post("/sites/:id/deploy", asyncHandler(async (req: Request, res: Response
         });
       } catch (err: any) {
         replicationResults.push({ node: peer.domain, success: false, error: err.message });
-        logger.warn({ peer: peer.domain, err: err.message }, "Replication to peer failed");
+        logger.warn({ peer: peer.domain, err: err.message }, "Replication to peer failed — queued for retry");
+        enqueueSyncRetry({ siteDomain: site.domain, deploymentId: deployment.id, targetNodeDomain: peer.domain, error: err.message });
       }
     }),
   );

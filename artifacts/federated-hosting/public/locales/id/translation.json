@@ -1,0 +1,243 @@
+{
+  "nav": {
+    "dashboard": "Dasbor",
+    "federationNodes": "Node Federasi",
+    "hostedSites": "Situs Dihosting",
+    "sitesDirectory": "Direktori Situs",
+    "federationProtocol": "Protokol Federasi",
+    "mySites": "Situs Saya",
+    "apiTokens": "Token API",
+    "nodeAdmin": "Admin Node"
+  },
+  "common": {
+    "signIn": "Masuk",
+    "signOut": "Keluar",
+    "getStarted": "Mulai",
+    "learnMore": "Pelajari Lebih Lanjut",
+    "loading": "Memuat…",
+    "error": "Galat",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "create": "Buat",
+    "back": "Kembali",
+    "next": "Berikutnya",
+    "done": "Selesai",
+    "copy": "Salin",
+    "copied": "Disalin!",
+    "refresh": "Perbarui",
+    "search": "Cari",
+    "filter": "Saring",
+    "noData": "Belum ada data.",
+    "viewLive": "Lihat Langsung",
+    "openSite": "Buka Situs",
+    "deploy": "Terapkan",
+    "analytics": "Analitik",
+    "settings": "Pengaturan",
+    "status": {
+      "active": "Aktif",
+      "inactive": "Tidak Aktif",
+      "suspended": "Ditangguhkan",
+      "migrating": "Migrasi",
+      "pending": "Menunggu",
+      "verified": "Terverifikasi",
+      "failed": "Gagal"
+    }
+  },
+  "dashboard": {
+    "title": "Ikhtisar Federasi",
+    "subtitle": "Telemetri real-time dan status konsensus jaringan.",
+    "welcome": "Selamat Datang di Federated Hosting",
+    "welcomeSubtitle": "Masuk untuk mendaftarkan situs Anda, mengunggah file, dan menerapkan ke jaringan federasi.",
+    "stats": {
+      "activeNodes": "Node Aktif",
+      "hostedSites": "Situs Dihosting",
+      "networkUptime": "Uptime Jaringan",
+      "totalBandwidth": "Total Bandwidth",
+      "storageAllocated": "Penyimpanan Dialokasikan"
+    },
+    "chart": {
+      "title": "Aktivitas Federasi (24j)",
+      "subtitle": "Penerapan dan peristiwa federasi per jam",
+      "noActivity": "Tidak ada aktivitas dalam 24 jam terakhir",
+      "noActivityHint": "Aktivitas akan muncul di sini saat node berkomunikasi dan situs diterapkan"
+    },
+    "consensus": {
+      "title": "Konsensus Node",
+      "subtitle": "Status langsung semua node federasi"
+    }
+  },
+  "mySites": {
+    "title": "Situs Saya",
+    "subtitle_one": "{{count}} situs di federasi",
+    "subtitle_other": "{{count}} situs di federasi",
+    "newSite": "+ Situs Baru",
+    "noSites": "Belum ada situs",
+    "noSitesHint": "Daftarkan situs pertama Anda untuk mulai hosting di federasi.",
+    "signInPrompt": "Masuk untuk mengelola situs yang dihosting dan menerapkan konten.",
+    "hits": "kunjungan",
+    "deploy": "Terapkan",
+    "analytics": "Analitik"
+  },
+  "deploy": {
+    "title": "Unggah File",
+    "subtitle": "Seret HTML, CSS, JS, gambar dan aset lainnya. File diunggah langsung ke penyimpanan objek.",
+    "dropzone": "Seret file ke sini atau klik untuk memilih",
+    "dropzoneHint": "HTML, CSS, JS, gambar, font · 50 MB per file",
+    "uploadFiles_one": "Unggah {{count}} File",
+    "uploadFiles_other": "Unggah {{count}} File",
+    "clear": "Bersihkan",
+    "deploySite": "Terapkan Situs",
+    "deploying": "Menerapkan…",
+    "deployed": "Berhasil Diterapkan!",
+    "deployedMsg": "Situs Anda sekarang sudah aktif.",
+    "deployFailed": "Penerapan gagal",
+    "preview": {
+      "title": "Pratinjau Situs",
+      "noIndex": "Tidak ada index.html — situs mungkin tidak dapat dimuat dengan benar.",
+      "live": "aktif",
+      "pending": "menunggu",
+      "queued": "antrean"
+    },
+    "history": {
+      "title": "Riwayat Penerapan",
+      "noDeployments": "Belum ada penerapan.",
+      "rollback": "Kembalikan",
+      "rollingBack": "Mengembalikan…",
+      "rolledBack": "Berhasil Dikembalikan!",
+      "rolledBackMsg": "Situs sekarang menggunakan versi sebelumnya.",
+      "rollbackFailed": "Pengembalian gagal",
+      "replicated": "↙ direplikasi"
+    }
+  },
+  "analytics": {
+    "title": "Analitik",
+    "periods": {
+      "24h": "24 jam",
+      "7d": "7 hari",
+      "30d": "30 hari"
+    },
+    "stats": {
+      "totalHits": "Total Kunjungan",
+      "uniqueVisitors": "Pengunjung Unik",
+      "bandwidth": "Bandwidth",
+      "allTimeHits": "Total Kunjungan Sepanjang Waktu"
+    },
+    "hitsOverTime": "Kunjungan Dari Waktu ke Waktu",
+    "hitsSubtitle": "Jumlah permintaan per bucket untuk periode yang dipilih",
+    "topPages": "Halaman Teratas",
+    "topPagesSubtitle": "Jalur file yang paling sering dilayani",
+    "topReferrers": "Perujuk Teratas",
+    "topReferrersSubtitle": "Dari mana lalu lintas Anda berasal",
+    "noData": "Belum ada data lalu lintas untuk periode ini.",
+    "noPathData": "Belum ada data jalur.",
+    "noReferrerData": "Belum ada data perujuk.",
+    "direct": "(langsung)"
+  },
+  "tokens": {
+    "title": "Token API",
+    "subtitle": "Token jangka panjang untuk CLI dan alat eksternal",
+    "newToken": "Token Baru",
+    "noTokens": "Belum ada token aktif.",
+    "noTokensHint": "Buat token untuk mengautentikasi CLI atau alat eksternal.",
+    "create": {
+      "title": "Buat Token API",
+      "namePlaceholder": "misalnya laptop-cli",
+      "nameLabel": "Nama token",
+      "expiryLabel": "Kedaluwarsa dalam (hari)",
+      "expiryHint": "— kosongkan untuk tanpa kedaluwarsa",
+      "expiryPlaceholder": "misalnya 365",
+      "creating": "Membuat…",
+      "createButton": "Buat Token"
+    },
+    "created": {
+      "title": "Token Dibuat",
+      "warning": "Ini adalah satu-satunya saat token ini ditampilkan. Simpan dengan aman.",
+      "cliHint": "Gunakan dengan CLI:"
+    },
+    "revoke": "Cabut",
+    "revoked": "Token dicabut",
+    "revokedMsg": "Token tidak lagi valid.",
+    "lastUsed": "Terakhir digunakan",
+    "never": "tidak pernah",
+    "expires": "Kedaluwarsa",
+    "quickstart": {
+      "title": "CLI FedHost",
+      "subtitle": "Buat token di atas, lalu autentikasi CLI dengan satu perintah."
+    }
+  },
+  "admin": {
+    "title": "Admin Node",
+    "edit": "Ubah Node",
+    "editCancel": "Batal",
+    "saving": "Menyimpan…",
+    "saveChanges": "Simpan Perubahan",
+    "saved": "Pengaturan node diperbarui",
+    "sections": {
+      "system": "Sistem",
+      "nodeIdentity": "Identitas Node",
+      "recentEvents": "Peristiwa Federasi Terbaru",
+      "recentEventsSubtitle": "10 peristiwa terakhir yang dicatat node ini"
+    },
+    "fields": {
+      "name": "Nama Node",
+      "region": "Wilayah",
+      "operatorEmail": "Email Operator",
+      "maxStorage": "Penyimpanan Maks (GB)",
+      "platform": "Platform",
+      "hostname": "Nama Host",
+      "nodeVersion": "Node.js",
+      "uptime": "Uptime",
+      "loadAvg": "Rata-rata Beban",
+      "memory": "Memori",
+      "domain": "Domain",
+      "status": "Status",
+      "joined": "Bergabung",
+      "storage": "Penyimpanan",
+      "publicKey": "Kunci Publik (Ed25519)"
+    },
+    "noEvents": "Belum ada peristiwa."
+  },
+  "federation": {
+    "title": "Protokol Federasi",
+    "peers": "Rekan Federasi",
+    "events": "Log Peristiwa",
+    "handshake": "Mulai Jabat Tangan",
+    "nodeIdentity": "Identitas Node",
+    "capabilities": "Kapabilitas"
+  },
+  "onboarding": {
+    "title": "Memulai",
+    "banner": {
+      "title": "Selamat Datang di Federated Hosting",
+      "subtitle": "Terapkan situs pertama Anda dalam 4 langkah — masuk, daftar, unggah, aktifkan."
+    },
+    "steps": {
+      "signin": {
+        "title": "Masuk",
+        "description": "Buat akun Anda dengan satu klik."
+      },
+      "register": {
+        "title": "Daftarkan situs",
+        "description": "Beri nama dan domain pada situs Anda."
+      },
+      "upload": {
+        "title": "Unggah file Anda",
+        "description": "Seret & lepas HTML, CSS, JS dan aset."
+      },
+      "deploy": {
+        "title": "Terapkan",
+        "description": "Aktifkan dan replikasi ke seluruh jaringan."
+      }
+    }
+  },
+  "errors": {
+    "loadFailed": "Gagal memuat data.",
+    "deployFailed": "Penerapan gagal",
+    "authRequired": "Autentikasi diperlukan",
+    "authRequiredMsg": "Masuk untuk mengakses halaman ini.",
+    "notFound": "Tidak ditemukan.",
+    "serverError": "Galat server"
+  }
+}

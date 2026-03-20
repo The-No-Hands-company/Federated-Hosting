@@ -11,6 +11,21 @@ version: "3.9"
 
 services:
 
+  # ── Redis (shared rate-limit + session store) ─────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fedhost
+
   # ── PostgreSQL ─────────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
@@ -111,12 +126,17 @@ services:
 
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
 
+      # ── Redis (shared rate limiting + cache) ─────────────────────────────
+      REDIS_URL: redis://redis:6379
+
     depends_on:
       db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
       minio:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/live || exit 1"]
@@ -130,6 +150,7 @@ services:
 volumes:
   db_data:
   minio_data:
+  redis_data:
 
 networks:
   fedhost:

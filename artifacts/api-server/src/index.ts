@@ -5,6 +5,8 @@ import { generateKeyPair } from "./lib/federation";
 import { startHealthMonitor } from "./lib/healthMonitor";
 import { startAnalyticsFlusher, stopAnalyticsFlusher } from "./lib/analyticsFlush";
 import { startGossipPusher, stopGossipPusher } from "./routes/gossip";
+import { getRedisClient, closeRedis } from "./lib/redis";
+import { startSyncRetryQueue, stopSyncRetryQueue } from "./lib/syncRetryQueue";
 import { db, sessionsTable } from "@workspace/db";
 import { lt } from "drizzle-orm";
 import { seedBundledSites } from "./lib/seedBundledSites";
@@ -60,6 +62,8 @@ function gracefulShutdown(server: http.Server, signal: string): void {
     try {
       stopAnalyticsFlusher();
       stopGossipPusher();
+      stopSyncRetryQueue();
+      await closeRedis();
       const { pool } = await import("@workspace/db");
       await pool.end();
       logger.info("Database pool closed");
@@ -92,6 +96,13 @@ ensureLocalNode()
     startHealthMonitor();
     startAnalyticsFlusher();
     startGossipPusher();
+    startSyncRetryQueue();
+
+    // Initialise Redis connection (optional — falls back to in-memory if not configured)
+    const redis = getRedisClient();
+    if (redis) {
+      await redis.connect().catch(() => {}); // errors handled via 'error' event
+    }
 
     // Session expiry cleanup — purge expired sessions every 6 hours
     // Prevents unbounded growth of the sessions table

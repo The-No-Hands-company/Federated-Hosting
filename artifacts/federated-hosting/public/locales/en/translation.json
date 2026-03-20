@@ -1,0 +1,243 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "federationNodes": "Federation Nodes",
+    "hostedSites": "Hosted Sites",
+    "sitesDirectory": "Sites Directory",
+    "federationProtocol": "Federation Protocol",
+    "mySites": "My Sites",
+    "apiTokens": "API Tokens",
+    "nodeAdmin": "Node Admin"
+  },
+  "common": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "loading": "Loading…",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "refresh": "Refresh",
+    "search": "Search",
+    "filter": "Filter",
+    "noData": "No data yet.",
+    "viewLive": "View Live",
+    "openSite": "Open Site",
+    "deploy": "Deploy",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "migrating": "Migrating",
+      "pending": "Pending",
+      "verified": "Verified",
+      "failed": "Failed"
+    }
+  },
+  "dashboard": {
+    "title": "Federation Overview",
+    "subtitle": "Real-time telemetry and network consensus state.",
+    "welcome": "Welcome to Federated Hosting",
+    "welcomeSubtitle": "Sign in to register your own site, upload files, and deploy to the federation network.",
+    "stats": {
+      "activeNodes": "Active Nodes",
+      "hostedSites": "Hosted Sites",
+      "networkUptime": "Network Uptime",
+      "totalBandwidth": "Total Bandwidth",
+      "storageAllocated": "Storage Allocated"
+    },
+    "chart": {
+      "title": "Federation Activity (24h)",
+      "subtitle": "Deployments and federation events per hour",
+      "noActivity": "No activity in the last 24 hours",
+      "noActivityHint": "Activity will appear here as nodes communicate and sites are deployed"
+    },
+    "consensus": {
+      "title": "Node Consensus",
+      "subtitle": "Live status of all federation nodes"
+    }
+  },
+  "mySites": {
+    "title": "My Sites",
+    "subtitle_one": "{{count}} site on the federation",
+    "subtitle_other": "{{count}} sites on the federation",
+    "newSite": "+ New Site",
+    "noSites": "No sites yet",
+    "noSitesHint": "Register your first site to start hosting on the federation.",
+    "signInPrompt": "Sign in to manage your hosted sites and deploy content.",
+    "hits": "hits",
+    "deploy": "Deploy",
+    "analytics": "Analytics"
+  },
+  "deploy": {
+    "title": "Upload Files",
+    "subtitle": "Drop HTML, CSS, JS, images and other assets. Files upload directly to object storage.",
+    "dropzone": "Drop files here or click to browse",
+    "dropzoneHint": "HTML, CSS, JS, images, fonts · 50 MB per file",
+    "uploadFiles_one": "Upload {{count}} File",
+    "uploadFiles_other": "Upload {{count}} Files",
+    "clear": "Clear",
+    "deploySite": "Deploy Site",
+    "deploying": "Deploying…",
+    "deployed": "Deployed!",
+    "deployedMsg": "Your site is now live.",
+    "deployFailed": "Deploy failed",
+    "preview": {
+      "title": "Site Preview",
+      "noIndex": "No index.html — site may not load correctly.",
+      "live": "live",
+      "pending": "pending",
+      "queued": "queued"
+    },
+    "history": {
+      "title": "Deployment History",
+      "noDeployments": "No deployments yet.",
+      "rollback": "Rollback",
+      "rollingBack": "Rolling back…",
+      "rolledBack": "Rolled back!",
+      "rolledBackMsg": "Site is now serving the previous version.",
+      "rollbackFailed": "Rollback failed",
+      "replicated": "↙ replicated"
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "periods": {
+      "24h": "24 hours",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
+    "stats": {
+      "totalHits": "Total Hits",
+      "uniqueVisitors": "Unique Visitors",
+      "bandwidth": "Bandwidth",
+      "allTimeHits": "All-time Hits"
+    },
+    "hitsOverTime": "Hits Over Time",
+    "hitsSubtitle": "Request count per bucket for the selected period",
+    "topPages": "Top Pages",
+    "topPagesSubtitle": "Most-served file paths",
+    "topReferrers": "Top Referrers",
+    "topReferrersSubtitle": "Where your traffic is coming from",
+    "noData": "No traffic data for this period yet.",
+    "noPathData": "No path data yet.",
+    "noReferrerData": "No referrer data yet.",
+    "direct": "(direct)"
+  },
+  "tokens": {
+    "title": "API Tokens",
+    "subtitle": "Long-lived tokens for the CLI and external tools",
+    "newToken": "New Token",
+    "noTokens": "No active tokens yet.",
+    "noTokensHint": "Create a token to authenticate the CLI or external tools.",
+    "create": {
+      "title": "Create API Token",
+      "namePlaceholder": "e.g. laptop-cli",
+      "nameLabel": "Token name",
+      "expiryLabel": "Expires in (days)",
+      "expiryHint": "— leave blank for no expiry",
+      "expiryPlaceholder": "e.g. 365",
+      "creating": "Creating…",
+      "createButton": "Create Token"
+    },
+    "created": {
+      "title": "Token Created",
+      "warning": "This is the only time this token will be shown. Store it securely.",
+      "cliHint": "Use with the CLI:"
+    },
+    "revoke": "Revoke",
+    "revoked": "Token revoked",
+    "revokedMsg": "The token is no longer valid.",
+    "lastUsed": "Last used",
+    "never": "never",
+    "expires": "Expires",
+    "quickstart": {
+      "title": "FedHost CLI",
+      "subtitle": "Create a token above, then authenticate the CLI in one command."
+    }
+  },
+  "admin": {
+    "title": "Node Admin",
+    "edit": "Edit Node",
+    "editCancel": "Cancel",
+    "saving": "Saving…",
+    "saveChanges": "Save Changes",
+    "saved": "Node settings updated",
+    "sections": {
+      "system": "System",
+      "nodeIdentity": "Node Identity",
+      "recentEvents": "Recent Federation Events",
+      "recentEventsSubtitle": "Last 10 events logged by this node"
+    },
+    "fields": {
+      "name": "Node Name",
+      "region": "Region",
+      "operatorEmail": "Operator Email",
+      "maxStorage": "Max Storage (GB)",
+      "platform": "Platform",
+      "hostname": "Hostname",
+      "nodeVersion": "Node.js",
+      "uptime": "Uptime",
+      "loadAvg": "Load Avg",
+      "memory": "Memory",
+      "domain": "Domain",
+      "status": "Status",
+      "joined": "Joined",
+      "storage": "Storage",
+      "publicKey": "Public Key (Ed25519)"
+    },
+    "noEvents": "No events yet."
+  },
+  "federation": {
+    "title": "Federation Protocol",
+    "peers": "Federation Peers",
+    "events": "Event Log",
+    "handshake": "Initiate Handshake",
+    "nodeIdentity": "Node Identity",
+    "capabilities": "Capabilities"
+  },
+  "onboarding": {
+    "title": "Getting Started",
+    "banner": {
+      "title": "Welcome to Federated Hosting",
+      "subtitle": "Deploy your first site in 4 steps — sign in, register, upload, go live."
+    },
+    "steps": {
+      "signin": {
+        "title": "Sign in",
+        "description": "Create your account with one click."
+      },
+      "register": {
+        "title": "Register a site",
+        "description": "Give your site a name and a domain."
+      },
+      "upload": {
+        "title": "Upload your files",
+        "description": "Drag & drop HTML, CSS, JS and assets."
+      },
+      "deploy": {
+        "title": "Deploy",
+        "description": "Go live and replicate across the network."
+      }
+    }
+  },
+  "errors": {
+    "loadFailed": "Failed to load data.",
+    "deployFailed": "Deploy failed",
+    "authRequired": "Authentication required",
+    "authRequiredMsg": "Sign in to access this page.",
+    "notFound": "Not found.",
+    "serverError": "Server error"
+  }
+}

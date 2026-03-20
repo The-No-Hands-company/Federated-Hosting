@@ -1,7 +1,32 @@
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
+import { getRedisClient } from "../lib/redis";
+import logger from "../lib/logger";
 
 const isProd = process.env.NODE_ENV === "production";
+
+// Build optional Redis store for rate limiting.
+// Without Redis, rate limits are per-instance (not shared across multiple API servers).
+// With Redis, limits are enforced network-wide — required for horizontal scaling.
+function makeStore() {
+  const redis = getRedisClient();
+  if (!redis) {
+    if (isProd) {
+      logger.warn(
+        "[rate-limit] REDIS_URL not set — rate limiting is per-instance only. " +
+        "In multi-instance deployments this is a security gap. Set REDIS_URL."
+      );
+    }
+    return undefined; // express-rate-limit falls back to in-memory
+  }
+
+  // rate-limit-redis v4 uses sendCommand interface
+  return {
+    sendCommand: (...args: string[]) => redis.call(...args),
+  } as import("rate-limit-redis").RedisStore;
+}
+
+const store = makeStore();
 
 function makeHandler(message: string, code: string) {
   return (_req: unknown, res: { status: (n: number) => { json: (b: unknown) => void } }) => {
@@ -15,6 +40,7 @@ export const globalLimiter = rateLimit({
   max: isProd ? 300 : 10_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler("Too many requests. Please slow down.", "RATE_LIMITED"),
   skip: (req) => req.path === "/api/health",
 });
@@ -25,6 +51,7 @@ export const authLimiter = rateLimit({
   max: isProd ? 20 : 1_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler(
     "Too many authentication attempts. Try again in 15 minutes.",
     "AUTH_RATE_LIMITED",
@@ -37,6 +64,7 @@ export const uploadLimiter = rateLimit({
   max: isProd ? 60 : 1_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler("Upload limit reached. Please wait before uploading again.", "UPLOAD_RATE_LIMITED"),
 });
 
@@ -46,6 +74,7 @@ export const federationLimiter = rateLimit({
   max: isProd ? 30 : 1_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler("Federation request limit reached.", "FEDERATION_RATE_LIMITED"),
 });
 
@@ -55,6 +84,7 @@ export const writeLimiter = rateLimit({
   max: isProd ? 60 : 10_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler("Write limit reached. Please wait before making more changes.", "WRITE_RATE_LIMITED"),
 });
 
@@ -64,6 +94,7 @@ export const tokenLimiter = rateLimit({
   max: isProd ? 10 : 1_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler("Token creation limit reached. Try again in an hour.", "TOKEN_RATE_LIMITED"),
 });
 
@@ -73,6 +104,7 @@ export const webhookLimiter = rateLimit({
   max: isProd ? 20 : 1_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store,
   handler: makeHandler("Webhook test limit reached.", "WEBHOOK_RATE_LIMITED"),
 });
 

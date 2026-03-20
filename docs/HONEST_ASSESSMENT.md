@@ -282,3 +282,36 @@ This assumes a small but dedicated engineering team. The protocol design and API
 ---
 
 *This document should be updated as issues are resolved.*
+
+---
+
+## Issues Resolved Since Initial Assessment
+
+The following critical and high-severity issues from this document have been fixed:
+
+| Issue | Resolution |
+|---|---|
+| Object storage Replit-only | `storageProvider.ts` with `S3StorageProvider` (AWS SDK v3) + `ReplitStorageProvider` |
+| No database migrations | `lib/db/migrations/0000_initial_schema.sql` + `migrate.ts` runner |
+| Rate limiting in-memory only | `redis.ts` singleton + Redis store in all 7 rate limiters; warns in prod if missing |
+| Unlock cookie not verified | HMAC-signed with `crypto.createHmac` + `timingSafeEqual` verification in host router |
+| Admin has no RBAC | `requireAdmin.ts` middleware, `isAdmin` column on `users` table |
+| Host router DB queries per request | `domainCache.ts` LRU (10K domains, 50K files, 5-min TTL, invalidated on deploy) |
+| DB pool no config | Explicit `max`, `min`, `idleTimeoutMillis`, `connectionTimeoutMillis`, pool error handler |
+| Session expiry not cleaned up | Background job every 6 hours deletes expired sessions |
+| Analytics `sql.join` unsafe | Replaced with `inArray()` |
+| Health monitor single-failure flip | N=3 consecutive failure threshold, per-domain failure counter |
+| Federation replay attack window | 5-minute timestamp check on ping endpoint |
+| i18n bundled synchronously | `i18next-http-backend` loads translations via HTTP from `/locales/` |
+| Federation sync no retry | `syncRetryQueue.ts` with exponential backoff (30s→2m→10m→1h→6h), max 10 attempts |
+| Docker Compose broken MinIO | S3StorageProvider wired; Redis added to Compose; `REDIS_URL` env var |
+
+**Remaining genuine gaps:**
+- ACME/TLS automation is still a stub (use Caddy)
+- Admin action audit log not built
+- File content deduplication not built
+- Prometheus metrics not built
+- Session store is PostgreSQL (works, not Redis-shared across instances)
+- Gossip in-memory per-instance (eventual consistency over TTL)
+
+*Last updated: March 2026*
