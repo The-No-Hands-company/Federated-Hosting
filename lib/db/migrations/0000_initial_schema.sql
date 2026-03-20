@@ -486,3 +486,9 @@ CREATE INDEX IF NOT EXISTS "webhooks_site_idx" ON "webhooks"("site_id");
 
 -- ─── API token scopes ─────────────────────────────────────────────────────────
 ALTER TABLE "api_tokens" ADD COLUMN IF NOT EXISTS "scopes" TEXT NOT NULL DEFAULT 'read,write,deploy';
+
+-- ─── Add maintenance status to sites (idempotent) ─────────────────────────────
+ALTER TYPE "site_status" ADD VALUE IF NOT EXISTS 'maintenance';
+
+-- ─── Maintenance message column ───────────────────────────────────────────────
+ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "maintenance_message" TEXT;

@@ -292,6 +292,26 @@ export async function hostRouter(req: Request, res: Response, next: NextFunction
 
   if (!site) { next(); return; }
 
+  // ── Site status checks ────────────────────────────────────────────────────
+  const siteStatus = (site as any).status as string | undefined;
+
+  if (siteStatus === "maintenance") {
+    const msg = (site as any).maintenanceMessage as string | undefined;
+    res.status(503)
+      .setHeader("Retry-After", "3600")
+      .send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Maintenance</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}h1{font-size:2rem;margin-bottom:1rem}p{color:#9ca3af;max-width:40ch;line-height:1.6}</style>
+</head><body><div><h1>🔧 Under Maintenance</h1><p>${msg ? msg.replace(/</g, "&lt;") : "We&rsquo;re making some improvements. Back soon."}</p></div></body></html>`);
+    return;
+  }
+
+  if (siteStatus === "suspended") {
+    res.status(451).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Suspended</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}h1{font-size:2rem;margin-bottom:1rem}p{color:#9ca3af}</style>
+</head><body><div><h1>Site Suspended</h1><p>This site has been suspended. If you own this site, contact the node operator.</p></div></body></html>`);
+    return;
+  }
+
   if (site.visibility === "private") {
     res.status(403).send(`<!DOCTYPE html><html><body style="font-family:system-ui;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;"><div style="text-align:center"><h1>403</h1><p>This site is private.</p></div></body></html>`);
     return;

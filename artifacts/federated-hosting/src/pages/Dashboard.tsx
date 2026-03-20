@@ -27,6 +27,55 @@ interface Deployment {
   site?: { name: string; domain: string };
 }
 
+function RecentActivityFeed() {
+  const { data: deployments } = useQuery<{ data: Array<{ id: number; version: number; status: string; environment: string; deployedAt: string; siteId: number; site?: { name: string; domain: string } }> }>({
+    queryKey: ["dashboard-recent-deploys"],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites?limit=5`, { credentials: "include" });
+      if (!r.ok) return { data: [] };
+      const sites = (await r.json() as { data: Array<{ id: number }> }).data ?? [];
+      const deps = await Promise.all(
+        sites.slice(0, 3).map(s =>
+          fetch(`${BASE}/api/sites/${s.id}/deployments?limit=2`, { credentials: "include" })
+            .then(r => r.ok ? r.json() : { data: [] })
+            .then((d: any) => (d.data ?? []).map((dep: any) => ({ ...dep, siteId: s.id })))
+        )
+      );
+      return { data: deps.flat().sort((a: any, b: any) => new Date(b.deployedAt).getTime() - new Date(a.deployedAt).getTime()).slice(0, 6) };
+    },
+    staleTime: 60_000,
+  });
+
+  const items = deployments?.data ?? [];
+  if (items.length === 0) return null;
+
+  const STATUS_COLOR: Record<string, string> = {
+    active: "text-green-400", failed: "text-red-400", pending: "text-amber-400",
+  };
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Recent Deployments</h3>
+      <div className="space-y-1.5">
+        {items.map((d: any) => (
+          <Link key={`${d.siteId}-${d.id}`} href={`/deploy/${d.siteId}`}>
+            <div className="flex items-center gap-3 p-2.5 rounded-lg border border-white/5 hover:border-white/10 bg-muted/5 transition-all cursor-pointer text-sm">
+              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === "active" ? "bg-green-400" : d.status === "failed" ? "bg-red-400" : "bg-amber-400"}`} />
+              <span className="text-white flex-1 truncate font-mono text-xs">
+                site-{d.siteId} <span className="text-muted-foreground">v{d.version}</span>
+                {d.environment !== "production" && <span className="text-amber-400 ml-1">[{d.environment}]</span>}
+              </span>
+              <span className="text-muted-foreground text-xs shrink-0">
+                {formatDistanceToNow(new Date(d.deployedAt), { addSuffix: true })}
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PersonalDashboard() {
   const { user } = useAuth();
 
@@ -99,6 +148,7 @@ function PersonalDashboard() {
           </Card>
         ))}
       </div>
+      <RecentActivityFeed />
     </motion.div>
   );
 }

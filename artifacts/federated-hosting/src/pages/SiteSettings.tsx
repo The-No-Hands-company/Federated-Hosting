@@ -139,6 +139,61 @@ const REDIRECT_STATUS_OPTIONS = [
   { value: 410, label: "410 Gone" },
 ];
 
+function MaintenanceModeCard({ siteId, initialStatus }: { siteId: number; initialStatus: string }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [message, setMessage] = useState("");
+  const isMaintenance = initialStatus === "maintenance";
+
+  const toggleMutation = useMutation({
+    mutationFn: async () => {
+      const newStatus = isMaintenance ? "active" : "maintenance";
+      const r = await fetch(`${BASE}/api/sites/${siteId}`, {
+        method: "PATCH", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, ...(newStatus === "maintenance" && message ? { maintenanceMessage: message } : {}) }),
+      });
+      if (!r.ok) throw new Error((await r.json() as any).message ?? "Failed");
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["site", String(siteId)] });
+      toast({ title: isMaintenance ? "Maintenance mode disabled" : "Maintenance mode enabled" });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  return (
+    <Card className={isMaintenance ? "border-amber-500/30 bg-amber-500/5" : "border-white/5"}>
+      <CardHeader>
+        <CardTitle className={`text-base flex items-center gap-2 ${isMaintenance ? "text-amber-400" : "text-white"}`}>
+          <AlertTriangle className="w-4 h-4" />
+          Maintenance Mode {isMaintenance && <span className="text-xs font-normal bg-amber-500/20 px-2 py-0.5 rounded-full">ACTIVE</span>}
+        </CardTitle>
+        <CardDescription>
+          {isMaintenance
+            ? "Your site is showing a maintenance page to all visitors."
+            : "Show a maintenance page to visitors while you make changes."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {!isMaintenance && (
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Custom message (optional)</Label>
+            <Input value={message} onChange={e => setMessage(e.target.value)} maxLength={200}
+              placeholder="We're making some improvements. Back soon."
+              className="bg-muted/20 border-white/8" />
+          </div>
+        )}
+        <Button variant={isMaintenance ? "outline" : "default"}
+          className={isMaintenance ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10" : "bg-amber-500 text-black hover:bg-amber-400"}
+          onClick={() => toggleMutation.mutate()} disabled={toggleMutation.isPending}>
+          {toggleMutation.isPending ? "Updating…" : isMaintenance ? "Disable maintenance mode" : "Enable maintenance mode"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SiteSettings() {
   const { id } = useParams<{ id: string }>();
   const siteId = parseInt(id!, 10);
@@ -408,6 +463,8 @@ export default function SiteSettings() {
 
         {/* ── Danger Zone ── */}
         <TabsContent value="danger" className="space-y-4 mt-4">
+          {/* Maintenance mode */}
+          <MaintenanceModeCard siteId={siteId} initialStatus={site.status} />
           <Card className="border-red-500/20 bg-red-500/5">
             <CardHeader>
               <CardTitle className="text-red-400 text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4" />Danger Zone</CardTitle>

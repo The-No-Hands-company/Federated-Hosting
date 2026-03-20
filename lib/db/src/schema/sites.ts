@@ -2,7 +2,7 @@ import { pgTable, text, serial, timestamp, real, integer, bigint, pgEnum, index 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const siteStatusEnum = pgEnum("site_status", ["active", "suspended", "migrating"]);
+export const siteStatusEnum = pgEnum("site_status", ["active", "suspended", "migrating", "maintenance"]);
 export const siteTypeEnum = pgEnum("site_type", ["static", "dynamic", "blog", "portfolio", "other"]);
 export const siteVisibilityEnum = pgEnum("site_visibility", ["public", "private", "password"]);
 
@@ -26,7 +26,8 @@ export const sitesTable = pgTable("sites", {
   visibility: siteVisibilityEnum("visibility").notNull().default("public"),
   /** bcrypt hash — only set when visibility = 'password' */
   passwordHash:  text("password_hash"),
-  unlockMessage: text("unlock_message"),
+  unlockMessage:      text("unlock_message"),
+  maintenanceMessage: text("maintenance_message"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => [
