@@ -5,14 +5,17 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LoadingState, ErrorState, StatusBadge } from "@/components/shared";
 import {
   Server, Users, Globe, Activity, HardDrive, Cpu, MemoryStick,
   TrendingUp, Settings, LogIn, RefreshCw, Zap, Radio,
+  ClipboardList, HeartPulse, CheckCircle2, AlertTriangle, XCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -331,6 +334,114 @@ export default function AdminPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// ── Audit Log tab ──────────────────────────────────────────────────────────────
+function AuditLogTab() {
+  const [page, setPage] = useState(1);
+  const { data } = useQuery<{ data: Array<{ id: number; actorEmail: string | null; action: string; targetType: string | null; targetId: string | null; metadata: Record<string, unknown> | null; ipAddress: string | null; createdAt: string }>; meta: { total: number; page: number; limit: number } }>({
+    queryKey: ["audit-log", page],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/admin/audit-log?page=${page}&limit=25`, { credentials: "include" });
+      return r.ok ? r.json() : { data: [], meta: { total: 0, page: 1, limit: 25 } };
+    },
+  });
+
+  const entries = data?.data ?? [];
+  const total   = data?.meta.total ?? 0;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm">{total.toLocaleString()} total entries</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="border-white/10 text-xs">← Prev</Button>
+          <Button variant="outline" size="sm" disabled={entries.length < 25} onClick={() => setPage(p => p + 1)} className="border-white/10 text-xs">Next →</Button>
+        </div>
+      </div>
+      {entries.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground text-sm">No audit log entries yet.</div>
+      ) : (
+        <div className="space-y-1">
+          {entries.map(e => (
+            <div key={e.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/5 border border-white/5 text-sm hover:border-white/10 transition-colors">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-white font-semibold">{e.action}</span>
+                  {e.targetType && <Badge variant="outline" className="text-xs border-white/10">{e.targetType} {e.targetId}</Badge>}
+                </div>
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                  <span>{e.actorEmail ?? "system"}</span>
+                  {e.ipAddress && <span>· {e.ipAddress}</span>}
+                  <span>· {format(new Date(e.createdAt), "MMM d, HH:mm")}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Site Health tab ────────────────────────────────────────────────────────────
+function SiteHealthTab() {
+  const { data } = useQuery<{ total: number; up: number; degraded: number; down: number; results: Array<{ siteId: number; domain: string; status: string; httpStatus: number | null; responseMs: number | null; checkedAt: string; error?: string }> }>({
+    queryKey: ["site-health"],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/admin/site-health`, { credentials: "include" });
+      return r.ok ? r.json() : { total: 0, up: 0, degraded: 0, down: 0, results: [] };
+    },
+    refetchInterval: 60_000,
+  });
+
+  const results = data?.results ?? [];
+  const STATUS_ICON = { up: CheckCircle2, degraded: AlertTriangle, down: XCircle } as const;
+  const STATUS_COLOR = { up: "text-green-400", degraded: "text-amber-400", down: "text-red-400" } as const;
+
+  return (
+    <div className="space-y-4">
+      {data && (
+        <div className="grid grid-cols-3 gap-3">
+          {(["up", "degraded", "down"] as const).map(s => {
+            const Icon = STATUS_ICON[s];
+            return (
+              <Card key={s} className="border-white/5">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Icon className={cn("w-5 h-5", STATUS_COLOR[s])} />
+                  <div>
+                    <p className={cn("text-2xl font-bold font-mono", STATUS_COLOR[s])}>{data[s]}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{s}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+      {results.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground text-sm">
+          No health check data yet. Set <code className="text-xs bg-muted/20 px-1 rounded">ENABLE_SITE_HEALTH_CHECKS=true</code> to activate monitoring.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {results.map(r => {
+            const Icon = STATUS_ICON[r.status as keyof typeof STATUS_ICON] ?? Activity;
+            const color = STATUS_COLOR[r.status as keyof typeof STATUS_COLOR] ?? "text-muted-foreground";
+            return (
+              <div key={r.siteId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/5 border border-white/5 text-sm">
+                <Icon className={cn("w-4 h-4 shrink-0", color)} />
+                <span className="text-white font-mono flex-1 truncate">{r.domain}</span>
+                <span className={cn("font-mono text-xs shrink-0", color)}>{r.httpStatus ?? "—"}</span>
+                <span className="text-muted-foreground text-xs shrink-0">{r.responseMs ? `${r.responseMs}ms` : ""}</span>
+                <span className="text-muted-foreground text-xs shrink-0">{formatDistanceToNow(new Date(r.checkedAt), { addSuffix: true })}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
