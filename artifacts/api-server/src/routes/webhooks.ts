@@ -80,4 +80,31 @@ router.post("/webhooks/test", webhookLimiter, asyncHandler(async (req: Request, 
   });
 }));
 
+/**
+ * GET /api/sites/:id/webhooks/:hookId/deliveries
+ * Last 50 delivery attempts for a webhook, newest first.
+ * Useful for debugging failed deliveries and retry status.
+ */
+router.get("/sites/:id/webhooks/:hookId/deliveries", asyncHandler(async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) throw AppError.unauthorized();
+  const siteId  = parseInt(req.params.id     as string, 10);
+  const hookId  = parseInt(req.params.hookId as string, 10);
+  if (isNaN(siteId) || isNaN(hookId)) throw AppError.badRequest("Invalid ID");
+
+  const [site] = await db.select({ ownerId: sitesTable.ownerId })
+    .from(sitesTable).where(eq(sitesTable.id, siteId));
+  if (!site) throw AppError.notFound("Site not found");
+  if (site.ownerId !== req.user.id) throw AppError.forbidden();
+
+  const { webhookDeliveriesTable } = await import("@workspace/db");
+  const { desc: descOp } = await import("drizzle-orm");
+
+  const deliveries = await db.select().from(webhookDeliveriesTable)
+    .where(eq(webhookDeliveriesTable.webhookId, hookId))
+    .orderBy(descOp(webhookDeliveriesTable.createdAt))
+    .limit(50);
+
+  res.json(deliveries);
+}));
+
 export default router;

@@ -139,8 +139,8 @@ A living document tracking what is built, what is in progress, and what must be 
 | 13 | Federation sync retry | MEDIUM | ✅ Fixed — exponential backoff queue, 10 max attempts |
 | 14 | ACME TLS automation | MEDIUM | ✅ Full acme-client implementation |
 | 15 | Admin audit logging | MEDIUM | ✅ auditLog(), admin_audit_log table, GET /api/admin/audit-log |
-| 16 | Content deduplication | LOW | ✅ content_hash column, dedup on register-file, objectPath reuse |
-| 17 | Prometheus metrics | LOW | ✅ prom-client, 12 metrics, GET /metrics, metricsMiddleware |
+| 16 | Content deduplication | LOW | ✅ content_hash + SHA-256, CLI sends hash, server deduplicates |
+| 17 | Prometheus metrics | LOW | ✅ prom-client, 13 metrics, GET /metrics, metricsMiddleware, 30s gauge collector |
 | 18 | Gossip peer state | ✅ | Peer list stored in PostgreSQL nodes table — shared across instances naturally |
 | 19 | Session store (multi-instance) | MEDIUM | ✅ Redis-first with PostgreSQL fallback; cross-instance session sharing |
 
@@ -175,3 +175,17 @@ A living document tracking what is built, what is in progress, and what must be 
 ---
 
 *Last updated: March 2026. This document is intentionally critical — see `docs/HONEST_ASSESSMENT.md`.*
+| – | Data retention job | – | ✅ 6h cleanup: analytics/forms/webhooks/builds/sessions/audit log |
+| – | Webhook delivery log + retry | – | ✅ Persistent log, 5-attempt exponential backoff retry queue |
+| – | Full-text site search | – | ✅ tsvector GIN index, plainto_tsquery, Postgres trigger |
+| – | SSE real-time analytics | – | ✅ EventSource stream, live hit counter in analytics page |
+| – | Form submission backend | – | ✅ POST /forms/:domain/:name, spam scoring, email notify, CSV export |
+| – | Build pipeline (git) | – | ✅ Clone → install → build → deploy, parallel upload, env injection |
+| – | Git webhook auto-deploy | – | ✅ GitHub/GitLab HMAC verification, auto-trigger on push |
+| – | 2FA enforcement | – | ✅ Enforced in OIDC callback, Redis lockout after 5 failures |
+| – | Shell completion | – | ✅ bash/zsh/fish via fh completion |
+| – | fh env command | – | ✅ Per-site build env vars, secret masking, CRUD |
+| – | Per-site rate limiting | – | ✅ deployLimiter, userWriteLimiter keyed by user ID |
+| – | Site health monitoring | – | ✅ 10-min checks, history in DB, site_down webhook |
+| – | Invitation system | – | ✅ Email invites with 7d tokens, pending state, accept flow |
+| – | Password gate security | – | ✅ HMAC-signed cookies, 5-attempt brute force limit |

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@workspace/auth-web";
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { ArrowLeft, TrendingUp, Globe, HardDrive, Eye, ExternalLink } from "lucide-react";
+import { ArrowLeft, TrendingUp, Globe, HardDrive, Eye, ExternalLink, Download, Radio } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
@@ -78,6 +78,26 @@ export default function SiteAnalytics() {
   const [period, setPeriod] = useState<Period>("24h");
   const { t } = useTranslation();
 
+  // Real-time hit counter via SSE
+  const [liveHits, setLiveHits] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const sseRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    if (!id || !isAuthenticated) return;
+    const es = new EventSource(`${BASE}/api/sites/${id}/analytics/stream`, { withCredentials: true });
+    sseRef.current = es;
+    es.onopen = () => setIsLive(true);
+    es.onmessage = (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.path) setLiveHits(n => n + 1);
+      } catch {}
+    };
+    es.onerror = () => setIsLive(false);
+    return () => { es.close(); setIsLive(false); };
+  }, [id, isAuthenticated]);
+
   const { data: site, isLoading: siteLoading } = useQuery<SiteInfo>({
     queryKey: ["site", id],
     queryFn: async () => {
@@ -101,6 +121,26 @@ export default function SiteAnalytics() {
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
+
+  const { data: referrers } = useQuery<{ referrers: Array<{ referrer: string; hits: number }> }>({
+    queryKey: ["analytics-referrers", id, period],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${id}/analytics/referrers?period=${period}`, { credentials: "include" });
+      return r.ok ? r.json() : { referrers: [] };
+    },
+    enabled: Boolean(id),
+    staleTime: 300_000,
+  });
+
+  const exportCSV = async () => {
+    const r = await fetch(`${BASE}/api/sites/${id}/analytics/export?period=${period}`, { credentials: "include" });
+    if (!r.ok) return;
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `analytics-${site?.domain ?? id}-${period}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (siteLoading || isLoading) return <LoadingState />;
   if (error) return <ErrorState message="Failed to load analytics data." />;
@@ -172,6 +212,20 @@ export default function SiteAnalytics() {
               <ExternalLink className="w-3 h-3" />
             </a>
           )}
+        </div>
+        {/* Live hit counter */}
+        <div className="flex items-center gap-3">
+          {isLive && (
+            <div className="flex items-center gap-1.5 text-xs text-green-400 bg-green-400/10 px-3 py-1.5 rounded-full border border-green-400/20">
+              <Radio className="w-3 h-3 animate-pulse" />
+              <span className="font-mono font-semibold">{liveHits}</span>
+              <span>live hits</span>
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5 border-white/10 text-muted-foreground hover:text-white">
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
         </div>
         {/* Period selector */}
         <div className="flex gap-1 bg-muted/30 p-1 rounded-xl border border-white/5">
@@ -302,34 +356,38 @@ export default function SiteAnalytics() {
             <CardDescription>{t("analytics.topReferrersSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
-            {topReferrers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t("analytics.noReferrerData")}</p>
-            ) : (
-              <div className="space-y-3">
-                {topReferrers.slice(0, 8).map((r, i) => {
-                  const max = topReferrers[0]?.count ?? 1;
-                  const pct = Math.round((r.count / max) * 100);
-                  const label = r.referrer || "{t("analytics.direct")}";
-                  return (
-                    <div key={r.referrer} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground truncate max-w-[200px]">{label}</span>
-                        <span className="text-white font-medium tabular-nums">{r.count.toLocaleString()}</span>
+            {(() => {
+              const list = (referrers?.referrers?.length ?? 0) > 0
+                ? referrers!.referrers.map(r => ({ referrer: r.referrer, count: r.hits }))
+                : topReferrers;
+              if (list.length === 0) return <p className="text-muted-foreground text-sm">{t("analytics.noReferrerData")}</p>;
+              return (
+                <div className="space-y-3">
+                  {list.slice(0, 12).map((r, i) => {
+                    const max = list[0]?.count ?? 1;
+                    const pct = Math.round((r.count / max) * 100);
+                    const label = r.referrer || "(direct)";
+                    return (
+                      <div key={r.referrer || i} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground truncate max-w-[200px]">{label}</span>
+                          <span className="text-white font-medium tabular-nums">{r.count.toLocaleString()}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ background: BAR_COLORS[(i + 5) % BAR_COLORS.length] }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.6, delay: i * 0.04 }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                        <motion.div
-                          className="h-full rounded-full"
-                          style={{ background: BAR_COLORS[(i + 5) % BAR_COLORS.length] }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.6, delay: i * 0.04 }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>

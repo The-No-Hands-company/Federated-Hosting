@@ -183,6 +183,7 @@ router.post("/sites/:id/deploy", deployLimiter, asyncHandler(async (req: Request
         status: "active",
         fileCount: pendingFiles.length,
         totalSizeMb,
+        environment: (req.body as any)?.environment ?? "production",
       })
       .returning();
 
