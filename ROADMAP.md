@@ -113,7 +113,7 @@ A living document tracking what is built, what is in progress, and what must be 
 
 | Feature | Status | Notes |
 |---|---|---|
-| ACME/Let's Encrypt automation | ❌ | Stub — issues HTTP-01 token only; full ACME flow not implemented |
+| ACME/Let's Encrypt automation | ✅ | Real acme-client: account key, HTTP-01 challenge, cert written to disk, 12h auto-renewal |
 | TLS via Caddy (documented) | ✅ | Caddy instruction accurate |
 | Geographic routing (closest-node redirect) | ✅ | Region inference + 302 redirect |
 | Geo routing: latency probing | ❌ | Mentioned in code comment, not implemented |
@@ -137,12 +137,12 @@ A living document tracking what is built, what is in progress, and what must be 
 | 11 | Replay attack window | MEDIUM | ✅ Fixed — 5-minute timestamp check |
 | 12 | i18n async loading | LOW | ✅ Fixed — i18next-http-backend, HTTP-fetched |
 | 13 | Federation sync retry | MEDIUM | ✅ Fixed — exponential backoff queue, 10 max attempts |
-| 14 | ACME TLS automation | MEDIUM | ❌ Still a stub — use Caddy for now |
-| 15 | Admin audit logging | MEDIUM | 📋 Not yet built |
-| 16 | Content deduplication | LOW | 📋 Not yet built |
-| 17 | Prometheus metrics | LOW | 📋 Not yet built |
+| 14 | ACME TLS automation | MEDIUM | ✅ Full acme-client implementation |
+| 15 | Admin audit logging | MEDIUM | ✅ auditLog(), admin_audit_log table, GET /api/admin/audit-log |
+| 16 | Content deduplication | LOW | ✅ content_hash column, dedup on register-file, objectPath reuse |
+| 17 | Prometheus metrics | LOW | ✅ prom-client, 12 metrics, GET /metrics, metricsMiddleware |
 | 18 | Gossip in-memory per-instance | LOW | ⚠️ Multi-instance gossip not Redis-shared |
-| 19 | Session store (multi-instance) | MEDIUM | ⚠️ PostgreSQL sessions work; not Redis-backed |
+| 19 | Session store (multi-instance) | MEDIUM | ✅ Redis-first with PostgreSQL fallback; cross-instance session sharing |
 
 ---
 

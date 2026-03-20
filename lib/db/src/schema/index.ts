@@ -6,3 +6,4 @@ export * from "./federation";
 export * from "./analytics";
 export * from "./access";
 export * from "./domains";
+export * from "./audit";

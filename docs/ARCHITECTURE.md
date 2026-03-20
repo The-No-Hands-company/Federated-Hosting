@@ -39,7 +39,7 @@ The architecture is intentionally simple: a PostgreSQL database, an object store
 │    → hostRouter → routes → errorHandler                       │
 │                                                               │
 │  Routes:                                                      │
-│    /api/auth/*         Replit Auth OIDC flow                  │
+│    /api/auth/*         OIDC Auth OIDC flow                  │
 │    /api/nodes/*        Node registry CRUD                     │
 │    /api/sites/*        Site management                        │
 │    /api/sites/serve/*  File streaming from object storage     │
@@ -54,7 +54,7 @@ The architecture is intentionally simple: a PostgreSQL database, an object store
                ▼                              ▼
 ┌──────────────────────┐          ┌──────────────────────────┐
 │  PostgreSQL           │          │  Object Storage           │
-│  (Drizzle ORM)        │          │  (Replit / S3-compat.)   │
+│  (Drizzle ORM)        │          │  (S3 / MinIO / R2)       │
 │                       │          │                          │
 │  Tables:              │          │  Buckets:                │
 │    users              │          │    private/ (uploads)    │
@@ -91,8 +91,8 @@ The project is a **pnpm workspace monorepo** with TypeScript project references.
 | `@workspace/api-spec` | `lib/api-spec` | OpenAPI 3.1 spec (source of truth) |
 | `@workspace/api-zod` | `lib/api-zod` | Auto-generated Zod validators (Orval) |
 | `@workspace/api-client-react` | `lib/api-client-react` | Auto-generated React Query hooks (Orval) |
-| `@workspace/replit-auth-web` | `lib/integrations/replit-auth-web` | `useAuth()` hook |
-| `@workspace/object-storage` | `lib/integrations/object-storage` | Object storage client |
+| `@workspace/auth-web` | `lib/integrations/auth-web` | `useAuth()` hook |
+| `@workspace/object-storage` | `lib/storageProvider` | Object storage client |
 
 Every package extends `tsconfig.base.json` (`composite: true`). Build order is resolved by TypeScript project references.
 
@@ -102,7 +102,7 @@ Every package extends `tsconfig.base.json` (`composite: true`). Build order is r
 
 ```
 users
-  id            text PK (Replit user ID)
+  id            text PK (OIDC subject identifier)
   name          text
   email         text
   profileImage  text
@@ -341,4 +341,4 @@ The current implementation is designed for correctness and clarity. For genuinel
 | Frontend | React 19 + Vite 7 | Fast HMR; RSC-ready if needed later |
 | Crypto | Node built-in `crypto` | No third-party deps for key gen/sign/verify |
 | Logging | pino | Fastest JSON logger for Node; redaction built-in |
-| Object storage | Replit Object Storage | S3-compatible; presigned URLs keep file bytes off the API server |
+| Object storage | S3-compatible object storage | S3-compatible; presigned URLs keep file bytes off the API server |

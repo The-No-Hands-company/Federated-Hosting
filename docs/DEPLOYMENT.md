@@ -11,7 +11,7 @@ This guide covers running a Federated Hosting node in production.
 | Node.js | 24 | Native Ed25519 in `crypto`; native `fetch` |
 | pnpm | 10 | Monorepo package manager |
 | PostgreSQL | 15 | Any hosted provider works |
-| Object storage | S3-compatible | Replit Object Storage, AWS S3, Cloudflare R2, etc. |
+| Object storage | S3-compatible | S3-compatible object storage, AWS S3, Cloudflare R2, etc. |
 
 ---
 

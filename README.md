@@ -13,7 +13,7 @@ A production-grade **federated website hosting service** where users deploy stat
 
 Federated Hosting lets users:
 
-1. **Log in** via Replit Auth (OpenID Connect)
+1. **Log in** via OIDC Auth (OpenID Connect)
 2. **Upload** website files (HTML, CSS, JS, images, fonts) to object storage
 3. **Deploy** their site — gets a unique domain, version-tracked, atomically committed
 4. **Replicate** — the deploy is automatically mirrored to all active federation peers via signed `site_sync` events
@@ -30,7 +30,7 @@ Independent operators run nodes. Each node has an **Ed25519 cryptographic identi
 - [Node.js 24+](https://nodejs.org/)
 - [pnpm 10+](https://pnpm.io/)
 - PostgreSQL database (connection string in `DATABASE_URL`)
-- Replit object storage (or S3-compatible store)
+- S3-compatible object storage (or S3-compatible store)
 
 ### Install
 
@@ -79,7 +79,7 @@ pnpm run build
 ## Features
 
 ### Phase 1 — Auth + File Serving
-- Replit Auth (OIDC + PKCE) — users own their sites
+- OIDC Auth (OpenID Connect + PKCE) — users own their sites
 - Presigned URL upload flow to object storage
 - Host-header site serving — `your-domain.com` routes to the right files
 - My Sites dashboard + drag-and-drop deploy UI
@@ -181,7 +181,7 @@ Browser → Federated Hosting UI (Vite/React)
 │   ├── api-zod/             # Generated Zod schemas (Orval)
 │   ├── db/                  # Drizzle ORM schema + migrations
 │   │   └── src/schema/      # nodes, sites, deployments, federation, auth
-│   └── integrations/        # replit-auth-web, object-storage
+│   └── integrations/        # auth-web, object-storage
 ├── scripts/                 # Seed + utility scripts
 ├── docs/                    # Architecture, API, Contributing, Security
 ├── LICENSE

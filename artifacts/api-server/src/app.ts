@@ -10,7 +10,7 @@ import { tokenAuthMiddleware } from "./middleware/tokenAuth";
 import { globalErrorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { globalLimiter, speedLimiter } from "./middleware/rateLimiter";
 import router from "./routes";
-import { hostRouter } from "./middleware/hostRouter";
+import { metricsMiddleware, registry } from "./lib/metrics";
 import { geoRoutingMiddleware } from "./lib/geoRouting";
 import { db, nodesTable, siteDeploymentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -25,7 +25,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const app: Express = express();
 
-// ── Trust proxy (Replit / reverse-proxy environments) ─────────────────────────
+// ── Trust reverse proxy headers (X-Forwarded-For, X-Real-IP) ────────────────────
 // Required so express-rate-limit can correctly read X-Forwarded-For
 app.set("trust proxy", 1);
 
@@ -97,6 +97,21 @@ app.use(cookieParser());
 app.use(globalLimiter);
 app.use(speedLimiter);
 
+// ── Prometheus metrics instrumentation ────────────────────────────────────────
+app.use(metricsMiddleware);
+
+// GET /metrics — Prometheus scrape endpoint.
+// Set METRICS_TOKEN to protect it; without it metrics are open (bind to localhost recommended).
+app.get("/metrics", async (req: Request, res: Response) => {
+  const token = process.env.METRICS_TOKEN;
+  if (token && req.headers.authorization !== `Bearer ${token}`) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  res.setHeader("Content-Type", registry.contentType);
+  res.end(await registry.metrics());
+});
+
 // ── Auth middleware ────────────────────────────────────────────────────────────
 app.use(authMiddleware);
 
@@ -122,7 +137,7 @@ app.get("/.well-known/federation", async (_req: Request, res: Response, next: Ne
     res.json({
       protocol: "fedhost/1.0",
       name: localNode?.name ?? "Federated Hosting Node",
-      domain: localNode?.domain ?? process.env.REPLIT_DEV_DOMAIN ?? "unknown",
+      domain: localNode?.domain ?? process.env.PUBLIC_DOMAIN ?? "unknown",
       region: localNode?.region ?? "unknown",
       publicKey: localNode?.publicKey ? stripPemHeaders(localNode.publicKey) : null,
       nodeCount: allNodes.length,

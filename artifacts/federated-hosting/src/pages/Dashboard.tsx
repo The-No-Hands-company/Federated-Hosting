@@ -7,7 +7,7 @@ import { formatGb, formatPercent } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@workspace/auth-web";
 import { useStatsHourly, useNodes } from "@/lib/apiHooks";
 import { useState } from "react";
 import { OnboardingBanner, OnboardingModal, useOnboarding } from "@/components/Onboarding";

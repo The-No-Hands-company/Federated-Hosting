@@ -9,7 +9,7 @@ import {
   LogIn, Globe, Upload, Rocket, CheckCircle,
   ChevronRight, ChevronLeft, X, Terminal, ExternalLink,
 } from "lucide-react";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@workspace/auth-web";
 import { cn } from "@/lib/utils";
 
 interface OnboardingStep {

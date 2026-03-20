@@ -63,7 +63,7 @@ artifacts/federated-hosting    ← React + Vite frontend (port 25231 in dev)
 artifacts/api-server           ← Express 5 API (port 8080 in dev)
     │
     ├── lib/db                 ← Drizzle ORM + PostgreSQL
-    ├── lib/objectStorage      ← Replit/S3-compatible object store
+    ├── lib/objectStorage      ← deprecated shim → use storageProvider.ts
     ├── federation peers       ← Other nodes (Ed25519-verified)
     └── background jobs        ← healthMonitor, analyticsFlush, gossipPusher
 ```
@@ -75,7 +75,7 @@ lib/
   api-spec/              ← OpenAPI 3.1 spec + Orval codegen config
   api-client-react/      ← Generated React Query hooks (from OpenAPI)
   api-zod/               ← Generated Zod schemas (from OpenAPI)
-  replit-auth-web/       ← useAuth() hook
+  auth-web/       ← useAuth() hook
   object-storage-web/    ← Upload component + useUpload hook
 
 artifacts/
@@ -190,7 +190,7 @@ A full Playwright E2E suite is a high-priority item on the roadmap. Until it exi
 
 - **Don't break the federation protocol** — `FEDERATION.md` is a public spec; changes must be backwards-compatible or versioned
 - **Don't remove Drizzle transactions** from the deploy endpoint — partial deployments corrupt site state
-- **Don't add Replit-specific dependencies** without an abstraction layer — the project must remain self-hostable
+- **Don't add legacy dependencies** without an abstraction layer — the project must remain self-hostable
 - **Don't return stack traces in production** — the global error handler already strips them; don't bypass it
 - **Don't log private keys** — the pino logger has `privateKey` and `password` in its redaction list, but don't work around it
 - **Don't use `Promise.all` for peer operations** — always `Promise.allSettled`; a dead peer must never crash a user-facing request

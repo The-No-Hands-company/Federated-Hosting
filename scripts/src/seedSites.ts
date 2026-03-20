@@ -16,7 +16,7 @@ import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { db, sitesTable, siteDeploymentsTable, siteFilesTable, nodesTable } from "@workspace/db";
 
-const REPLIT_SIDECAR = "http://127.0.0.1:1106";
+// Object storage is now configured via OBJECT_STORAGE_ENDPOINT env var
 
 // ─── Resolve monorepo root ───────────────────────────────────────────────────
 // This file lives at scripts/src/seedSites.ts, so root is three levels up
@@ -59,7 +59,7 @@ function getPrivateDir(): string {
 }
 
 async function getSignedUploadUrl(objectName: string): Promise<string> {
-  const res = await fetch(`${REPLIT_SIDECAR}/object-storage/signed-object-url`, {
+  const res = await fetch(`${process.env.OBJECT_STORAGE_ENDPOINT ?? "http://localhost:9000"}/object-storage/signed-object-url`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

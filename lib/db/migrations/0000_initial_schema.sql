@@ -255,3 +255,29 @@ CREATE TABLE IF NOT EXISTS "custom_domains" (
 CREATE INDEX IF NOT EXISTS "custom_domains_site_idx"   ON "custom_domains"("site_id");
 CREATE INDEX IF NOT EXISTS "custom_domains_domain_idx" ON "custom_domains"("domain");
 CREATE INDEX IF NOT EXISTS "custom_domains_status_idx" ON "custom_domains"("status");
+
+-- ─── Admin audit log ─────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS "admin_audit_log" (
+  "id"           SERIAL PRIMARY KEY,
+  "actor_id"     TEXT    NOT NULL,
+  "actor_email"  TEXT,
+  "action"       TEXT    NOT NULL,
+  "target_type"  TEXT    NOT NULL,
+  "target_id"    TEXT,
+  "metadata"     JSONB   NOT NULL DEFAULT '{}',
+  "ip_address"   TEXT,
+  "user_agent"   TEXT,
+  "created_at"   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "audit_log_actor_idx"  ON "admin_audit_log"("actor_id");
+CREATE INDEX IF NOT EXISTS "audit_log_action_idx" ON "admin_audit_log"("action");
+CREATE INDEX IF NOT EXISTS "audit_log_time_idx"   ON "admin_audit_log"("created_at");
+
+-- ─── Migration 0001: file content hash for deduplication ─────────────────────
+-- Add content_hash column to site_files for deduplication.
+-- SHA-256 of file content, hex-encoded (64 chars).
+
+ALTER TABLE "site_files" ADD COLUMN IF NOT EXISTS "content_hash" TEXT;
+CREATE INDEX IF NOT EXISTS "site_files_hash_idx" ON "site_files"("content_hash") WHERE "content_hash" IS NOT NULL;

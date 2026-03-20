@@ -6,14 +6,12 @@ import { hashIp } from "../lib/analyticsFlush";
 import crypto from "crypto";
 import { getCachedSite, setCachedSite, getCachedFile, setCachedFile } from "../lib/domainCache";
 
-const REPLIT_DEV_DOMAIN = process.env.REPLIT_DEV_DOMAIN ?? "";
+const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN ?? "";
 
 function isKnownInfraHost(host: string): boolean {
   if (!host) return true;
   if (host.startsWith("localhost")) return true;
-  if (REPLIT_DEV_DOMAIN && host.includes(REPLIT_DEV_DOMAIN)) return true;
-  if (host.endsWith(".replit.app")) return true;
-  if (host.endsWith(".replit.dev")) return true;
+  if (PUBLIC_DOMAIN && host.includes(PUBLIC_DOMAIN)) return true;
   return false;
 }
 
@@ -30,7 +28,7 @@ function recordHit(siteId: number, path: string, req: Request, bytesServed: numb
 function verifyUnlockCookie(cookieValue: string | undefined, siteId: number): boolean {
   if (!cookieValue) return false;
   try {
-    const secret = process.env.COOKIE_SECRET ?? process.env.REPL_ID ?? "change-me-in-production";
+    const secret = process.env.COOKIE_SECRET ?? (process.env.NODE_ENV === "production" ? (() => { throw new Error("COOKIE_SECRET must be set in production"); })() : "dev-only-insecure-cookie-secret");
     const [encodedPayload, hmac] = cookieValue.split(".");
     if (!encodedPayload || !hmac) return false;
     const payload = Buffer.from(encodedPayload, "base64url").toString();

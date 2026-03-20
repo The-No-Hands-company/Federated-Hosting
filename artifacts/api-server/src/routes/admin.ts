@@ -7,6 +7,7 @@ import { eq, count, sql, desc, gte, and } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
 import { writeLimiter } from "../middleware/rateLimiter";
 import { requireAdmin } from "../middleware/requireAdmin";
+import { auditLog } from "../lib/auditLog";
 import { z } from "zod/v4";
 import os from "os";
 
@@ -122,6 +123,11 @@ router.patch("/admin/node", requireAdmin, writeLimiter, asyncHandler(async (req:
     .where(eq(nodesTable.isLocalNode, 1))
     .returning();
 
+  await auditLog(req, "node.settings.update",
+    { type: "node", id: localNode.id },
+    { before: { name: localNode.name, region: localNode.region, operatorEmail: localNode.operatorEmail }, after: updateData },
+  );
+
   res.json(updated);
 }));
 
@@ -182,6 +188,29 @@ router.get("/admin/sites", requireAdmin, asyncHandler(async (req: Request, res: 
     .offset(offset);
 
   res.json({ data: sites, meta: { total: Number(total), page, limit } });
+}));
+
+/** GET /api/admin/audit-log — paginated admin action history */
+router.get("/admin/audit-log", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) throw AppError.unauthorized();
+
+  const page   = Math.max(1, parseInt((req.query.page  as string) || "1",  10));
+  const limit  = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || "50", 10)));
+  const offset = (page - 1) * limit;
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(sql`admin_audit_log` as any);
+
+  const entries = await db.execute(sql`
+    SELECT id, actor_id, actor_email, action, target_type, target_id,
+           metadata, ip_address, user_agent, created_at
+    FROM admin_audit_log
+    ORDER BY created_at DESC
+    LIMIT ${limit} OFFSET ${offset}
+  `);
+
+  res.json({ data: entries.rows, meta: { total: Number(total ?? 0), page, limit } });
 }));
 
 export default router;

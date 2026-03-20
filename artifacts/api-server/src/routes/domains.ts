@@ -71,7 +71,7 @@ router.post("/sites/:id/domains", writeLimiter, asyncHandler(async (req: Request
       cname: {
         name: domain,
         type: "CNAME",
-        value: process.env.REPLIT_DEV_DOMAIN ?? "nodes.fedhosting.network",
+        value: process.env.PUBLIC_DOMAIN ?? "nodes.fedhosting.network",
       },
     },
   });

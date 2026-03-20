@@ -1,6 +1,6 @@
 # Self-Hosting Guide
 
-A complete walkthrough for running your own Federated Hosting node anywhere — a VPS, bare metal, or any Linux host. No Replit account required.
+A complete walkthrough for running your own Federated Hosting node anywhere — a VPS, bare metal, or any Linux host. .
 
 ---
 
@@ -10,8 +10,8 @@ A complete walkthrough for running your own Federated Hosting node anywhere — 
 2. [Quick Start (Docker Compose)](#quick-start-docker-compose)
 3. [Manual Setup (Node.js)](#manual-setup-nodejs)
 4. [Environment Variables Reference](#environment-variables-reference)
-5. [Replacing Replit-specific Services](#replacing-replit-specific-services)
-   - [Auth — from Replit OIDC to any OIDC provider](#auth)
+5. [Replacing legacy Services](#replacing-replit-specific-services)
+   - [Auth — from your OIDC provider to any OIDC provider](#auth)
    - [Object Storage — from Replit to S3/R2/MinIO](#object-storage)
 6. [Reverse Proxy (nginx / Caddy)](#reverse-proxy)
 7. [TLS / Let's Encrypt](#tls--lets-encrypt)
@@ -130,7 +130,7 @@ pnpm run dev
 | `DATABASE_URL` | ✅ | — | PostgreSQL connection string |
 | `PORT` | — | `8080` | API server port |
 | `NODE_ENV` | — | `development` | Set to `production` for JSON logs |
-| `PUBLIC_DOMAIN` | ✅ | — | Public hostname (e.g. `node.example.com`) — used as `REPLIT_DEV_DOMAIN` |
+| `PUBLIC_DOMAIN` | ✅ | — | Public hostname (e.g. `node.example.com`) — used as `PUBLIC_DOMAIN` |
 | `NODE_NAME` | — | `Primary Node` | Display name for your node |
 | `NODE_REGION` | — | `self-hosted` | Geographic region label |
 | `OPERATOR_EMAIL` | — | `admin@example.com` | Contact email shown in federation discovery |
@@ -142,25 +142,25 @@ pnpm run dev
 | `OBJECT_STORAGE_ENDPOINT` | — | Replit | S3-compatible endpoint URL |
 | `OBJECT_STORAGE_ACCESS_KEY` | — | — | S3 access key |
 | `OBJECT_STORAGE_SECRET_KEY` | — | — | S3 secret key |
-| `ISSUER_URL` | — | `https://replit.com/oidc` | OIDC issuer URL |
-| `REPL_ID` | ✅ for Replit Auth | — | OIDC client ID |
+| `ISSUER_URL` | — | — | OIDC issuer URL (required) |
+| `OIDC_CLIENT_ID` | ✅ for OIDC Auth | — | OIDC client ID |
 | `ALLOWED_ORIGINS` | — | `*` | Comma-separated allowed CORS origins |
 
 ---
 
-## Replacing Replit-specific Services
+## Replacing legacy Services
 
-The codebase was originally built on Replit. Every Replit-specific integration is isolated and swappable.
+The codebase was originally built . Every legacy integration is isolated and swappable.
 
 ### Auth
 
-Replit Auth uses standard **OpenID Connect (OIDC)**. To replace it:
+OIDC Auth uses standard **OpenID Connect (OIDC)**. To replace it:
 
 1. Set up any OIDC provider (Keycloak, Auth0, Okta, Authentik, etc.)
 2. Update two env vars:
    ```env
    ISSUER_URL=https://auth.yourdomain.com/realms/fedhost
-   REPL_ID=your-oidc-client-id
+   OIDC_CLIENT_ID=your-oidc-client-id
    ```
 3. The `artifacts/api-server/src/lib/auth.ts` file does standard OIDC discovery — no code change needed as long as your provider supports PKCE + `offline_access`.
 
@@ -168,7 +168,7 @@ For a self-contained option, **Authentik** or **Keycloak** both work out of the 
 
 ### Object Storage
 
-The `lib/integrations/object-storage` package wraps Replit Object Storage. To replace with S3-compatible storage:
+The `lib/storageProvider` package wraps S3-compatible object storage. To replace with S3-compatible storage:
 
 1. Set the S3 environment variables:
    ```env
@@ -178,7 +178,7 @@ The `lib/integrations/object-storage` package wraps Replit Object Storage. To re
    DEFAULT_OBJECT_STORAGE_BUCKET_ID=my-fedhost-bucket
    ```
 
-2. The `ObjectStorageService` in `artifacts/api-server/src/lib/objectStorage.ts` currently wraps the Replit SDK. For S3 compatibility, replace it with the AWS SDK v3:
+2. Storage is handled by `artifacts/api-server/src/lib/storageProvider.ts`. Set `OBJECT_STORAGE_ENDPOINT` to activate the S3 provider:
    ```bash
    pnpm --filter @workspace/api-server add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
    ```
@@ -297,7 +297,7 @@ Confirm `PUBLIC_DOMAIN` is set to the public hostname (not `localhost`).
 Check your firewall allows inbound TCP 443 (or 8080 if no reverse proxy).
 
 **Authentication failing**
-For Replit Auth: ensure `REPL_ID` matches your Replit app's ID.  
+For OIDC Auth: ensure `OIDC_CLIENT_ID` matches your provider's client ID.  
 For custom OIDC: verify the issuer discovery URL returns a valid OIDC configuration at `/.well-known/openid-configuration`.
 
 **Logs**

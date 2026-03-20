@@ -71,7 +71,7 @@ lib/db/                   Drizzle ORM schema + migrations
 lib/api-spec/             OpenAPI 3.1 specification (source of truth)
 lib/api-zod/              Auto-generated Zod validators (do not edit)
 lib/api-client-react/     Auto-generated React Query hooks (do not edit)
-lib/integrations/         Replit Auth + Object Storage wrappers
+lib/integrations/         OIDC Auth + Object Storage wrappers
 docs/                     Architecture, API, and other documentation
 scripts/                  Utility and seed scripts
 ```

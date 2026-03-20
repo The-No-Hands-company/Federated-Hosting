@@ -2,12 +2,11 @@
  * Storage provider abstraction layer.
  *
  * All storage operations go through this interface. Two implementations:
- *   - ReplitStorageProvider  — Replit Object Storage via sidecar (development/Replit hosted)
  *   - S3StorageProvider      — AWS S3, Cloudflare R2, MinIO, Backblaze B2, any S3-compatible
  *
  * Which provider is used is determined at startup based on environment variables:
- *   - If OBJECT_STORAGE_ENDPOINT is set → S3StorageProvider
- *   - Otherwise                         → ReplitStorageProvider
+ *   Requires OBJECT_STORAGE_ENDPOINT (or AWS_ACCESS_KEY_ID) to be set.
+ *   In development without credentials, logs a warning and continues.
  *
  * The active provider is exported as `storage` and used everywhere.
  */
@@ -171,118 +170,27 @@ export class S3StorageProvider implements StorageProvider {
   }
 }
 
-// ── Replit sidecar provider ────────────────────────────────────────────────────
-
-export class ReplitStorageProvider implements StorageProvider {
-  private readonly sidecar = "http://127.0.0.1:1106";
-  private readonly bucket: string;
-  private readonly prefix: string;
-
-  constructor() {
-    this.bucket = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID ?? "";
-    this.prefix = process.env.PRIVATE_OBJECT_DIR ?? "private";
-  }
-
-  private newObjectPath(): string {
-    return `/objects/${this.prefix}/uploads/${randomUUID()}`;
-  }
-
-  private async signUrl(bucketName: string, objectName: string, method: "GET" | "PUT", ttlSec: number): Promise<string> {
-    const response = await fetch(`${this.sidecar}/object-storage/signed-object-url`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        bucket_name: bucketName,
-        object_name: objectName,
-        method,
-        expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
-      }),
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!response.ok) throw new Error(`Sidecar sign error: ${response.status}`);
-    const { signed_url } = await response.json() as { signed_url: string };
-    return signed_url;
-  }
-
-  private parseObjectPath(objectPath: string): { bucket: string; key: string } {
-    const raw = objectPath.startsWith("/") ? objectPath.slice(1) : objectPath;
-    const slash = raw.indexOf("/");
-    if (slash === -1) return { bucket: raw, key: "" };
-    return { bucket: raw.slice(0, slash), key: raw.slice(slash + 1) };
-  }
-
-  async getUploadUrl(opts: { contentType: string; ttlSec: number }): Promise<{ uploadUrl: string; objectPath: string }> {
-    const objectPath = this.newObjectPath();
-    const { bucket, key } = this.parseObjectPath(objectPath);
-    const uploadUrl = await this.signUrl(this.bucket || bucket, key, "PUT", opts.ttlSec);
-    return { uploadUrl, objectPath };
-  }
-
-  async getDownloadUrl(objectPath: string, ttlSec = 3600): Promise<string> {
-    const { bucket, key } = this.parseObjectPath(objectPath);
-    return this.signUrl(this.bucket || bucket, key, "GET", ttlSec);
-  }
-
-  async streamToResponse(objectPath: string, res: import("express").Response): Promise<void> {
-    const downloadUrl = await this.getDownloadUrl(objectPath);
-    const response = await fetch(downloadUrl, { signal: AbortSignal.timeout(30_000) });
-    if (!response.ok) throw new ObjectNotFoundError(objectPath);
-    if (response.body) {
-      const nodeStream = Readable.fromWeb(response.body as ReadableStream);
-      await new Promise<void>((resolve, reject) => {
-        nodeStream.pipe(res);
-        nodeStream.on("error", reject);
-        res.on("finish", resolve);
-      });
-    } else {
-      res.end();
-    }
-  }
-
-  async stat(objectPath: string): Promise<{ contentType: string; size: number } | null> {
-    try {
-      const downloadUrl = await this.getDownloadUrl(objectPath, 60);
-      const response = await fetch(downloadUrl, { method: "HEAD", signal: AbortSignal.timeout(5_000) });
-      if (!response.ok) return null;
-      return {
-        contentType: response.headers.get("content-type") ?? "application/octet-stream",
-        size: parseInt(response.headers.get("content-length") ?? "0", 10),
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  async delete(objectPath: string): Promise<void> {
-    // Replit sidecar delete support — fire and forget
-    try {
-      const { bucket, key } = this.parseObjectPath(objectPath);
-      await fetch(`${this.sidecar}/object-storage/${this.bucket || bucket}/${key}`, {
-        method: "DELETE",
-        signal: AbortSignal.timeout(5_000),
-      });
-    } catch (err) {
-      logger.warn({ err, objectPath }, "[storage] Delete failed");
-    }
-  }
-}
-
 // ── Provider selection ─────────────────────────────────────────────────────────
 
 function createProvider(): StorageProvider {
-  const useS3 = Boolean(
+  const hasS3Config = Boolean(
     process.env.OBJECT_STORAGE_ENDPOINT ||
     process.env.OBJECT_STORAGE_ACCESS_KEY ||
     process.env.AWS_ACCESS_KEY_ID
   );
 
-  if (useS3) {
-    logger.info("[storage] Using S3-compatible storage provider");
-    return new S3StorageProvider();
+  if (!hasS3Config) {
+    const msg =
+      "No object storage configured. Set OBJECT_STORAGE_ENDPOINT (MinIO/S3-compatible) " +
+      "or AWS_ACCESS_KEY_ID + OBJECT_STORAGE_BUCKET to configure storage.";
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(msg);
+    }
+    logger.warn("[storage] " + msg + " Using S3 provider with empty credentials (dev mode).");
   }
 
-  logger.info("[storage] Using Replit storage provider (sidecar)");
-  return new ReplitStorageProvider();
+  logger.info("[storage] Using S3-compatible storage provider");
+  return new S3StorageProvider();
 }
 
 export const storage: StorageProvider = createProvider();

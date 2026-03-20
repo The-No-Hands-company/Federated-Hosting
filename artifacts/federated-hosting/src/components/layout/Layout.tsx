@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@workspace/auth-web";
 import { useHealthStatus } from "@/lib/apiHooks";
 
 const NAV_ITEMS = [

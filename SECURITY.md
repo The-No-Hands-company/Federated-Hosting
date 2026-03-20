@@ -40,7 +40,7 @@ All inter-node pings and sync notifications are signed with the originating node
 
 ### Authentication
 
-Users authenticate via **Replit Auth** (OpenID Connect with PKCE). Session tokens are stored in the database (not in JWTs), are HttpOnly + Secure cookies, and expire after a configurable TTL.
+Users authenticate via **OIDC Auth** (OpenID Connect with PKCE). Session tokens are stored in the database (not in JWTs), are HttpOnly + Secure cookies, and expire after a configurable TTL.
 
 ### Rate limiting
 

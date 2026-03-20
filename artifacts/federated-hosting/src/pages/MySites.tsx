@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@workspace/auth-web";
 import { useSites } from "@/lib/apiHooks";
 import { Link } from "wouter";
 import { Globe, Upload, ExternalLink, Plus, LogIn, Eye, Clock, Zap, BarChart2 } from "lucide-react";

@@ -44,11 +44,13 @@ export const siteFilesTable = pgTable("site_files", {
   objectPath: text("object_path").notNull(),
   contentType: text("content_type").notNull().default("application/octet-stream"),
   sizeBytes: integer("size_bytes").notNull().default(0),
+  contentHash: text("content_hash"), // SHA-256 hex — enables dedup: same hash = same objectPath
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index("site_files_site_idx").on(t.siteId),
   index("site_files_path_idx").on(t.siteId, t.filePath),
   index("site_files_deployment_idx").on(t.deploymentId),
+  index("site_files_hash_idx").on(t.contentHash),
 ]);
 
 export type SiteDeployment = typeof siteDeploymentsTable.$inferSelect;

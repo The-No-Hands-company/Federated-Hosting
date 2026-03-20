@@ -179,7 +179,7 @@ router.post("/sites/:id/unlock", asyncHandler(async (req: Request, res: Response
 
   // Issue HMAC-signed unlock token so the server can verify it without a DB lookup.
   // Format: base64url(siteId:issuedAt:hmac)
-  const secret = process.env.COOKIE_SECRET ?? process.env.REPL_ID ?? "change-me-in-production";
+  const secret = process.env.COOKIE_SECRET ?? (process.env.NODE_ENV === "production" ? (() => { throw new Error("COOKIE_SECRET must be set in production"); })() : "dev-only-insecure-cookie-secret");
   const issuedAt = Math.floor(Date.now() / 1000).toString();
   const payload = `${site.id}:${issuedAt}`;
   const hmac = crypto.createHmac("sha256", secret).update(payload).digest("base64url");

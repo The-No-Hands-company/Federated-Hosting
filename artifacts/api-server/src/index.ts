@@ -7,6 +7,7 @@ import { startAnalyticsFlusher, stopAnalyticsFlusher } from "./lib/analyticsFlus
 import { startGossipPusher, stopGossipPusher } from "./routes/gossip";
 import { getRedisClient, closeRedis } from "./lib/redis";
 import { startSyncRetryQueue, stopSyncRetryQueue } from "./lib/syncRetryQueue";
+import { startAcmeRenewalScheduler, stopAcmeRenewalScheduler } from "./lib/acme";
 import { db, sessionsTable } from "@workspace/db";
 import { lt } from "drizzle-orm";
 import { seedBundledSites } from "./lib/seedBundledSites";
@@ -22,14 +23,14 @@ async function ensureLocalNode(): Promise<void> {
   const [existing] = await db.select().from(nodesTable).where(eq(nodesTable.isLocalNode, 1));
 
   if (!existing) {
-    const domain = process.env.REPLIT_DEV_DOMAIN ?? `localhost:${port}`;
+    const domain = process.env.PUBLIC_DOMAIN ?? `localhost:${port}`;
     const { publicKey, privateKey } = generateKeyPair();
     const [created] = await db
       .insert(nodesTable)
       .values({
         name: process.env.NODE_NAME ?? "Primary Node",
         domain,
-        region: process.env.NODE_REGION ?? "Replit-Cloud",
+        region: process.env.NODE_REGION ?? "unknown",
         operatorName: process.env.OPERATOR_NAME ?? "Node Operator",
         operatorEmail: process.env.OPERATOR_EMAIL ?? "admin@example.com",
         storageCapacityGb: Number(process.env.STORAGE_CAPACITY_GB ?? 100),
@@ -63,6 +64,7 @@ function gracefulShutdown(server: http.Server, signal: string): void {
       stopAnalyticsFlusher();
       stopGossipPusher();
       stopSyncRetryQueue();
+      stopAcmeRenewalScheduler();
       await closeRedis();
       const { pool } = await import("@workspace/db");
       await pool.end();
@@ -97,6 +99,7 @@ ensureLocalNode()
     startAnalyticsFlusher();
     startGossipPusher();
     startSyncRetryQueue();
+    startAcmeRenewalScheduler();
 
     // Initialise Redis connection (optional — falls back to in-memory if not configured)
     const redis = getRedisClient();

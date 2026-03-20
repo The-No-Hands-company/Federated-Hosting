@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useParams, Link } from "wouter";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@workspace/auth-web";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Upload, FileIcon, Rocket, CheckCircle, Clock, ArrowLeft,

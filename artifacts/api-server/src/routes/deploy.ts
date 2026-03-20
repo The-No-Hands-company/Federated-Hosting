@@ -71,7 +71,7 @@ router.post("/sites/:id/files", asyncHandler(async (req: Request, res: Response)
   const [site] = await db.select().from(sitesTable).where(eq(sitesTable.id, siteId));
   if (!site) throw AppError.notFound("Site not found");
 
-  const { filePath, objectPath, contentType, sizeBytes } = parsed.data;
+  const { filePath, objectPath, contentType, sizeBytes, contentHash } = parsed.data as typeof parsed.data & { contentHash?: string };
 
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
     throw AppError.badRequest(`Content type '${contentType}' is not allowed`, "DISALLOWED_CONTENT_TYPE");
@@ -79,12 +79,26 @@ router.post("/sites/:id/files", asyncHandler(async (req: Request, res: Response)
 
   const sanitized = sanitizeFilePath(filePath);
 
+  // Content deduplication: if we already have a file with the same hash,
+  // reuse its objectPath instead of storing a duplicate in object storage.
+  let resolvedObjectPath = objectPath;
+  if (contentHash) {
+    const [existing] = await db
+      .select({ objectPath: siteFilesTable.objectPath })
+      .from(siteFilesTable)
+      .where(eq(siteFilesTable.contentHash, contentHash))
+      .limit(1);
+    if (existing) {
+      resolvedObjectPath = existing.objectPath;
+    }
+  }
+
   const [file] = await db
     .insert(siteFilesTable)
-    .values({ siteId, filePath: sanitized, objectPath, contentType, sizeBytes })
+    .values({ siteId, filePath: sanitized, objectPath: resolvedObjectPath, contentType, sizeBytes, contentHash: contentHash ?? null })
     .returning();
 
-  res.status(201).json(file);
+  res.status(201).json({ ...file, deduplicated: resolvedObjectPath !== objectPath });
 }));
 
 router.get("/sites/:id/files", asyncHandler(async (req: Request, res: Response) => {

@@ -409,7 +409,7 @@ const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
     <div class="step">
       <div class="step-num">1</div>
       <h3>Sign In</h3>
-      <p>Use your Replit account to authenticate. Your identity is linked to your node.</p>
+      <p>Sign in with your OIDC provider. Your identity is linked to your node.</p>
     </div>
     <div class="step">
       <div class="step-num">2</div>
