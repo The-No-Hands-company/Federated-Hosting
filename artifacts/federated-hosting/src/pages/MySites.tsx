@@ -179,6 +179,16 @@ export default function MySites() {
                         Deploy
                       </Button>
                     </Link>
+                    <Link href={`/analytics/${site.id}`}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-white/10 text-muted-foreground hover:text-white"
+                        title="View analytics"
+                      >
+                        <BarChart2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
                     <a
                       href={`/api/sites/serve/${site.domain}/index.html`}
                       target="_blank"

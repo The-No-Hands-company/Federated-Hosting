@@ -13,7 +13,7 @@
 
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, nodesTable, federationEventsTable } from "@workspace/db";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, desc } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
 import { signMessage, verifyMessage, generateKeyPair } from "../lib/federation";
 import logger from "../lib/logger";
@@ -234,8 +234,54 @@ export function startGossipPusher(intervalMs = 5 * 60 * 1000): void {
   logger.info({ intervalMs }, "Gossip pusher started");
 }
 
-export function stopGossipPusher(): void {
-  if (gossipTimer) { clearInterval(gossipTimer); gossipTimer = null; }
-}
+/**
+ * GET /api/federation/bootstrap
+ *
+ * Public bootstrap registry — returns a curated list of healthy, verified
+ * nodes that new nodes can use to seed their peer list. Designed to be
+ * referenced in documentation and consumed by fh CLI / node startup.
+ */
+router.get("/federation/bootstrap", asyncHandler(async (_req: Request, res: Response) => {
+  const [localNode] = await db.select().from(nodesTable).where(eq(nodesTable.isLocalNode, 1));
 
+  const verifiedPeers = await db
+    .select({
+      domain: nodesTable.domain,
+      name: nodesTable.name,
+      region: nodesTable.region,
+      publicKey: nodesTable.publicKey,
+      status: nodesTable.status,
+      lastSeenAt: nodesTable.lastSeenAt,
+      verifiedAt: nodesTable.verifiedAt,
+      joinedAt: nodesTable.joinedAt,
+    })
+    .from(nodesTable)
+    .where(and(eq(nodesTable.status, "active"), ne(nodesTable.isLocalNode, 1)))
+    .orderBy(desc(nodesTable.verifiedAt))
+    .limit(50);
+
+  // Only include nodes verified within the last 24 hours for bootstrap reliability
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const healthy = verifiedPeers.filter(
+    (p) => p.verifiedAt && new Date(p.verifiedAt) > since,
+  );
+
+  res.json({
+    protocol: "fedhost/1.0",
+    description: "FedHost bootstrap node registry — seed your peer list from here",
+    servedBy: localNode?.domain ?? "unknown",
+    generatedAt: new Date().toISOString(),
+    nodeCount: healthy.length,
+    nodes: healthy.map((n) => ({
+      domain: n.domain,
+      name: n.name,
+      region: n.region,
+      publicKey: n.publicKey,
+      verifiedAt: n.verifiedAt,
+    })),
+    docs: "https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/FEDERATION.md",
+  });
+}));
+
+export { startGossipPusher, stopGossipPusher };
 export default router;
