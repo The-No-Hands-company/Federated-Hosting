@@ -31,6 +31,7 @@ const AcceptInvitation    = lazy(() => import("@/pages/AcceptInvitation"));
 const AccountSettings     = lazy(() => import("@/pages/AccountSettings"));
 const FormInbox           = lazy(() => import("@/pages/FormInbox"));
 const BuildHistory        = lazy(() => import("@/pages/BuildHistory"));
+const WebhookManager      = lazy(() => import("@/pages/WebhookManager"));
 
 function onQueryError(error: unknown) {
   const err = error as { status?: number; message?: string };
@@ -86,6 +87,7 @@ function Router() {
             <Route path="/settings/account" component={AccountSettings} />
             <Route path="/sites/:id/forms" component={FormInbox} />
             <Route path="/sites/:id/builds" component={BuildHistory} />
+            <Route path="/sites/:id/webhooks" component={WebhookManager} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>

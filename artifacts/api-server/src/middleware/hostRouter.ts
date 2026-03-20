@@ -7,6 +7,25 @@ import crypto from "crypto";
 import { getCachedSite, setCachedSite, getCachedFile, setCachedFile } from "../lib/domainCache";
 import fs from "fs";
 import path from "path";
+import rateLimit from "express-rate-limit";
+
+// Per-IP rate limit on site serving — prevents bandwidth/scraping abuse.
+// 600 req/min per IP per host in production (~10 req/s sustained).
+const _limiters = new Map<string, ReturnType<typeof rateLimit>>();
+function getServeLimiter(host: string) {
+  if (!_limiters.has(host)) {
+    _limiters.set(host, rateLimit({
+      windowMs: 60_000,
+      max: process.env.NODE_ENV === "production" ? 600 : 100_000,
+      keyGenerator: (req) => `${req.ip ?? ""}:${host}`,
+      handler: (_req, res) => res.status(429).send("Too Many Requests"),
+      standardHeaders: "draft-7",
+      legacyHeaders: false,
+      skip: (req) => req.ip === "127.0.0.1" || req.ip === "::1",
+    }));
+  }
+  return _limiters.get(host)!;
+}
 
 const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN ?? "";
 
@@ -212,6 +231,10 @@ function applyCustomHeaders(
 export async function hostRouter(req: Request, res: Response, next: NextFunction): Promise<void> {
   const host = req.hostname;
   if (!host || isKnownInfraHost(host)) { next(); return; }
+
+  // Apply per-IP rate limit for this host before doing anything else
+  await new Promise<void>((resolve) => getServeLimiter(host)(req, res, () => resolve()));
+  if (res.headersSent) return; // rate limit handler already responded
 
   // ── Domain lookup (cache-first) ───────────────────────────────────────────
   let site: typeof sitesTable.$inferSelect | null = null;

@@ -95,10 +95,22 @@ export const deployCommand = new Command("deploy")
       return;
     }
 
-    // Upload files in parallel with concurrency limit
-    const uploadSpinner = ora(`Uploading files (concurrency: ${concurrency})`).start();
-    let uploaded = 0;
-    let failed = 0;
+    // Upload files in parallel with progress bar
+    const total      = files.length;
+    let uploaded     = 0;
+    let failed       = 0;
+    let deduplicated = 0;
+    let totalBytes   = 0;
+
+    function progressLine() {
+      const pct   = total > 0 ? Math.round((uploaded + failed) / total * 100) : 0;
+      const bar   = "█".repeat(Math.floor(pct / 5)) + "░".repeat(20 - Math.floor(pct / 5));
+      const dedup = deduplicated > 0 ? chalk.dim(` (${deduplicated} deduped)`) : "";
+      const mb    = totalBytes > 0 ? chalk.dim(` ${(totalBytes / 1024 / 1024).toFixed(1)} MB`) : "";
+      return `  [${chalk.cyan(bar)}] ${pct}% — ${uploaded + failed}/${total} files${mb}${dedup}`;
+    }
+
+    process.stdout.write(progressLine());
 
     async function uploadFile(f: { abs: string; rel: string }): Promise<void> {
       const stat = fs.statSync(f.abs);
@@ -129,10 +141,11 @@ export const deployCommand = new Command("deploy")
             { method: "POST", body: JSON.stringify({ filePath: f.rel, contentType, size }) },
           );
           await apiUpload(uploadUrl, fs.createReadStream(f.abs), contentType, size);
-          await apiFetch(`/sites/${siteId}/files`, {
+          const reg = await apiFetch<{ deduplicated?: boolean }>(`/sites/${siteId}/files`, {
             method: "POST",
             body: JSON.stringify({ filePath: f.rel, objectPath, contentType, sizeBytes: size, contentHash }),
           });
+          if (reg.deduplicated) deduplicated++; else totalBytes += size;
           return; // success
         } catch (err) {
           lastError = err as Error;
@@ -151,18 +164,21 @@ export const deployCommand = new Command("deploy")
           uploaded++;
         } else {
           failed++;
-          uploadSpinner.warn(
-            `Failed to upload ${chunk[j]?.rel}: ${(result.reason as Error).message}`,
-          );
+          process.stdout.write("\r" + " ".repeat(80) + "\r");
+          console.log(chalk.red(`  ✗ ${chunk[j]?.rel}: ${(result.reason as Error).message}`));
         }
       }
-      uploadSpinner.text = `Uploading files … ${uploaded}/${files.length}`;
+      process.stdout.write("\r" + progressLine());
     }
 
+    process.stdout.write("\n");
+
     if (failed > 0) {
-      uploadSpinner.warn(`Uploaded ${uploaded}/${files.length} files (${failed} failed)`);
+      console.log(chalk.yellow(`  ⚠ Uploaded ${uploaded}/${total} files (${failed} failed)`));
     } else {
-      uploadSpinner.succeed(`Uploaded ${chalk.bold(uploaded)} files`);
+      const dd   = deduplicated > 0 ? chalk.dim(` · ${deduplicated} deduplicated`) : "";
+      const mbStr = totalBytes > 0 ? chalk.dim(` · ${(totalBytes / 1024 / 1024).toFixed(1)} MB`) : "";
+      console.log(chalk.green(`  ✓ Uploaded ${chalk.bold(String(uploaded))} files${mbStr}${dd}`));
     }
 
     if (uploaded === 0) {

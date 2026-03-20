@@ -253,6 +253,7 @@ export default function SiteSettings() {
           <TabsTrigger value="redirects">Redirects</TabsTrigger>
           <TabsTrigger value="headers">Headers</TabsTrigger>
           <TabsTrigger value="env">Env Vars</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
           <TabsTrigger value="danger" className="text-red-400 data-[state=active]:text-red-300">Danger</TabsTrigger>
         </TabsList>
 
@@ -390,6 +391,14 @@ export default function SiteSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Webhooks ── */}
+        <TabsContent value="webhooks" className="mt-4">
+          <div className="rounded-xl border border-white/5 p-4 text-sm text-muted-foreground">
+            <p>Manage webhooks in the dedicated Webhooks page.</p>
+            <a href={`/sites/${siteId}/webhooks`} className="text-primary hover:underline mt-2 block">→ Open Webhooks Manager</a>
+          </div>
         </TabsContent>
 
         {/* ── Env Vars ── */}

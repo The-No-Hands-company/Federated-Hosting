@@ -57,7 +57,16 @@ export const analyticsCommand = new Command("analytics")
       return;
     }
 
-    const { totals, topPaths, topReferrers } = data;
+    const { totals, topPaths, topReferrers, hourly } = data;
+
+    // Build ASCII sparkline from hourly data
+    function sparkline(hourlyData: Array<{ hits: number }>): string {
+      if (!hourlyData?.length) return "";
+      const BLOCKS = " ▁▂▃▄▅▆▇█";
+      const values = hourlyData.map(h => Number(h.hits));
+      const max    = Math.max(...values, 1);
+      return values.map(v => BLOCKS[Math.round((v / max) * 8)] ?? " ").join("");
+    }
 
     console.log();
     console.log(
@@ -68,6 +77,12 @@ export const analyticsCommand = new Command("analytics")
     console.log(`  ${chalk.dim("Hits:")}         ${chalk.white(totals.hits.toLocaleString())}`);
     console.log(`  ${chalk.dim("Unique IPs:")}   ${chalk.white(totals.uniqueIps.toLocaleString())}`);
     console.log(`  ${chalk.dim("Bandwidth:")}    ${chalk.white(formatBytes(totals.bytesServed))}`);
+
+    // Sparkline if we have hourly data
+    if (hourly?.length > 1) {
+      const spark = sparkline(hourly);
+      console.log(`  ${chalk.dim("Traffic:")}     ${chalk.cyan(spark)}`);
+    }
     console.log();
 
     if (topPaths.length > 0) {
