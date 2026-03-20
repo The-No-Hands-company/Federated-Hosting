@@ -178,6 +178,30 @@ Both `en.json` and `id.json` are bundled directly into the JavaScript bundle, in
 
 ---
 
+## Resolved Since Initial Assessment
+
+The following critical and high-severity issues identified in the initial audit have been fixed:
+
+| Issue | Fix |
+|---|---|
+| Object storage Replit-only | `storageProvider.ts` — `S3StorageProvider` (AWS SDK v3) + `ReplitStorageProvider`, env-selected |
+| No Drizzle migrations | `0000_initial_schema.sql` (25 tables, all indexes) + `migrate.ts` runner |
+| Rate limiting in-memory | `ioredis` + `rate-limit-redis` — shared Redis store when `REDIS_URL` set |
+| Unlock cookie not verified | HMAC-signed with `crypto.timingSafeEqual`, 24-hour expiry |
+| Admin has no RBAC | `requireAdmin` middleware — `users.isAdmin` DB column + `ADMIN_USER_IDS` env var |
+| Host router 2–3 DB queries/request | LRU cache — 10K domain + 50K file entries, invalidated on deploy |
+| DB pool no config | Explicit `max`/`min`/`idleTimeoutMillis`/`connectionTimeoutMillis` |
+| Session expiry no cleanup | Background job purging expired sessions every 6 hours |
+| Analytics bulk delete unsafe SQL | `inArray()` operator replacing manual SQL construction |
+| Health monitor single-failure offline | N=3 consecutive failures required, jittered failure counter |
+| Federation replay attack window | 5-minute timestamp enforcement on all signed messages |
+| ACME is a stub | Full `acme-client` — HTTP-01 + DNS-01, auto-renewal, expiry email notifications |
+| i18n bundled synchronously | `i18next-http-backend` — async loading from `/public/locales/` |
+| Federation sync silently dropped | `syncRetryQueue.ts` — exponential backoff (30s → 6h), 10 max attempts, jitter |
+| No load tests | `load-tests/run.mjs` — 5 scenarios with thresholds, soak test |
+
+---
+
 ## What Is Actually Working
 
 | Component | Real Status |
