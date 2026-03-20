@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Federated Hosting API
-  version: 0.8.0
+  version: 0.9.0
   description: |
     Production-grade federated static site hosting network.
     Every node exposes this API. Authentication uses session cookies (browser)
@@ -2372,3 +2372,336 @@ components:
               schema: {type: string}
         '401':
           description: Unauthorized (METRICS_TOKEN mismatch)
+
+  /sites/{id}/redirects:
+    get:
+      summary: List redirect rules
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        '200': {description: Redirect rules array}
+    post:
+      summary: Create redirect rule
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [src, dest]
+              properties:
+                src:      {type: string, example: "/old-path/:slug"}
+                dest:     {type: string, example: "/new-path/:slug"}
+                status:   {type: integer, enum: [200, 301, 302, 307, 308, 404, 410], default: 301}
+                force:    {type: boolean, default: false}
+                position: {type: integer, default: 0}
+      responses:
+        '201': {description: Created rule}
+    put:
+      summary: Replace all redirect rules (bulk update)
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: array, items: {type: object}}
+      responses:
+        '200': {description: Updated rules}
+
+  /sites/{id}/headers:
+    get:
+      summary: List custom response headers
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        '200': {description: Custom headers array}
+    post:
+      summary: Create custom response header rule
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, value]
+              properties:
+                path:  {type: string, default: "/*"}
+                name:  {type: string, example: "X-Frame-Options"}
+                value: {type: string, example: "DENY"}
+      responses:
+        '201': {description: Created header rule}
+
+  /sites/{id}/invitations:
+    get:
+      summary: List pending invitations
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        '200': {description: Pending invitations}
+    post:
+      summary: Send invitation email
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: {type: string, format: email}
+                role:  {type: string, enum: [editor, viewer], default: viewer}
+      responses:
+        '201': {description: Invitation created and email sent}
+
+  /invitations/{token}/accept:
+    post:
+      summary: Accept a site invitation
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: token, in: path, required: true, schema: {type: string}}]
+      responses:
+        '200': {description: Invitation accepted, membership created}
+
+  /sites/{id}/forms:
+    get:
+      summary: List form submissions
+      tags: [Forms]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters:
+        - {name: id,    in: path,  required: true,  schema: {type: integer}}
+        - {name: form,  in: query, required: false, schema: {type: string}}
+        - {name: page,  in: query, schema: {type: integer, default: 1}}
+        - {name: limit, in: query, schema: {type: integer, default: 50, maximum: 100}}
+      responses:
+        '200': {description: Form submissions with form breakdown}
+
+  /forms/{domain}/{formName}:
+    post:
+      summary: Submit a form (public)
+      tags: [Forms]
+      parameters:
+        - {name: domain,   in: path, required: true, schema: {type: string}}
+        - {name: formName, in: path, required: true, schema: {type: string}}
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema: {type: object, additionalProperties: {type: string}}
+          application/json:
+            schema: {type: object, additionalProperties: {type: string}}
+      responses:
+        '200': {description: Submission accepted}
+        '429': {description: Rate limit exceeded}
+
+  /sites/{id}/builds:
+    get:
+      summary: List build jobs
+      tags: [Builds]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters:
+        - {name: id,    in: path,  required: true,  schema: {type: integer}}
+        - {name: page,  in: query, schema: {type: integer, default: 1}}
+        - {name: limit, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200': {description: Build jobs list}
+    post:
+      summary: Trigger a build from Git
+      tags: [Builds]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gitUrl:         {type: string, format: uri}
+                gitBranch:      {type: string, default: main}
+                buildCommand:   {type: string, default: "npm run build"}
+                outputDir:      {type: string, default: dist}
+                environment:    {type: string, enum: [production, staging, preview]}
+                installCommand: {type: string}
+                envVars:        {type: object, additionalProperties: {type: string}}
+      responses:
+        '202': {description: Build queued}
+
+  /git-webhook/{siteId}:
+    post:
+      summary: Receive GitHub/GitLab push webhook to auto-trigger builds
+      tags: [Builds]
+      parameters: [{name: siteId, in: path, required: true, schema: {type: integer}}]
+      responses:
+        '202': {description: Build triggered}
+        '401': {description: Invalid webhook signature}
+
+  /auth/2fa/setup:
+    post:
+      summary: Generate TOTP secret and QR code
+      tags: [Auth]
+      security: [{sessionCookie: []}]
+      responses:
+        '200':
+          description: TOTP setup data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret: {type: string}
+                  qrCode: {type: string, description: base64 data URL}
+                  otpAuthUrl: {type: string}
+
+  /auth/2fa/verify:
+    post:
+      summary: Confirm TOTP code and enable 2FA
+      tags: [Auth]
+      security: [{sessionCookie: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, secret]
+              properties:
+                code:   {type: string, minLength: 6, maxLength: 6}
+                secret: {type: string}
+      responses:
+        '200': {description: 2FA enabled, backup codes returned}
+
+  /auth/2fa/validate:
+    post:
+      summary: Validate a TOTP or backup code
+      tags: [Auth]
+      security: [{sessionCookie: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: {type: string}
+      responses:
+        '200': {description: Code valid}
+        '400': {description: Invalid code or account locked}
+
+  /sites/{id}/transfer:
+    post:
+      summary: Initiate site ownership transfer
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toEmail]
+              properties:
+                toEmail: {type: string, format: email}
+      responses:
+        '200': {description: Transfer token issued}
+
+  /sites/{id}/export:
+    get:
+      summary: Export site data as JSON manifest
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        '200': {description: Site export manifest with presigned file URLs}
+
+  /sites/import:
+    post:
+      summary: Import site from export manifest
+      tags: [Sites]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      responses:
+        '201': {description: Site created from import}
+
+  /sites/{id}/env:
+    get:
+      summary: List site build environment variables
+      tags: [Builds]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters:
+        - {name: id,          in: path,  required: true,  schema: {type: integer}}
+        - {name: showSecrets, in: query, required: false, schema: {type: boolean}}
+      responses:
+        '200': {description: Env vars (secrets masked unless showSecrets=1)}
+    post:
+      summary: Set a build environment variable
+      tags: [Builds]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, value]
+              properties:
+                key:    {type: string, pattern: "^[A-Z_][A-Z0-9_]{0,99}$"}
+                value:  {type: string}
+                secret: {type: integer, enum: [0, 1], default: 0}
+      responses:
+        '201': {description: Env var set}
+
+  /sites/{id}/analytics/export:
+    get:
+      summary: Export analytics as CSV
+      tags: [Analytics]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters:
+        - {name: id,     in: path,  required: true,  schema: {type: integer}}
+        - {name: period, in: query, schema: {type: string, enum: [7d, 30d, all], default: 30d}}
+      responses:
+        '200':
+          description: CSV file
+          content: {text/csv: {schema: {type: string}}}
+
+  /sites/{id}/analytics/stream:
+    get:
+      summary: Real-time analytics SSE stream
+      tags: [Analytics]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        '200':
+          description: Server-Sent Events stream of page hits
+          content: {'text/event-stream': {schema: {type: string}}}
+
+  /admin/site-health:
+    get:
+      summary: Site health monitoring overview
+      tags: [Admin]
+      security: [{sessionCookie: []}, {bearerToken: []}]
+      responses:
+        '200':
+          description: Health status of all monitored sites
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:    {type: integer}
+                  up:       {type: integer}
+                  degraded: {type: integer}
+                  down:     {type: integer}

@@ -129,6 +129,35 @@ services:
       # ── Redis (shared rate limiting + cache) ─────────────────────────────
       REDIS_URL: redis://redis:6379
 
+      # ── Security ──────────────────────────────────────────────────────────
+      COOKIE_SECRET:  ${COOKIE_SECRET}         # Required — random 32+ char string
+      METRICS_TOKEN:  ${METRICS_TOKEN:-}       # Optional — bearer token for /metrics
+
+      # ── Email notifications (SMTP) ────────────────────────────────────────
+      SMTP_HOST:       ${SMTP_HOST:-}
+      SMTP_PORT:       ${SMTP_PORT:-587}
+      SMTP_SECURE:     ${SMTP_SECURE:-false}
+      SMTP_USER:       ${SMTP_USER:-}
+      SMTP_PASS:       ${SMTP_PASS:-}
+      EMAIL_FROM:      ${EMAIL_FROM:-noreply@example.com}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-FedHost}
+
+      # ── TLS / ACME ────────────────────────────────────────────────────────
+      ACME_ENABLED:     ${ACME_ENABLED:-false}
+      ACME_EMAIL:       ${ACME_EMAIL:-}
+      ACME_STAGING:     ${ACME_STAGING:-false}
+      ACME_CERT_DIR:    ${ACME_CERT_DIR:-/etc/certs}
+      ACME_CHALLENGE_TYPE: ${ACME_CHALLENGE_TYPE:-http}
+
+      # ── Site health monitoring ────────────────────────────────────────────
+      ENABLE_SITE_HEALTH_CHECKS:      ${ENABLE_SITE_HEALTH_CHECKS:-false}
+      SITE_HEALTH_CHECK_INTERVAL_MS:  ${SITE_HEALTH_CHECK_INTERVAL_MS:-600000}
+
+      # ── Data retention ────────────────────────────────────────────────────
+      ANALYTICS_RETENTION_DAYS:  ${ANALYTICS_RETENTION_DAYS:-90}
+      FORM_RETENTION_DAYS:       ${FORM_RETENTION_DAYS:-365}
+      AUDIT_LOG_RETENTION_DAYS:  ${AUDIT_LOG_RETENTION_DAYS:-365}
+
     depends_on:
       db:
         condition: service_healthy

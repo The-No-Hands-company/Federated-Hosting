@@ -10,71 +10,68 @@ npm install -g @fedhost/cli
 pnpm add -g @fedhost/cli
 ```
 
-## Quick Start
+## Quick start
 
 ```bash
-# 1. Authenticate to your node
-fh login --node https://your-node.example.com
+fh login --node https://your-node.example.com  # authenticate
+fh deploy ./dist --site 42                      # deploy files
+fh status                                        # confirm live
+```
 
-# 2. Create a site
-fh sites create --name "My Site" --domain mysite.example.com
+## Shell completion
 
-# 3. Deploy your built files
-fh deploy ./dist --site 42
-
-# 4. Check it's live
-fh status
+```bash
+eval "$(fh completion bash)"   # Bash — add to ~/.bashrc
+eval "$(fh completion zsh)"    # Zsh  — add to ~/.zshrc
+fh completion fish > ~/.config/fish/completions/fh.fish
 ```
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `fh login` | Authenticate to a FedHost node |
-| `fh logout` | Remove stored credentials |
-| `fh status` | Show node health and federation network status |
-| `fh deploy <dir>` | Upload and deploy a directory |
-| `fh rollback` | Roll back to a previous deployment |
-| `fh analytics` | View site traffic analytics |
-| `fh sites list` | List your sites |
-| `fh sites create` | Register a new site |
-| `fh sites info <id>` | Show site details |
-| `fh tokens list` | List API tokens |
-| `fh tokens revoke <id>` | Revoke an API token |
+### Account
+| `fh login --node <url>` | Authenticate with a node |
+| `fh logout` | Remove credentials |
+| `fh whoami` | Show current user and node |
+| `fh init` | Init site config in current directory |
 
-## Deploy Options
+### Deploying
+| `fh deploy <dir>` | Upload files and deploy |
+| `fh deploy <dir> --staging` | Deploy to staging |
+| `fh rollback <site-id>` | Roll back to previous deployment |
+| `fh status` | Show deployment status |
 
+### Git builds
 ```bash
-fh deploy ./dist --site 42
-  --site, -s <id>           Site ID to deploy to (required)
-  --dry-run                 List files that would be uploaded
-  --concurrency, -c <n>     Parallel uploads (default: 4, max: 10)
+fh build <site-id> --git-url https://github.com/org/repo
+fh build <site-id> --branch main --command "npm run build" --output dist --wait
+fh logs  <site-id>                         # list recent builds
+fh logs  <site-id> --build 42 --follow     # stream a build log
 ```
 
-## GitHub Actions
+### Environment variables (injected into builds)
+```bash
+fh env list  <site-id>
+fh env set   <site-id> VITE_API_URL https://api.example.com
+fh env set   <site-id> MY_SECRET abc123 --secret
+fh env unset <site-id> VITE_API_URL
+fh env pull  <site-id>   # print as export statements
+```
 
-Add to your workflow to auto-deploy on push:
+### Forms, analytics, tokens
+```bash
+fh forms     <site-id> [--form contact] [--export file.csv] [--unread]
+fh analytics <site-id> [--period 7d|30d]
+fh sites
+fh tokens
+```
+
+## CI / GitHub Actions
 
 ```yaml
-- name: Deploy to FedHost
-  run: |
-    npm install -g @fedhost/cli
-    fh login --node ${{ secrets.FH_NODE_URL }} --token ${{ secrets.FH_TOKEN }}
-    fh deploy ./dist --site ${{ secrets.FH_SITE_ID }}
+- uses: actions/setup-node@v4
+  with: {node-version: 24}
+- run: npm install -g @fedhost/cli && fh deploy ./dist --site ${{ vars.SITE_ID }}
+  env:
+    FH_NODE_URL: ${{ vars.FH_NODE_URL }}
+    FH_TOKEN:    ${{ secrets.FH_TOKEN }}
 ```
-
-A ready-made workflow is available at `.github/workflows/deploy.yml` in the [main repo](https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/.github/workflows/deploy.yml).
-
-## Authentication
-
-The CLI uses long-lived API tokens. Create one from the FedHost UI under **My Sites → API Tokens → New Token**, or via another token:
-
-```bash
-fh login --node https://node.example.com --token fh_your_token_here
-```
-
-Tokens are stored locally using [`conf`](https://github.com/sindresorhus/conf) in your OS config directory.
-
-## License
-
-MIT — [The No Hands Company](https://github.com/The-No-Hands-company)

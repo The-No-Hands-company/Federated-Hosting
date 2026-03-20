@@ -58,7 +58,7 @@ async function appendLog(buildId: number, text: string): Promise<void> {
   );
 }
 
-async function runBuild(buildId: number, siteId: number, opts: {
+export async function runBuild(buildId: number, siteId: number, opts: {
   gitUrl: string;
   gitBranch: string;
   buildCommand: string;

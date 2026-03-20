@@ -24,7 +24,7 @@ This checklist is for node operators preparing a Federated Hosting node for publ
 - [ ] `DEFAULT_OBJECT_STORAGE_BUCKET_ID` — bucket created and accessible
 - [ ] `PRIVATE_OBJECT_DIR` and `PUBLIC_OBJECT_SEARCH_PATHS` — set to match your bucket structure
 - [ ] `NODE_ENV=production` — enables JSON logs, disables stack traces in error responses
-- [ ] `ISSUER_URL` — points to your OIDC provider (Replit, Authentik, Keycloak, etc.)
+- [ ] `ISSUER_URL` — points to your OIDC provider (Authentik, Keycloak, Auth0, Dex, etc.)
 - [ ] `OIDC_CLIENT_ID` — OIDC client ID registered with your provider
 - [ ] `PUBLIC_DOMAIN` — your public hostname (e.g. `node.yourdomain.com`)
 - [ ] `NODE_NAME`, `NODE_REGION`, `OPERATOR_EMAIL` — visible in federation discovery
