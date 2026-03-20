@@ -1,0 +1,45 @@
+// Router example — serve different responses by path
+// Demonstrates basic request routing in NLPL
+
+import network
+import io
+import string
+
+function handle_home with request returns String
+  set body to "<!DOCTYPE html><html><head><title>NLPL App</title></head><body><h1>Home</h1><nav><a href='/about'>About</a> | <a href='/api/hello'>API</a></nav></body></html>"
+  return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + body
+end
+
+function handle_about with request returns String
+  set body to "<!DOCTYPE html><html><body><h1>About</h1><p>Built with NLPL on Federated Hosting.</p></body></html>"
+  return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + body
+end
+
+function handle_api_hello with request returns String
+  set body to "{\"message\": \"Hello from NLPL!\", \"version\": \"0.1\"}"
+  return "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + body
+end
+
+function handle_not_found with request returns String
+  return "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nPage not found"
+end
+
+function route with request returns String
+  set path to network.get_path from request
+
+  if path equals "/"
+    return handle_home with request
+  end
+
+  if path equals "/about"
+    return handle_about with request
+  end
+
+  if path equals "/api/hello"
+    return handle_api_hello with request
+  end
+
+  return handle_not_found with request
+end
+
+call network.serve_http with route, PORT

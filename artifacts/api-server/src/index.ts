@@ -8,6 +8,7 @@ import { startGossipPusher, stopGossipPusher } from "./routes/gossip";
 import { getRedisClient, closeRedis } from "./lib/redis";
 import { startSyncRetryQueue, stopSyncRetryQueue } from "./lib/syncRetryQueue";
 import { startAcmeRenewalScheduler, stopAcmeRenewalScheduler } from "./lib/acme";
+import { stopAllProcesses } from "./lib/processManager";
 import { startSiteHealthMonitor, stopSiteHealthMonitor } from "./lib/siteHealthMonitor";
 import { startMetricsCollector, stopMetricsCollector } from "./lib/metricsCollector";
 import { startWebhookRetryProcessor, stopWebhookRetryProcessor } from "./lib/webhooks";

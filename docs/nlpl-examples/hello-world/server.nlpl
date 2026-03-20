@@ -1,0 +1,11 @@
+// Hello World — minimal NLPL HTTP server
+// Upload this file as server.nlpl and click "Start Process"
+
+import network
+import io
+
+function handle_request with request returns String
+  return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html><html><head><title>Hello from NLPL</title></head><body><h1>Hello from NLPL!</h1><p>Your NLPL server is running on Federated Hosting.</p></body></html>"
+end
+
+call network.serve_http with handle_request, PORT

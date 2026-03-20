@@ -26,6 +26,7 @@ import envVarsRouter from "./envVars";
 import gitWebhookRouter from "./gitWebhook";
 import deploymentDiffRouter from "./deploymentDiff";
 import cloneRouter from "./clone";
+import nlplRouter from "./nlpl";
 
 const router: IRouter = Router();
 
@@ -56,5 +57,6 @@ router.use(envVarsRouter);
 router.use(gitWebhookRouter);
 router.use(deploymentDiffRouter);
 router.use(cloneRouter);
+router.use(nlplRouter);
 
 export default router;

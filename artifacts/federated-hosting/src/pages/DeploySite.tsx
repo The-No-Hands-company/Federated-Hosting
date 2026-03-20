@@ -18,6 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { SitePreviewModal } from "@/components/SitePreviewModal";
+import { NlplPanel } from "@/components/NlplPanel";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -389,6 +390,11 @@ export default function DeploySite() {
         </div>
 
         <div className="space-y-4">
+          {/* NLPL / dynamic site process management panel */}
+          {(site.siteType === "nlpl" || site.siteType === "dynamic") && (
+            <NlplPanel siteId={siteId} siteDomain={site.domain} siteType={site.siteType} />
+          )}
+
           <DeploymentHistory siteId={siteId} deployments={deployments} onRollback={depId=>rollbackMutation.mutate(depId)} isRollingBack={rollbackMutation.isPending} rollingBackId={rollingBackId}/>
           <Card className="border-white/5">
             <CardHeader className="pb-3"><CardTitle className="text-white text-base">Quick Links</CardTitle></CardHeader>

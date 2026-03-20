@@ -14,7 +14,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE "site_type" AS ENUM('static', 'dynamic', 'blog', 'portfolio', 'other');
+  CREATE TYPE "site_type" AS ENUM('static', 'dynamic', 'blog', 'portfolio', 'other', 'nlpl');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN

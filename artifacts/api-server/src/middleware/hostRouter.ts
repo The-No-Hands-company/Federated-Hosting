@@ -4,7 +4,10 @@ import { eq, and } from "drizzle-orm";
 import { storage, ObjectNotFoundError } from "../lib/storageProvider";
 import { hashIp } from "../lib/analyticsFlush";
 import crypto from "crypto";
+import http from "http";
 import { getCachedSite, setCachedSite, getCachedFile, setCachedFile } from "../lib/domainCache";
+import { getSiteProxyTarget } from "../lib/processManager";
+import logger from "../lib/logger";
 import fs from "fs";
 import path from "path";
 import rateLimit from "express-rate-limit";
@@ -319,6 +322,70 @@ export async function hostRouter(req: Request, res: Response, next: NextFunction
 
   if (site.visibility === "password" && !verifyUnlockCookie(req.cookies?.[`site_unlock_${site.id}`], site.id)) {
     res.status(401).send(renderPasswordGate(site.id, host, (site as any).unlockMessage));
+    return;
+  }
+
+  // ── Dynamic site: proxy to the site's running process ────────────────────
+  // Sites with siteType "nlpl", "node", or "python" run as persistent processes.
+  // The processManager allocates a port and keeps the process alive.
+  // Here we simply forward the HTTP request to that process.
+  const siteType = (site as any).siteType as string | undefined;
+  if (siteType === "nlpl" || siteType === "node" || siteType === "python" || siteType === "dynamic") {
+    const proxyTarget = getSiteProxyTarget(site.id);
+
+    if (!proxyTarget) {
+      // Process isn't running — return a clear error rather than hanging
+      res.status(503).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Site Starting</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}h1{font-size:2rem;margin-bottom:1rem;color:#7c6af7}p{color:#9ca3af;max-width:40ch;line-height:1.6}code{font-family:monospace;font-size:.85em;background:#1a1a2e;padding:.2em .4em;border-radius:.25em}</style>
+</head><body><div>
+<h1>⚡ Site is starting</h1>
+<p>The <code>${siteType}</code> process for this site is not running yet.</p>
+<p style="margin-top:1rem;font-size:.85em">Deploy the site or check the node admin panel to start the process.</p>
+</div></body></html>`);
+      return;
+    }
+
+    // Parse proxy target URL
+    const targetUrl = new URL(req.url, proxyTarget);
+
+    const proxyReq = http.request(
+      {
+        host: "127.0.0.1",
+        port: new URL(proxyTarget).port,
+        path: req.url,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: host,  // forward original host header
+          "x-forwarded-for": req.ip ?? "",
+          "x-forwarded-proto": "https",
+          "x-site-domain": host,
+        },
+      },
+      (proxyRes) => {
+        res.status(proxyRes.statusCode ?? 200);
+        for (const [key, val] of Object.entries(proxyRes.headers)) {
+          if (val !== undefined) res.setHeader(key, val);
+        }
+        res.setHeader("X-Served-By", "federated-hosting-proxy");
+        proxyRes.pipe(res);
+        recordHit(site.id, req.path, req, 0);
+      },
+    );
+
+    proxyReq.on("error", (err) => {
+      logger.warn({ siteId: site.id, domain: host, err: (err as Error).message }, "[host-router] Proxy error");
+      if (!res.headersSent) {
+        res.status(502).send("Bad gateway — site process error");
+      }
+    });
+
+    if (req.body) {
+      const bodyData = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      proxyReq.write(bodyData);
+    }
+    proxyReq.end();
     return;
   }
 

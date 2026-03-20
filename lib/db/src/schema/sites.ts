@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const siteStatusEnum = pgEnum("site_status", ["active", "suspended", "migrating", "maintenance"]);
-export const siteTypeEnum = pgEnum("site_type", ["static", "dynamic", "blog", "portfolio", "other"]);
+export const siteTypeEnum = pgEnum("site_type", ["static", "dynamic", "blog", "portfolio", "other", "nlpl"]);
 export const siteVisibilityEnum = pgEnum("site_visibility", ["public", "private", "password"]);
 
 export const sitesTable = pgTable("sites", {
