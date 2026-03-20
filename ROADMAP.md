@@ -141,7 +141,7 @@ A living document tracking what is built, what is in progress, and what must be 
 | 15 | Admin audit logging | MEDIUM | ✅ auditLog(), admin_audit_log table, GET /api/admin/audit-log |
 | 16 | Content deduplication | LOW | ✅ content_hash column, dedup on register-file, objectPath reuse |
 | 17 | Prometheus metrics | LOW | ✅ prom-client, 12 metrics, GET /metrics, metricsMiddleware |
-| 18 | Gossip in-memory per-instance | LOW | ⚠️ Multi-instance gossip not Redis-shared |
+| 18 | Gossip peer state | ✅ | Peer list stored in PostgreSQL nodes table — shared across instances naturally |
 | 19 | Session store (multi-instance) | MEDIUM | ✅ Redis-first with PostgreSQL fallback; cross-instance session sharing |
 
 ---
