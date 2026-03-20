@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -146,13 +147,13 @@ function DeploymentHistory({ siteId, deployments, onRollback, isRollingBack, rol
     <Card className="border-white/5">
       <CardHeader className="pb-3">
         <CardTitle className="text-white flex items-center gap-2 text-base">
-          <Rocket className="w-4 h-4 text-primary"/>Deployment History
+          <Rocket className="w-4 h-4 text-primary"/>{t("deploy.history.title")}
         </CardTitle>
         <CardDescription>{deployments.length} deployment{deployments.length!==1?"s":""}</CardDescription>
       </CardHeader>
       <CardContent>
         {deployments.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-4">No deployments yet.</p>
+          <p className="text-muted-foreground text-sm text-center py-4">{t("deploy.history.noDeployments")}</p>
         ) : (
           <div className="space-y-2">
             {sorted.map(d => {
@@ -207,6 +208,7 @@ export default function DeploySite() {
   const [rollingBackId, setRollingBackId] = useState<number|null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { t } = useTranslation();
   const rollbackMutation = useMutation({
     mutationFn:(depId:number) => apiFetch(`/sites/${siteId}/deployments/${depId}/rollback`,{method:"POST"}),
     onMutate:(depId) => setRollingBackId(depId),
@@ -290,8 +292,8 @@ export default function DeploySite() {
           <p className="text-primary font-mono text-sm mt-0.5">{site.domain}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/analytics/${siteId}`}><Button variant="outline" size="sm" className="border-white/10 text-muted-foreground hover:text-white"><BarChart2 className="w-4 h-4 mr-1.5"/>Analytics</Button></Link>
-          {activeDeployment && <a href={`/api/sites/serve/${site.domain}/index.html`} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="border-status-active/30 text-status-active hover:bg-status-active/10"><ExternalLink className="w-4 h-4 mr-1.5"/>View Live</Button></a>}
+          <Link href={`/analytics/${siteId}`}><Button variant="outline" size="sm" className="border-white/10 text-muted-foreground hover:text-white"><BarChart2 className="w-4 h-4 mr-1.5"/>{t("common.analytics")}</Button></Link>
+          {activeDeployment && <a href={`/api/sites/serve/${site.domain}/index.html`} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="border-status-active/30 text-status-active hover:bg-status-active/10"><ExternalLink className="w-4 h-4 mr-1.5"/>{t("common.viewLive")}</Button></a>}
         </div>
       </div>
 
@@ -299,7 +301,7 @@ export default function DeploySite() {
         <div className="xl:col-span-2 space-y-4">
           <Card className="border-white/5">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2"><Upload className="w-5 h-5 text-primary"/>Upload Files</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2"><Upload className="w-5 h-5 text-primary"/>{t("deploy.title")}</CardTitle>
               <CardDescription>Drop HTML, CSS, JS, images and other assets. Files upload directly to object storage.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -310,7 +312,7 @@ export default function DeploySite() {
                 onClick={()=>fileInputRef.current?.click()}>
                 <input ref={fileInputRef} type="file" multiple className="hidden" onChange={e=>e.target.files&&addFiles(e.target.files)}/>
                 <FolderOpen className={cn("w-12 h-12 mx-auto mb-3 transition-colors",isDragOver?"text-primary":"text-muted-foreground")}/>
-                <p className="text-white font-medium mb-1">Drop files here or click to browse</p>
+                <p className="text-white font-medium mb-1">{t("deploy.dropzone")}</p>
                 <p className="text-muted-foreground text-sm">HTML, CSS, JS, images, fonts · 50 MB per file</p>
               </div>
 
@@ -348,7 +350,7 @@ export default function DeploySite() {
               {hasUndeployed&&uploadQueue.every(i=>i.status!=="pending")&&(
                 <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}}>
                   <Button onClick={deploy} disabled={isDeploying} className="w-full bg-primary text-black hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 h-11">
-                    {isDeploying?<><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Deploying&hellip;</>:<><Rocket className="w-4 h-4 mr-2"/>Deploy Site</>}
+                    {isDeploying?<><Loader2 className="w-4 h-4 mr-2 animate-spin"/>{t("deploy.deploying")}</>:<><Rocket className="w-4 h-4 mr-2"/>{t("deploy.deploySite")}</>}
                   </Button>
                 </motion.div>
               )}
@@ -367,7 +369,7 @@ export default function DeploySite() {
                 <Button size="sm" variant="outline" className="w-full border-white/10 text-muted-foreground hover:text-white justify-start"><Globe className="w-3.5 h-3.5 mr-2"/>Live Site</Button>
               </a>
               <Link href={`/analytics/${siteId}`} className="block">
-                <Button size="sm" variant="outline" className="w-full border-white/10 text-muted-foreground hover:text-white justify-start"><BarChart2 className="w-3.5 h-3.5 mr-2"/>Analytics</Button>
+                <Button size="sm" variant="outline" className="w-full border-white/10 text-muted-foreground hover:text-white justify-start"><BarChart2 className="w-3.5 h-3.5 mr-2"/>{t("common.analytics")}</Button>
               </Link>
               <div className="bg-muted/20 rounded-xl p-3 mt-1">
                 <p className="text-xs text-muted-foreground mb-1.5">CLI deploy:</p>

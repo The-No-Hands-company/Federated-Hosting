@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export default function AdminPage() {
   const { isAuthenticated, login } = useAuth();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [editMode, setEditMode] = useState(false);
@@ -113,8 +115,8 @@ export default function AdminPage() {
           <Server className="w-8 h-8 text-primary" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Node Admin</h2>
-          <p className="text-muted-foreground">Sign in to access the operator dashboard.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">{t("admin.title")}</h2>
+          <p className="text-muted-foreground">{t("errors.authRequiredMsg")}</p>
         </div>
         <Button onClick={login} className="bg-primary text-black hover:bg-primary/90 font-semibold">
           <LogIn className="w-4 h-4 mr-2" /> Sign In
@@ -144,17 +146,17 @@ export default function AdminPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Node Admin</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{t("admin.title")}</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm">{node.domain}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}
             className="border-white/10 text-muted-foreground hover:text-white">
-            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+            <RefreshCw className="w-4 h-4 mr-2" /> {t("common.refresh")}
           </Button>
           <Button size="sm" onClick={() => { setEditMode(!editMode); setNodeSettings({ name: node.name, region: node.region, operatorEmail: node.operatorEmail }); }}
             className={editMode ? "bg-muted border-white/10" : "bg-primary text-black hover:bg-primary/90 font-semibold"}>
-            <Settings className="w-4 h-4 mr-2" />{editMode ? "Cancel" : "Edit Node"}
+            <Settings className="w-4 h-4 mr-2" />{editMode ? t("admin.editCancel") : t("admin.edit")}
           </Button>
         </div>
       </div>
@@ -194,7 +196,7 @@ export default function AdminPage() {
                   disabled={updateNodeMutation.isPending}
                   className="bg-primary text-black hover:bg-primary/90 font-semibold"
                 >
-                  {updateNodeMutation.isPending ? "Saving…" : "Save Changes"}
+                  {updateNodeMutation.isPending ? t("admin.saving") : t("admin.saveChanges")}
                 </Button>
               </div>
             </CardContent>
@@ -229,7 +231,7 @@ export default function AdminPage() {
         <Card className="border-white/5">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-muted-foreground" /> System
+              <Cpu className="w-5 h-5 text-muted-foreground" /> {t("admin.sections.system")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -266,7 +268,7 @@ export default function AdminPage() {
         <Card className="border-white/5">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
-              <Radio className="w-5 h-5 text-muted-foreground" /> Node Identity
+              <Radio className="w-5 h-5 text-muted-foreground" /> {t("admin.sections.nodeIdentity")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -301,12 +303,12 @@ export default function AdminPage() {
       {/* Recent federation events */}
       <Card className="border-white/5">
         <CardHeader>
-          <CardTitle className="text-white text-lg">Recent Federation Events</CardTitle>
-          <CardDescription>Last 10 events logged by this node</CardDescription>
+          <CardTitle className="text-white text-lg">{t("admin.sections.recentEvents")}</CardTitle>
+          <CardDescription>{t("admin.sections.recentEventsSubtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           {recentEvents.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No events yet.</p>
+            <p className="text-muted-foreground text-sm">{t("admin.noEvents")}</p>
           ) : (
             <div className="space-y-2">
               {recentEvents.map((ev) => (

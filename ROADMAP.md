@@ -102,7 +102,7 @@ Auto-seeded demo sites ship with every node on first boot.
 | Webhook notifications | ✅ | node_offline, node_online, deploy, deploy_failed, new_peer — Ed25519 signed |
 | Rollback via CLI | ✅ | fh rollback --site <id> [--version <n>] with interactive picker |
 | fh analytics + fh status CLI commands | ✅ | ASCII bar charts for traffic, node health summary |
-| @fedhost/cli published to npm | 🔄 | Package ready (@fedhost/cli), needs npm org + publish token |
+| @fedhost/cli published to npm | 🔄 | publish-cli.yml workflow ready, needs NPM_TOKEN secret |
 | Public bootstrap node registry | ✅ | GET /api/federation/bootstrap — healthy verified peers, 24h window |
 | Mobile-responsive layout audit | ✅ | Verified responsive grids across all pages |
 
@@ -124,7 +124,7 @@ Auto-seeded demo sites ship with every node on first boot.
 
 | Item | Priority |
 |---|---|
-| E2E test suite (Playwright) | High |
+| E2E test suite (Playwright) | ✅ | health, deploy (11-step), security (20+ auth tests) |
 | OpenAPI spec kept in sync | Medium |
 | @fedhost/cli npm publish | Medium |
 | Rate limiting on all write endpoints | ✅ | writeLimiter, tokenLimiter, webhookLimiter applied globally |

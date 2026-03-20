@@ -11,6 +11,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useStatsHourly, useNodes } from "@/lib/apiHooks";
 import { useState } from "react";
 import { OnboardingBanner, OnboardingModal, useOnboarding } from "@/components/Onboarding";
+import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading, error: statsError } = useGetFederationStats();
@@ -19,16 +20,17 @@ export default function Dashboard() {
   const { isAuthenticated, login } = useAuth();
   const { shouldShow } = useOnboarding();
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const { t } = useTranslation();
 
   if (statsLoading) return <LoadingState />;
   if (statsError || !stats) return <ErrorState message="Failed to load federation statistics." />;
 
   const statCards = [
-    { title: "Active Nodes", value: `${stats.activeNodes} / ${stats.totalNodes}`, icon: Server, color: "text-primary" },
-    { title: "Hosted Sites", value: `${stats.activeSites} / ${stats.totalSites}`, icon: Globe, color: "text-secondary" },
-    { title: "Network Uptime", value: formatPercent(stats.uptimePercent), icon: Activity, color: "text-status-active" },
-    { title: "Total Bandwidth", value: formatGb(stats.totalBandwidthGb), icon: ArrowUpRight, color: "text-status-migrating" },
-    { title: "Storage Allocated", value: formatGb(stats.totalStorageGb), icon: HardDrive, color: "text-amber-400" },
+    { title: t("dashboard.stats.activeNodes"),     value: `${stats.activeNodes} / ${stats.totalNodes}`,   icon: Server,      color: "text-primary" },
+    { title: t("dashboard.stats.hostedSites"),     value: `${stats.activeSites} / ${stats.totalSites}`,   icon: Globe,       color: "text-secondary" },
+    { title: t("dashboard.stats.networkUptime"),   value: formatPercent(stats.uptimePercent),              icon: Activity,    color: "text-status-active" },
+    { title: t("dashboard.stats.totalBandwidth"),  value: formatGb(stats.totalBandwidthGb),                icon: ArrowUpRight,color: "text-status-migrating" },
+    { title: t("dashboard.stats.storageAllocated"),value: formatGb(stats.totalStorageGb),                  icon: HardDrive,   color: "text-amber-400" },
   ];
 
   const chartData = hourly?.hours ?? [];
@@ -37,8 +39,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-2">Federation Overview</h1>
-        <p className="text-muted-foreground font-mono">Real-time telemetry and network consensus state.</p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-2">{t("dashboard.title")}</h1>
+        <p className="text-muted-foreground font-mono">{t("dashboard.subtitle")}</p>
       </div>
 
       {/* Onboarding banner for guests */}
@@ -54,8 +56,8 @@ export default function Dashboard() {
                 <Rocket className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm">Welcome to Federated Hosting</p>
-                <p className="text-muted-foreground text-xs mt-0.5">Sign in to register your own site and deploy to the federation network.</p>
+                <p className="text-white font-semibold text-sm">{t("dashboard.welcome")}</p>
+                <p className="text-muted-foreground text-xs mt-0.5">{t("dashboard.welcomeSubtitle")}</p>
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap">
                 <Button size="sm" className="bg-primary text-black hover:bg-primary/90 font-semibold" onClick={login}>
@@ -107,10 +109,10 @@ export default function Dashboard() {
             <div>
               <CardTitle className="flex items-center gap-2 text-white">
                 <Activity className="w-5 h-5 text-primary" />
-                Federation Activity (24h)
+                {t("dashboard.chart.title")}
               </CardTitle>
               <CardDescription className="mt-1 text-xs font-mono">
-                Deployments and federation events per hour
+                {t("dashboard.chart.subtitle")}
               </CardDescription>
             </div>
             {hourlyLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mt-1" />}
@@ -119,8 +121,8 @@ export default function Dashboard() {
             {!hasActivity && !hourlyLoading ? (
               <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
                 <Activity className="w-10 h-10 text-muted-foreground/40" />
-                <p className="text-muted-foreground text-sm font-mono">No activity in the last 24 hours</p>
-                <p className="text-muted-foreground/60 text-xs">Activity will appear here as nodes communicate and sites are deployed</p>
+                <p className="text-muted-foreground text-sm font-mono">{t("dashboard.chart.noActivity")}</p>
+                <p className="text-muted-foreground/60 text-xs">{t("dashboard.chart.noActivityHint")}</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -160,7 +162,7 @@ export default function Dashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-white flex items-center gap-2">
               <Server className="w-5 h-5 text-secondary" />
-              Node Consensus
+              {t("dashboard.consensus.title")}
             </CardTitle>
             <Link href="/nodes">
               <span className="text-xs text-primary hover:underline cursor-pointer font-mono">View All</span>

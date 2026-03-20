@@ -11,6 +11,7 @@ import { SiteForm } from "@/components/forms/SiteForm";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import type { Site } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
 
 type SiteWithHits = Site & { hitCount?: number };
 
@@ -22,6 +23,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function MySites() {
   const { user, isAuthenticated, login } = useAuth();
+  const { t } = useTranslation();
   const { data: allSites, isLoading, refetch } = useSites();
   const [registerOpen, setRegisterOpen] = useState(false);
 
@@ -32,8 +34,8 @@ export default function MySites() {
           <Globe className="w-8 h-8 text-primary" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">My Sites</h2>
-          <p className="text-muted-foreground">Sign in to manage your hosted sites and deploy content.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">{t("mySites.title")}</h2>
+          <p className="text-muted-foreground">{t("mySites.signInPrompt")}</p>
         </div>
         <Button onClick={login} className="bg-primary text-black hover:bg-primary/90 font-semibold">
           <LogIn className="w-4 h-4 mr-2" />
@@ -49,9 +51,9 @@ export default function MySites() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">My Sites</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{t("mySites.title")}</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm">
-            {mySites.length} site{mySites.length !== 1 ? "s" : ""} on the federation
+            {t("mySites.subtitle_other", { count: mySites.length })}
           </p>
         </div>
 
@@ -84,9 +86,9 @@ export default function MySites() {
               <Globe className="w-8 h-8 text-muted-foreground/50" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-semibold text-white">No sites yet</p>
+              <p className="text-lg font-semibold text-white">{t("mySites.noSites")}</p>
               <p className="text-muted-foreground text-sm mt-1 max-w-sm">
-                Register a domain, upload your HTML/CSS/JS files, and deploy to the federation network in minutes.
+                {t("mySites.noSitesHint")}
               </p>
             </div>
             <div className="flex flex-col items-center gap-3 w-full max-w-xs">

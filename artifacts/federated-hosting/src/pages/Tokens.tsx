@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,7 @@ function CopyButton({ text }: { text: string }) {
 
 export default function TokensPage() {
   const { isAuthenticated, login } = useAuth();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -89,7 +91,7 @@ export default function TokensPage() {
     mutationFn: (id: number) => apiFetch<void>(`/tokens/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tokens"] });
-      toast({ title: "Token revoked", description: "The token is no longer valid." });
+      toast({ title: "t("tokens.revoked")", description: "The token is no longer valid." });
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -101,7 +103,7 @@ export default function TokensPage() {
           <Key className="w-8 h-8 text-primary" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">API Tokens</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">{t("tokens.title")}</h2>
           <p className="text-muted-foreground">Sign in to create and manage API tokens.</p>
         </div>
         <Button onClick={login} className="bg-primary text-black hover:bg-primary/90 font-semibold">
@@ -131,9 +133,9 @@ export default function TokensPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">API Tokens</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{t("tokens.title")}</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm">
-            Long-lived tokens for the CLI and external tools
+            {t("tokens.subtitle")}
           </p>
         </div>
         <Dialog open={createOpen} onOpenChange={(o) => { if (!o) handleCreateClose(); else setCreateOpen(true); }}>
@@ -145,7 +147,7 @@ export default function TokensPage() {
           <DialogContent className="bg-card border-white/10">
             <DialogHeader>
               <DialogTitle className="text-white">
-                {createdToken ? "Token Created" : "Create API Token"}
+                {createdToken ? {t("tokens.created.title")} : {t("tokens.create.title")}}
               </DialogTitle>
               <DialogDescription>
                 {createdToken
@@ -170,7 +172,7 @@ export default function TokensPage() {
                     fh login --token {createdToken.token}
                   </code>
                 </div>
-                <Button onClick={handleCreateClose} className="w-full">Done</Button>
+                <Button onClick={handleCreateClose} className="w-full">{t("common.done")}</Button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -240,8 +242,8 @@ export default function TokensPage() {
         <Card className="border-white/5 border-dashed">
           <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
             <Key className="w-10 h-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">No active tokens yet.</p>
-            <p className="text-muted-foreground/60 text-sm">Create a token to authenticate the CLI or external tools.</p>
+            <p className="text-muted-foreground">{t("tokens.noTokens")}</p>
+            <p className="text-muted-foreground/60 text-sm">{t("tokens.noTokensHint")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -283,7 +285,7 @@ export default function TokensPage() {
                       className="text-muted-foreground hover:text-red-400 hover:bg-red-400/10 shrink-0"
                       onClick={() => revokeMutation.mutate(token.id)}
                       disabled={revokeMutation.isPending}
-                      title="Revoke token"
+                      title="{t("tokens.revoke")}"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

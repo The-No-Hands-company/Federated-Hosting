@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { ArrowLeft, TrendingUp, Globe, HardDrive, Eye, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -63,9 +64,9 @@ function formatHour(iso: string, period: Period): string {
 }
 
 const PERIOD_OPTIONS: { label: string; value: Period }[] = [
-  { label: "24 hours", value: "24h" },
-  { label: "7 days",   value: "7d"  },
-  { label: "30 days",  value: "30d" },
+  { label: "t("analytics.periods.24h")", value: "24h" },
+  { label: "t("analytics.periods.7d")",   value: "7d"  },
+  { label: "t("analytics.periods.30d")",  value: "30d" },
 ];
 
 const CHART_COLOR = "#00e5ff";
@@ -75,6 +76,7 @@ export default function SiteAnalytics() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
   const [period, setPeriod] = useState<Period>("24h");
+  const { t } = useTranslation();
 
   const { data: site, isLoading: siteLoading } = useQuery<SiteInfo>({
     queryKey: ["site", id],
@@ -115,28 +117,28 @@ export default function SiteAnalytics() {
 
   const statCards = [
     {
-      title: "Total Hits",
+      title: "{t("analytics.stats.totalHits")}",
       value: totals.hits.toLocaleString(),
       icon: Eye,
       color: "text-primary",
       bg: "bg-primary/10 border-primary/20",
     },
     {
-      title: "Unique Visitors",
+      title: "{t("analytics.stats.uniqueVisitors")}",
       value: totals.uniqueIps.toLocaleString(),
       icon: Globe,
       color: "text-secondary",
       bg: "bg-secondary/10 border-secondary/20",
     },
     {
-      title: "Bandwidth",
+      title: "{t("analytics.stats.bandwidth")}",
       value: formatBytes(totals.bytesServed),
       icon: HardDrive,
       color: "text-amber-400",
       bg: "bg-amber-400/10 border-amber-400/20",
     },
     {
-      title: "All-time Hits",
+      title: "{t("analytics.stats.allTimeHits")}",
       value: (site?.hitCount ?? 0).toLocaleString(),
       icon: TrendingUp,
       color: "text-status-active",
@@ -219,13 +221,13 @@ export default function SiteAnalytics() {
       {/* Hits over time chart */}
       <Card className="border-white/5">
         <CardHeader>
-          <CardTitle className="text-white text-lg">Hits Over Time</CardTitle>
-          <CardDescription>Request count per bucket for the selected period</CardDescription>
+          <CardTitle className="text-white text-lg">{t("analytics.hitsOverTime")}</CardTitle>
+          <CardDescription>{t("analytics.hitsSubtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           {chartData.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-              No traffic data for this period yet.
+              {t("analytics.noData")}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
@@ -257,12 +259,12 @@ export default function SiteAnalytics() {
         {/* Top paths */}
         <Card className="border-white/5">
           <CardHeader>
-            <CardTitle className="text-white text-lg">Top Pages</CardTitle>
-            <CardDescription>Most-served file paths</CardDescription>
+            <CardTitle className="text-white text-lg">{t("analytics.topPages")}</CardTitle>
+            <CardDescription>{t("analytics.topPagesSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             {topPaths.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No path data yet.</p>
+              <p className="text-muted-foreground text-sm">{t("analytics.noPathData")}</p>
             ) : (
               <div className="space-y-3">
                 {topPaths.slice(0, 8).map((p, i) => {
@@ -296,18 +298,18 @@ export default function SiteAnalytics() {
         {/* Top referrers */}
         <Card className="border-white/5">
           <CardHeader>
-            <CardTitle className="text-white text-lg">Top Referrers</CardTitle>
-            <CardDescription>Where your traffic is coming from</CardDescription>
+            <CardTitle className="text-white text-lg">{t("analytics.topReferrers")}</CardTitle>
+            <CardDescription>{t("analytics.topReferrersSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             {topReferrers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No referrer data yet.</p>
+              <p className="text-muted-foreground text-sm">{t("analytics.noReferrerData")}</p>
             ) : (
               <div className="space-y-3">
                 {topReferrers.slice(0, 8).map((r, i) => {
                   const max = topReferrers[0]?.count ?? 1;
                   const pct = Math.round((r.count / max) * 100);
-                  const label = r.referrer || "(direct)";
+                  const label = r.referrer || "{t("analytics.direct")}";
                   return (
                     <div key={r.referrer} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">

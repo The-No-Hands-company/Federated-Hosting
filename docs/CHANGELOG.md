@@ -217,3 +217,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `nodes.ts` — auth + `writeLimiter` on all write routes
 - `rateLimiter.ts` — `writeLimiter`, `tokenLimiter`, `webhookLimiter` added
 - ROADMAP: geographic routing ✅, conflict resolution ✅, rate limiting all writes ✅
+
+---
+
+## [0.9.1] — i18n wiring, security tests, npm publish workflow
+
+### Added
+- `e2e/security.spec.ts` — 20+ auth enforcement tests, public endpoint tests, conflict/rate-limit smoke tests
+- `.github/workflows/publish-cli.yml` — npm publish workflow for `@fedhost/cli` (manual trigger + `cli-v*` tags)
+- `.env.example` — fully documented: all 18 env vars with descriptions, examples, correct defaults
+  (previously only covered 4 vars)
+
+### Changed
+
+**i18n applied to pages** — `useTranslation` and `t()` wired in:
+- `Dashboard.tsx` — title, subtitle, all 5 stat card titles, chart title/subtitle, no-activity text, consensus heading, welcome banner
+- `MySites.tsx` — title, subtitle (with count), sign-in prompt, empty state
+- `DeploySite.tsx` — Upload Files heading, dropzone text, Deploy/Deploying buttons, Deployment History, Rollback, View Live, Analytics
+- `SiteAnalytics.tsx` — all 4 stat cards, chart labels, top pages/referrers section titles, empty states, period selector labels, direct referrer label
+- `Tokens.tsx` — title, subtitle, no-tokens state, create/created dialog titles, action buttons
+- `Admin.tsx` — previously wired (title, refresh, edit, save, system/identity section headings)
+
+**Auth hardening** — final gaps closed:
+- `PATCH /admin/node` — `writeLimiter` applied
+- `POST /nodes/:id/generate-keys` — `writeLimiter` + `isAuthenticated()` check added
+- `federation.ts` — `writeLimiter` imported and used
+

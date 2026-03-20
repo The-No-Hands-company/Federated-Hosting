@@ -5,6 +5,7 @@ import {
 } from "@workspace/db";
 import { eq, count, sql, desc, gte, and } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
+import { writeLimiter } from "../middleware/rateLimiter";
 import { z } from "zod/v4";
 import os from "os";
 
@@ -96,7 +97,7 @@ router.get("/admin/overview", asyncHandler(async (req: Request, res: Response) =
 }));
 
 /** PATCH /api/admin/node — update local node settings */
-router.patch("/admin/node", asyncHandler(async (req: Request, res: Response) => {
+router.patch("/admin/node", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
 
   const parsed = UpdateNodeSettingsBody.safeParse(req.body);

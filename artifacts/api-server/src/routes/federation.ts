@@ -4,7 +4,7 @@ import { eq, desc, and, count } from "drizzle-orm";
 import { generateKeyPair, signMessage, verifySignature, createFederationChallenge, stripPemHeaders } from "../lib/federation";
 import { serializeDates } from "../lib/serialize";
 import { asyncHandler, AppError } from "../lib/errors";
-import { federationLimiter } from "../middleware/rateLimiter";
+import { federationLimiter, writeLimiter } from "../middleware/rateLimiter";
 import { parsePagination, buildPaginatedResponse } from "../lib/pagination";
 import logger from "../lib/logger";
 import { resolveConflict } from "../lib/conflictResolution";
@@ -122,7 +122,8 @@ router.post("/federation/handshake", federationLimiter, asyncHandler(async (req,
   res.json({ success: !error, targetUrl: targetNodeUrl, discoveryData, pingResult, error });
 }));
 
-router.post("/nodes/:id/generate-keys", asyncHandler(async (req, res) => {
+router.post("/nodes/:id/generate-keys", writeLimiter, asyncHandler(async (req, res) => {
+  if (!req.isAuthenticated()) throw AppError.unauthorized();
   const nodeId = parseInt(req.params.id as string, 10);
   if (Number.isNaN(nodeId)) throw AppError.badRequest("Invalid node ID");
 

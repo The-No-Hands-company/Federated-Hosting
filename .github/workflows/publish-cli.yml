@@ -1,0 +1,90 @@
+name: Publish @fedhost/cli to npm
+
+on:
+  # Trigger manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 0.2.0). Leave blank to use package.json version."
+        required: false
+  # Or automatically on a version tag
+  push:
+    tags:
+      - "cli-v*"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Required repository secret:
+#   NPM_TOKEN — Automation token from npmjs.com (Settings → Access Tokens → Granular)
+#               Needs: Read+Write access to @fedhost/cli package
+# ──────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  publish:
+    name: Build & Publish CLI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bump version (if specified)
+        if: ${{ inputs.version != '' }}
+        working-directory: artifacts/cli
+        run: |
+          npm version ${{ inputs.version }} --no-git-tag-version
+          echo "Publishing version ${{ inputs.version }}"
+
+      - name: Build CLI bundle
+        working-directory: artifacts/cli
+        run: pnpm run build
+
+      - name: Verify dist output
+        working-directory: artifacts/cli
+        run: |
+          ls -la dist/
+          head -1 dist/index.js   # should be #!/usr/bin/env node
+          echo "Dist OK"
+
+      - name: Dry run (check what would be published)
+        working-directory: artifacts/cli
+        run: npm publish --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm
+        working-directory: artifacts/cli
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag the release
+        if: ${{ inputs.version != '' }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag "cli-v${{ inputs.version }}"
+          git push origin "cli-v${{ inputs.version }}"
+
+      - name: Summary
+        run: |
+          VERSION=$(node -p "require('./artifacts/cli/package.json').version")
+          echo "## ✅ Published @fedhost/cli@${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Install with:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npm install -g @fedhost/cli" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
