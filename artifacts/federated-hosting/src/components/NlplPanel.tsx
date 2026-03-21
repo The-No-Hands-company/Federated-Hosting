@@ -37,7 +37,12 @@ interface RuntimeInfo {
   installInstructions: string | null;
 }
 
-interface NlplPanelProps {
+const RUNTIME_META: Record<string, { label: string; entryDefault: string; description: string; icon: string }> = {
+  nlpl:    { label: "NLPL",    entryDefault: "server.nlpl", description: "NLPL interpreted application", icon: "⚡" },
+  dynamic: { label: "Node.js", entryDefault: "server.js",   description: "Node.js HTTP server",          icon: "🟢" },
+  node:    { label: "Node.js", entryDefault: "server.js",   description: "Node.js HTTP server",          icon: "🟢" },
+  python:  { label: "Python",  entryDefault: "server.py",   description: "Python HTTP server",           icon: "🐍" },
+};
   siteId: number;
   siteDomain: string;
   siteType: string;
@@ -83,7 +88,7 @@ export function NlplPanel({ siteId, siteDomain, siteType }: NlplPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [logsOpen, setLogsOpen] = useState(false);
-  const [entryFile, setEntryFile] = useState("server.nlpl");
+  const [entryFile, setEntryFile] = useState(meta.entryDefault);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   // ── Status polling ─────────────────────────────────────────────────────────
@@ -134,7 +139,7 @@ export function NlplPanel({ siteId, siteDomain, siteType }: NlplPanelProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nlpl-status", siteId] });
-      toast({ title: "Process started", description: `${siteType.toUpperCase()} server is starting up.` });
+      toast({ title: "Process started", description: `${meta.label} server is starting up.` });
     },
     onError: (err: Error) => {
       toast({ title: "Failed to start", description: err.message, variant: "destructive" });
@@ -163,6 +168,7 @@ export function NlplPanel({ siteId, siteDomain, siteType }: NlplPanelProps) {
   });
 
   const cfg = STATUS_CONFIG[status?.status ?? "stopped"];
+  const meta = RUNTIME_META[siteType] ?? RUNTIME_META.nlpl;
 
   return (
     <Card className="border-white/8">
@@ -174,9 +180,9 @@ export function NlplPanel({ siteId, siteDomain, siteType }: NlplPanelProps) {
             </div>
             <div>
               <CardTitle className="text-white text-sm">
-                {siteType === "nlpl" ? "NLPL" : siteType === "node" ? "Node.js" : "Python"} Server
+                {meta.icon} {meta.label} Server
               </CardTitle>
-              <CardDescription className="text-xs">Persistent process — handles HTTP requests</CardDescription>
+              <CardDescription className="text-xs">{meta.description} — handles HTTP requests</CardDescription>
             </div>
           </div>
 

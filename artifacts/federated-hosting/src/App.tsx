@@ -27,6 +27,7 @@ const ApiDocs        = lazy(() => import("@/pages/ApiDocs"));
 const SiteSettings   = lazy(() => import("@/pages/SiteSettings"));
 const UsageDashboard      = lazy(() => import("@/pages/UsageDashboard"));
 const TwoFactorSettings   = lazy(() => import("@/pages/TwoFactorSettings"));
+const TwoFactorChallenge  = lazy(() => import("@/pages/TwoFactorChallenge"));
 const AcceptInvitation    = lazy(() => import("@/pages/AcceptInvitation"));
 const AccountSettings     = lazy(() => import("@/pages/AccountSettings"));
 const FormInbox           = lazy(() => import("@/pages/FormInbox"));
@@ -62,10 +63,16 @@ const queryClient = new QueryClient({
 
 function Router() {
   return (
-    <Layout>
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingState />}>
-          <Switch>
+    <Switch>
+      {/* Full-screen auth flows — no sidebar/nav */}
+      <Route path="/2fa-challenge" component={TwoFactorChallenge} />
+
+      {/* All other pages inside the shell layout */}
+      <Route>
+        <Layout>
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingState />}>
+              <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/nodes" component={NodeList} />
             <Route path="/nodes/:id" component={NodeDetail} />
@@ -89,10 +96,12 @@ function Router() {
             <Route path="/sites/:id/builds" component={BuildHistory} />
             <Route path="/sites/:id/webhooks" component={WebhooksPage} />
             <Route component={NotFound} />
-          </Switch>
-        </Suspense>
-      </ErrorBoundary>
-    </Layout>
+            </Switch>
+          </Suspense>
+        </ErrorBoundary>
+      </Layout>
+      </Route>
+    </Switch>
   );
 }
 

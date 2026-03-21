@@ -391,7 +391,7 @@ export default function DeploySite() {
 
         <div className="space-y-4">
           {/* NLPL / dynamic site process management panel */}
-          {(site.siteType === "nlpl" || site.siteType === "dynamic") && (
+          {(["nlpl", "dynamic", "node", "python"] as const).includes(site.siteType as any) && (
             <NlplPanel siteId={siteId} siteDomain={site.domain} siteType={site.siteType} />
           )}
 

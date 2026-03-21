@@ -11,8 +11,10 @@ import { LoadingState } from "@/components/shared";
 import {
   Webhook, Plus, Trash2, Play, ChevronLeft, CheckCircle2,
   XCircle, Clock, ToggleLeft, ToggleRight, Eye, EyeOff,
+  ChevronDown, ChevronUp, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -24,7 +26,77 @@ interface WebhookRecord {
 }
 interface Delivery {
   id: number; event: string; statusCode: number | null; success: number;
-  attempt: number; durationMs: number | null; createdAt: string; response: string | null;
+  attempt: number; durationMs: number | null; createdAt: string;
+  response: string | null; payload?: unknown;
+}
+
+function DeliveryRow({ delivery: d }: { delivery: Delivery }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const statusOk = d.success === 1;
+  const statusColor = statusOk ? "text-green-400" : "text-red-400";
+  const statusBg    = statusOk ? "bg-green-400/10 border-green-400/20" : "bg-red-400/10 border-red-400/20";
+
+  return (
+    <div className={cn("rounded-lg border text-xs", statusBg)}>
+      <button
+        className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
+        onClick={() => setExpanded(e => !e)}
+      >
+        {statusOk
+          ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" />
+          : <XCircle     className="w-3.5 h-3.5 text-red-400   shrink-0" />}
+
+        <span className="font-mono text-white/80 w-36 truncate">{d.event}</span>
+
+        <span className={cn("font-mono font-semibold shrink-0", statusColor)}>
+          {d.statusCode ?? "no response"}
+        </span>
+
+        {d.durationMs !== null && (
+          <span className="text-muted-foreground shrink-0">{d.durationMs}ms</span>
+        )}
+
+        {d.attempt > 1 && (
+          <Badge variant="outline" className="border-amber-400/30 text-amber-400 py-0 px-1.5 shrink-0">
+            <RotateCcw className="w-2.5 h-2.5 mr-1" />retry {d.attempt}
+          </Badge>
+        )}
+
+        <span className="text-muted-foreground ml-auto shrink-0">
+          {formatDistanceToNow(new Date(d.createdAt), { addSuffix: true })}
+        </span>
+
+        {expanded
+          ? <ChevronUp   className="w-3 h-3 text-muted-foreground shrink-0" />
+          : <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />}
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-white/5 space-y-2">
+          {d.payload && (
+            <div>
+              <p className="text-muted-foreground mb-1 font-semibold">Request payload</p>
+              <pre className="bg-black/40 rounded p-2 text-primary/80 font-mono overflow-x-auto text-xs leading-relaxed max-h-48 overflow-y-auto">
+                {JSON.stringify(d.payload, null, 2)}
+              </pre>
+            </div>
+          )}
+          {d.response && (
+            <div>
+              <p className="text-muted-foreground mb-1 font-semibold">Response body</p>
+              <pre className="bg-black/40 rounded p-2 text-white/70 font-mono overflow-x-auto text-xs leading-relaxed max-h-32 overflow-y-auto">
+                {d.response.slice(0, 2000)}{d.response.length > 2000 ? "\n…truncated" : ""}
+              </pre>
+            </div>
+          )}
+          <p className="text-muted-foreground/60">
+            Delivered {new Date(d.createdAt).toLocaleString()}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function WebhooksPage() {
@@ -164,23 +236,34 @@ export default function WebhooksPage() {
             </div>
 
             {/* Delivery history */}
-            {selectedHook === hook.id && deliveries.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-white/5 space-y-1.5">
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-2">Recent deliveries</p>
-                {deliveries.slice(0, 10).map(d => (
-                  <div key={d.id} className="flex items-center gap-2 text-xs">
-                    {d.success
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" />
-                      : <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />}
-                    <span className="text-muted-foreground w-28 truncate">{d.event}</span>
-                    <span className={cn("font-mono", d.statusCode && d.statusCode < 300 ? "text-green-400" : "text-red-400")}>
-                      {d.statusCode ?? "err"}
-                    </span>
-                    <span className="text-muted-foreground">{d.durationMs}ms</span>
-                    {d.attempt > 1 && <Badge variant="outline" className="border-amber-500/30 text-amber-400 text-xs py-0">retry {d.attempt}</Badge>}
-                    <span className="text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleTimeString()}</span>
+            {selectedHook === hook.id && (
+              <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                    Delivery History
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-white"
+                    onClick={() => qc.invalidateQueries({ queryKey: ["webhook-deliveries", selectedHook] })}
+                  >
+                    <Clock className="w-3 h-3 mr-1" />Refresh
+                  </Button>
+                </div>
+
+                {deliveries.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground/60">
+                    <CheckCircle2 className="w-6 h-6 mx-auto mb-2 opacity-30" />
+                    <p className="text-xs">No deliveries yet — fire a test event to see results.</p>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-1.5">
+                    {deliveries.slice(0, 50).map(d => (
+                      <DeliveryRow key={d.id} delivery={d} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

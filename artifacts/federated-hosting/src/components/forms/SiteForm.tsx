@@ -151,8 +151,9 @@ export function SiteForm({ onSuccess, initialData }: SiteFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="static">Static</SelectItem>
-                    <SelectItem value="dynamic">Dynamic App</SelectItem>
+                    <SelectItem value="static">Static (HTML/CSS/JS)</SelectItem>
+                    <SelectItem value="nlpl">NLPL Application</SelectItem>
+                    <SelectItem value="dynamic">Node.js Application</SelectItem>
                     <SelectItem value="blog">Blog</SelectItem>
                     <SelectItem value="portfolio">Portfolio</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
