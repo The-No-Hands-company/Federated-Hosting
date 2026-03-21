@@ -1,0 +1,70 @@
+{
+  "title": "FedHost — Site Traffic",
+  "uid": "fedhost-traffic",
+  "tags": ["fedhost", "analytics"],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [{
+      "name": "site", "type": "query", "label": "Site",
+      "query": "label_values(fedhost_site_hits_total, site_domain)",
+      "refresh": 2, "includeAll": true, "allValue": ".*"
+    }]
+  },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Total Hits (24h)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(increase(fedhost_site_hits_total{site_domain=~\"$site\"}[24h]))", "legendFormat": "hits" }],
+      "options": { "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "fixedColor": "blue", "mode": "fixed" }}}
+    },
+    {
+      "id": 2, "type": "stat", "title": "Bytes Served (24h)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(increase(fedhost_bytes_served_total{site_domain=~\"$site\"}[24h]))", "legendFormat": "bytes" }],
+      "options": { "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "color": { "fixedColor": "green", "mode": "fixed" }}}
+    },
+    {
+      "id": 3, "type": "stat", "title": "Cache Hit Rate",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "rate(fedhost_cache_hits_total[5m]) / (rate(fedhost_cache_hits_total[5m]) + rate(fedhost_cache_misses_total[5m]))", "legendFormat": "hit rate" }],
+      "options": { "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "percentunit",
+        "color": { "mode": "thresholds" }, "thresholds": { "steps": [
+          { "value": 0, "color": "red" }, { "value": 0.7, "color": "yellow" }, { "value": 0.9, "color": "green" }
+        ]}
+      }}
+    },
+    {
+      "id": 4, "type": "stat", "title": "Active Sites Serving Traffic",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "count(sum by (site_domain) (rate(fedhost_site_hits_total[5m])) > 0)", "legendFormat": "active" }],
+      "options": { "colorMode": "value" },
+      "fieldConfig": { "defaults": { "color": { "fixedColor": "purple", "mode": "fixed" }}}
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Hits per Minute",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "targets": [{ "expr": "sum(rate(fedhost_site_hits_total{site_domain=~\"$site\"}[1m])) * 60", "legendFormat": "hits/min" }],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 2 }}}
+    },
+    {
+      "id": 6, "type": "bargauge", "title": "Top Sites by Hits (1h)",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [{ "expr": "topk(10, sum by (site_domain) (increase(fedhost_site_hits_total[1h])))", "legendFormat": "{{site_domain}}" }],
+      "options": { "orientation": "horizontal", "displayMode": "gradient" },
+      "fieldConfig": { "defaults": { "unit": "short" }}
+    },
+    {
+      "id": 7, "type": "bargauge", "title": "Top Sites by Bandwidth (1h)",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [{ "expr": "topk(10, sum by (site_domain) (increase(fedhost_bytes_served_total[1h])))", "legendFormat": "{{site_domain}}" }],
+      "options": { "orientation": "horizontal", "displayMode": "gradient" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }}
+    }
+  ],
+  "schemaVersion": 37
+}

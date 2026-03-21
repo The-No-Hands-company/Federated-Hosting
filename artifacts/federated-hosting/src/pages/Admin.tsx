@@ -11,7 +11,9 @@ import {
   Server, Users, Globe, Activity, HardDrive, Cpu, MemoryStick,
   TrendingUp, Settings, LogIn, RefreshCw, Zap, Radio, Loader2,
   ClipboardList, HeartPulse, CheckCircle2, AlertTriangle, XCircle,
+  ExternalLink,
 } from "lucide-react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -338,6 +340,161 @@ export default function AdminPage() {
   );
 }
 
+// ── Admin Users tab ───────────────────────────────────────────────────────────
+
+interface AdminUser { id: string; email: string; firstName: string | null; lastName: string | null; createdAt: string; siteCount: number; }
+
+function AdminUsersTab() {
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const { data, isLoading } = useQuery<{ data: AdminUser[]; meta: { total: number; page: number; limit: number } }>({
+    queryKey: ["admin-users", page],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/admin/users?page=${page}&limit=25`, { credentials: "include" });
+      return r.ok ? r.json() : { data: [], meta: { total: 0, page: 1, limit: 25 } };
+    },
+    staleTime: 30_000,
+  });
+
+  const users = (data?.data ?? []).filter(u =>
+    !search || u.email?.toLowerCase().includes(search.toLowerCase()) ||
+    `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase())
+  );
+  const meta = data?.meta;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <input
+          type="search" placeholder="Filter by name or email…" value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1 bg-muted/20 border border-white/8 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
+        />
+        <span className="text-xs text-muted-foreground shrink-0">{meta?.total ?? "…"} total</span>
+      </div>
+
+      {isLoading ? <div className="flex items-center gap-2 text-muted-foreground py-4"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div> : (
+        <>
+          <div className="divide-y divide-white/5 border border-white/5 rounded-xl overflow-hidden">
+            {users.map(u => (
+              <div key={u.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/2">
+                <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                  {(u.firstName?.[0] ?? u.email?.[0] ?? "?").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm truncate">
+                    {u.firstName ? `${u.firstName} ${u.lastName ?? ""}`.trim() : u.email}
+                  </p>
+                  <p className="text-muted-foreground text-xs truncate">{u.email}</p>
+                </div>
+                <div className="text-right shrink-0 hidden sm:block">
+                  <p className="text-white text-sm">{u.siteCount}</p>
+                  <p className="text-muted-foreground text-xs">sites</p>
+                </div>
+                <p className="text-muted-foreground text-xs shrink-0 hidden md:block">
+                  {formatDistanceToNow(new Date(u.createdAt), { addSuffix: true })}
+                </p>
+              </div>
+            ))}
+            {users.length === 0 && <p className="px-4 py-8 text-center text-muted-foreground text-sm">No users found.</p>}
+          </div>
+
+          {meta && meta.total > meta.limit && (
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Page {page} of {Math.ceil(meta.total / meta.limit)}</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="h-7 border-white/10" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</Button>
+                <Button size="sm" variant="outline" className="h-7 border-white/10" onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(meta.total / meta.limit)}>Next</Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Admin Sites tab ───────────────────────────────────────────────────────────
+
+interface AdminSite { id: number; name: string; domain: string; status: string; visibility: string; ownerEmail: string | null; storageUsedMb: number; hitCount: number; createdAt: string; }
+
+function AdminSitesTab() {
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const { data, isLoading } = useQuery<{ data: AdminSite[]; meta: { total: number; page: number; limit: number } }>({
+    queryKey: ["admin-sites", page],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/admin/sites?page=${page}&limit=25`, { credentials: "include" });
+      return r.ok ? r.json() : { data: [], meta: { total: 0, page: 1, limit: 25 } };
+    },
+    staleTime: 30_000,
+  });
+
+  const sites = (data?.data ?? []).filter(s =>
+    !search || s.name?.toLowerCase().includes(search.toLowerCase()) ||
+    s.domain?.toLowerCase().includes(search.toLowerCase()) ||
+    s.ownerEmail?.toLowerCase().includes(search.toLowerCase())
+  );
+  const meta = data?.meta;
+
+  const STATUS_DOT: Record<string, string> = {
+    active: "bg-status-active", inactive: "bg-muted-foreground", maintenance: "bg-amber-400",
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <input
+          type="search" placeholder="Filter by name, domain, or owner…" value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1 bg-muted/20 border border-white/8 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
+        />
+        <span className="text-xs text-muted-foreground shrink-0">{meta?.total ?? "…"} total</span>
+      </div>
+
+      {isLoading ? <div className="flex items-center gap-2 text-muted-foreground py-4"><Loader2 className="w-4 h-4 animate-spin" />Loading…</div> : (
+        <>
+          <div className="divide-y divide-white/5 border border-white/5 rounded-xl overflow-hidden">
+            {sites.map(s => (
+              <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/2 group">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${STATUS_DOT[s.status] ?? "bg-muted-foreground"}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{s.name}</p>
+                  <p className="text-muted-foreground text-xs font-mono truncate">{s.domain}</p>
+                </div>
+                <div className="text-right shrink-0 hidden sm:block">
+                  <p className="text-white text-xs truncate max-w-[160px]">{s.ownerEmail ?? "—"}</p>
+                </div>
+                <div className="text-right shrink-0 hidden md:block">
+                  <p className="text-white text-xs">{s.storageUsedMb.toFixed(1)} MB</p>
+                </div>
+                <Link href={`/sites/${s.id}`}>
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </div>
+            ))}
+            {sites.length === 0 && <p className="px-4 py-8 text-center text-muted-foreground text-sm">No sites found.</p>}
+          </div>
+
+          {meta && meta.total > meta.limit && (
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Page {page} of {Math.ceil(meta.total / meta.limit)}</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="h-7 border-white/10" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</Button>
+                <Button size="sm" variant="outline" className="h-7 border-white/10" onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(meta.total / meta.limit)}>Next</Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Processes tab ─────────────────────────────────────────────────────────────
 
 interface ProcessInfo {
@@ -554,9 +711,9 @@ function SiteHealthTab() {
         </div>
       )}
 
-      {/* ── Secondary tabs: Audit Log + Site Health + Processes ── */}
+      {/* ── Secondary tabs: Audit Log + Site Health + Processes + Users + Sites ── */}
       <Tabs defaultValue="audit">
-        <TabsList className="bg-muted/30 border border-white/5">
+        <TabsList className="bg-muted/30 border border-white/5 flex-wrap h-auto">
           <TabsTrigger value="audit" className="gap-1.5">
             <ClipboardList className="w-3.5 h-3.5" />Audit Log
           </TabsTrigger>
@@ -565,6 +722,12 @@ function SiteHealthTab() {
           </TabsTrigger>
           <TabsTrigger value="processes" className="gap-1.5">
             <Cpu className="w-3.5 h-3.5" />Processes
+          </TabsTrigger>
+          <TabsTrigger value="users" className="gap-1.5">
+            <Users className="w-3.5 h-3.5" />Users
+          </TabsTrigger>
+          <TabsTrigger value="sites" className="gap-1.5">
+            <Globe className="w-3.5 h-3.5" />All Sites
           </TabsTrigger>
         </TabsList>
         <TabsContent value="audit" className="mt-4">
@@ -575,6 +738,12 @@ function SiteHealthTab() {
         </TabsContent>
         <TabsContent value="processes" className="mt-4">
           <ProcessesTab />
+        </TabsContent>
+        <TabsContent value="users" className="mt-4">
+          <AdminUsersTab />
+        </TabsContent>
+        <TabsContent value="sites" className="mt-4">
+          <AdminSitesTab />
         </TabsContent>
       </Tabs>
     </div>

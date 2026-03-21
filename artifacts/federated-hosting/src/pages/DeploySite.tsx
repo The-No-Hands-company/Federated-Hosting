@@ -6,8 +6,9 @@ import {
   Upload, FileIcon, Rocket, CheckCircle, Clock, ArrowLeft,
   Globe, ExternalLink, AlertCircle, Loader2, FolderOpen, Trash2,
   RotateCcw, Eye, ChevronDown, ChevronRight, BarChart2,
-  FileText, Image, Code, Package,
-} from "lucide-react";import { Button } from "@/components/ui/button";
+  FileText, Image, Code, Package, GitCompare, Plus, Minus, RefreshCw,
+  Copy, GitBranch, Share2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -133,10 +134,115 @@ function PreviewPanel({ files, queue }: { files: SiteFile[]; queue: UploadItem[]
   );
 }
 
+// ── Deployment Diff ──────────────────────────────────────────────────────────
+
+interface DiffFile { filePath: string; sizeBytes: number; contentType?: string; }
+interface DiffResult {
+  summary: { added: number; changed: number; removed: number; unchanged: number; netSizeBytes: number };
+  added: DiffFile[]; changed: DiffFile[]; removed: DiffFile[];
+}
+
+function DeploymentDiff({ siteId, depId, onClose }: { siteId: number; depId: number; onClose: () => void }) {
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  const { data: diff, isLoading, error } = useQuery<DiffResult>({
+    queryKey: ["dep-diff", siteId, depId],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/deployments/${depId}/diff`, { credentials: "include" });
+      if (!r.ok) throw new Error("Failed to load diff");
+      return r.json();
+    },
+    staleTime: 300_000,
+  });
+
+  function formatBytes(n: number) {
+    if (Math.abs(n) < 1024) return `${n} B`;
+    if (Math.abs(n) < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      className="bg-card border border-white/8 rounded-xl overflow-hidden"
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        <div className="flex items-center gap-2 text-sm">
+          <GitCompare className="w-4 h-4 text-primary" />
+          <span className="text-white font-semibold">Deployment #{depId} diff</span>
+          <span className="text-muted-foreground">vs previous version</span>
+        </div>
+        <button onClick={onClose} className="text-muted-foreground hover:text-white text-lg leading-none">×</button>
+      </div>
+
+      {isLoading && (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm p-4">
+          <Loader2 className="w-4 h-4 animate-spin" />Loading diff…
+        </div>
+      )}
+
+      {error && (
+        <p className="text-red-400 text-sm p-4">Failed to load diff — this may be the first deployment.</p>
+      )}
+
+      {diff && (
+        <div className="p-4 space-y-4">
+          {/* Summary bar */}
+          <div className="flex flex-wrap gap-3 text-xs">
+            {diff.summary.added > 0 && (
+              <span className="flex items-center gap-1 text-status-active">
+                <Plus className="w-3 h-3" />{diff.summary.added} added
+              </span>
+            )}
+            {diff.summary.changed > 0 && (
+              <span className="flex items-center gap-1 text-amber-400">
+                <RefreshCw className="w-3 h-3" />{diff.summary.changed} changed
+              </span>
+            )}
+            {diff.summary.removed > 0 && (
+              <span className="flex items-center gap-1 text-red-400">
+                <Minus className="w-3 h-3" />{diff.summary.removed} removed
+              </span>
+            )}
+            <span className="text-muted-foreground ml-auto">
+              net {diff.summary.netSizeBytes >= 0 ? "+" : ""}{formatBytes(diff.summary.netSizeBytes)}
+            </span>
+          </div>
+
+          {/* File lists */}
+          {[
+            { files: diff.added,   label: "Added",   icon: Plus,      color: "text-status-active", bg: "bg-status-active/5 border-status-active/15" },
+            { files: diff.changed, label: "Changed",  icon: RefreshCw, color: "text-amber-400",     bg: "bg-amber-400/5 border-amber-400/15" },
+            { files: diff.removed, label: "Removed",  icon: Minus,     color: "text-red-400",       bg: "bg-red-400/5 border-red-400/15" },
+          ].map(({ files, label, icon: Icon, color, bg }) => files.length > 0 && (
+            <div key={label}>
+              <p className={`text-xs font-semibold ${color} mb-1.5`}>{label} ({files.length})</p>
+              <div className={`border rounded-lg overflow-hidden ${bg}`}>
+                {files.slice(0, 20).map((f, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-1.5 border-b border-white/5 last:border-0 text-xs">
+                    <span className="font-mono text-white/80 truncate flex-1">{f.filePath}</span>
+                    <span className="text-muted-foreground shrink-0 ml-2">{formatBytes(f.sizeBytes)}</span>
+                  </div>
+                ))}
+                {files.length > 20 && (
+                  <p className="px-3 py-1.5 text-muted-foreground text-xs">…and {files.length - 20} more</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function DeploymentHistory({ siteId, deployments, onRollback, isRollingBack, rollingBackId }: {
   siteId:number; deployments:Deployment[];
   onRollback:(depId:number)=>void; isRollingBack:boolean; rollingBackId:number|null;
 }) {
+  const [diffingDepId, setDiffingDepId] = useState<number|null>(null);
   const STATUS_STYLE: Record<string,string> = {
     active:"border-status-active/30 text-status-active",
     pending:"border-amber-400/30 text-amber-400",
@@ -183,12 +289,13 @@ function DeploymentHistory({ siteId, deployments, onRollback, isRollingBack, rol
                     <span className="flex items-center justify-between">
                       <span>{d.deployedBy?.startsWith("federation:") ? <span className="text-secondary">↙ replicated</span> : formatDistanceToNow(new Date(d.deployedAt),{addSuffix:true})}</span>
                       {d.version > 1 && (
-                        <a href={`${import.meta.env.BASE_URL?.replace(/\/$/,"")}/api/sites/${siteId}/deployments/${d.id}/diff`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                          title="View diff vs previous version">
-                          diff
-                        </a>
+                        <button
+                          onClick={() => setDiffingDepId(diffingDepId === d.id ? null : d.id)}
+                          className={`flex items-center gap-1 transition-colors text-xs ${diffingDepId === d.id ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                          title="Show diff vs previous version"
+                        >
+                          <GitCompare className="w-3 h-3" />diff
+                        </button>
                       )}
                     </span>
                   </div>
@@ -198,6 +305,19 @@ function DeploymentHistory({ siteId, deployments, onRollback, isRollingBack, rol
           </div>
         )}
       </CardContent>
+
+      {/* Inline diff panel */}
+      <AnimatePresence>
+        {diffingDepId !== null && (
+          <div className="px-6 pb-4">
+            <DeploymentDiff
+              siteId={siteId}
+              depId={diffingDepId}
+              onClose={() => setDiffingDepId(null)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
     </Card>
   );
 }

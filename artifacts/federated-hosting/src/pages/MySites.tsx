@@ -2,16 +2,157 @@ import { useState } from "react";
 import { useAuth } from "@workspace/auth-web";
 import { useSites } from "@/lib/apiHooks";
 import { Link } from "wouter";
-import { Globe, Upload, ExternalLink, Plus, LogIn, Eye, Clock, Zap, BarChart2, Settings, Inbox, GitBranch, Webhook } from "lucide-react";
+import { Globe, Upload, ExternalLink, Plus, LogIn, Eye, Clock, Zap, BarChart2, Settings, Inbox, GitBranch, Webhook, MoreHorizontal, Copy, Send, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SiteForm } from "@/components/forms/SiteForm";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 import type { Site } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function SiteMoreMenu({ site }: { site: Site & { hitCount?: number; replicaCount?: number } }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [cloneOpen, setCloneOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [cloneName, setCloneName] = useState(`${site.name} (copy)`);
+  const [cloneDomain, setCloneDomain] = useState(`${site.domain}-copy`);
+  const [transferEmail, setTransferEmail] = useState("");
+
+  const cloneMutation = useMutation({
+    mutationFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${site.id}/clone`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cloneName, domain: cloneDomain }),
+      });
+      if (!r.ok) { const b = await r.json() as { message?: string }; throw new Error(b.message ?? "Failed"); }
+      return r.json();
+    },
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ["sites"] });
+      setCloneOpen(false);
+      toast({ title: "Site cloned", description: `${data.name} is ready — no storage duplicated.` });
+    },
+    onError: (e: Error) => toast({ title: "Clone failed", description: e.message, variant: "destructive" }),
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${site.id}/transfer`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toEmail: transferEmail }),
+      });
+      if (!r.ok) { const b = await r.json() as { message?: string }; throw new Error(b.message ?? "Failed"); }
+      return r.json();
+    },
+    onSuccess: () => {
+      setTransferOpen(false);
+      toast({ title: "Transfer initiated", description: `${transferEmail} must accept the transfer within 24 hours.` });
+    },
+    onError: (e: Error) => toast({ title: "Transfer failed", description: e.message, variant: "destructive" }),
+  });
+
+  const exportSite = async () => {
+    try {
+      const r = await fetch(`${BASE}/api/sites/${site.id}/export`, { credentials: "include" });
+      if (!r.ok) throw new Error("Export failed");
+      const data = await r.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${site.domain}-export.json`; a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Site exported" });
+    } catch (e: any) {
+      toast({ title: "Export failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="outline" className="border-white/10 text-muted-foreground hover:text-white" title="More actions">
+            <MoreHorizontal className="w-3.5 h-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44 bg-card border-white/10">
+          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => setCloneOpen(true)}>
+            <Copy className="w-3.5 h-3.5" />Clone site
+          </DropdownMenuItem>
+          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => setTransferOpen(true)}>
+            <Send className="w-3.5 h-3.5" />Transfer ownership
+          </DropdownMenuItem>
+          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={exportSite}>
+            <Download className="w-3.5 h-3.5" />Export manifest
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Clone dialog */}
+      <Dialog open={cloneOpen} onOpenChange={setCloneOpen}>
+        <DialogContent className="sm:max-w-sm border-white/10 bg-card">
+          <DialogHeader><DialogTitle className="text-white">Clone site</DialogTitle></DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">New site name</label>
+              <input value={cloneName} onChange={e => setCloneName(e.target.value)}
+                className="w-full bg-muted/20 border border-white/8 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary/40" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">New domain</label>
+              <input value={cloneDomain} onChange={e => setCloneDomain(e.target.value)}
+                className="w-full bg-muted/20 border border-white/8 rounded-lg px-3 py-2 text-white text-sm font-mono focus:outline-none focus:border-primary/40" />
+            </div>
+            <p className="text-xs text-muted-foreground">Files are reused — no storage duplicated.</p>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1 border-white/10" onClick={() => setCloneOpen(false)}>Cancel</Button>
+              <Button className="flex-1" onClick={() => cloneMutation.mutate()} disabled={!cloneName || !cloneDomain || cloneMutation.isPending}>
+                {cloneMutation.isPending ? "Cloning…" : "Clone"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer dialog */}
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent className="sm:max-w-sm border-white/10 bg-card">
+          <DialogHeader><DialogTitle className="text-white">Transfer ownership</DialogTitle></DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">New owner's email</label>
+              <input type="email" value={transferEmail} onChange={e => setTransferEmail(e.target.value)}
+                placeholder="newowner@example.com"
+                className="w-full bg-muted/20 border border-white/8 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary/40" />
+            </div>
+            <p className="text-xs text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-lg p-2">
+              The new owner must accept within 24 hours. You'll lose ownership immediately upon acceptance.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1 border-white/10" onClick={() => setTransferOpen(false)}>Cancel</Button>
+              <Button className="flex-1 bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500/30"
+                variant="outline" onClick={() => transferMutation.mutate()}
+                disabled={!transferEmail || transferMutation.isPending}>
+                {transferMutation.isPending ? "Sending…" : "Initiate transfer"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 type SiteWithHits = Site & { hitCount?: number };
 
@@ -233,6 +374,7 @@ export default function MySites() {
                         <Globe className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
+                    <SiteMoreMenu site={site} />
                   </div>
                 </CardContent>
               </Card>

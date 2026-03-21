@@ -165,12 +165,13 @@ A living document tracking what is built, what is in progress, and what must be 
 | Feature | Status | Notes |
 |---|---|---|
 | Paid plans / node sponsorship | 🔮 | Revenue model not designed |
-| Prometheus metrics + Grafana dashboards | 🔮 | |
+| Prometheus metrics | ✅ | `prom-client`, 12 metrics + Node.js defaults, `/metrics` endpoint |
+| Grafana dashboards | ✅ | `monitoring/grafana/` — node overview, federation health, site traffic |
 | OpenTelemetry distributed tracing | 🔮 | |
-| Virtual scrolling for large lists | 🔮 | |
+| Virtual scrolling for large lists | 🔮 | Admin lists paginated; virtual scroll deferred |
 | CDN integration guide | 🔮 | |
 | Multi-region PostgreSQL (read replicas) | 🔮 | |
-| Content deduplication (file hash) | 🔮 | |
+| Content deduplication (file hash) | ✅ | `content_hash` column, dedup on upload, cross-site reuse |
 
 ---
 

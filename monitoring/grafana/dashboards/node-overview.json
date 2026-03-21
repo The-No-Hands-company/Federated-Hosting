@@ -1,0 +1,110 @@
+{
+  "title": "FedHost — Node Overview",
+  "uid": "fedhost-node",
+  "tags": ["fedhost"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "HTTP Requests/min",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "rate(fedhost_http_requests_total[1m]) * 60", "legendFormat": "req/min" }],
+      "options": { "colorMode": "background", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [
+        { "value": 0, "color": "green" }, { "value": 500, "color": "yellow" }, { "value": 1000, "color": "red" }
+      ]}}}
+    },
+    {
+      "id": 2, "type": "stat", "title": "Active Sites",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "fedhost_active_sites_total", "legendFormat": "sites" }],
+      "options": { "colorMode": "background" },
+      "fieldConfig": { "defaults": { "color": { "fixedColor": "blue", "mode": "fixed" }}}
+    },
+    {
+      "id": 3, "type": "stat", "title": "Federation Peers",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "fedhost_federation_peers_total", "legendFormat": "peers" }],
+      "options": { "colorMode": "background" },
+      "fieldConfig": { "defaults": { "color": { "fixedColor": "purple", "mode": "fixed" }}}
+    },
+    {
+      "id": 4, "type": "stat", "title": "Node Uptime",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "time() - process_start_time_seconds", "legendFormat": "uptime" }],
+      "options": { "colorMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "fixedColor": "green", "mode": "fixed" }}}
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "HTTP Request Rate",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(fedhost_http_requests_total{status=~\"2..\"}[1m]) * 60", "legendFormat": "2xx" },
+        { "expr": "rate(fedhost_http_requests_total{status=~\"4..\"}[1m]) * 60", "legendFormat": "4xx" },
+        { "expr": "rate(fedhost_http_requests_total{status=~\"5..\"}[1m]) * 60", "legendFormat": "5xx" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2 }},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "2xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" }}]},
+          { "matcher": { "id": "byName", "options": "4xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" }}]},
+          { "matcher": { "id": "byName", "options": "5xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" }}]}
+        ]
+      }
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Response Latency (p50 / p95 / p99)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, rate(fedhost_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, rate(fedhost_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, rate(fedhost_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p99" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }}
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Node.js Memory",
+      "gridPos": { "x": 0, "y": 12, "w": 8, "h": 6 },
+      "targets": [
+        { "expr": "process_resident_memory_bytes", "legendFormat": "RSS" },
+        { "expr": "nodejs_heap_size_used_bytes", "legendFormat": "Heap used" },
+        { "expr": "nodejs_heap_size_total_bytes", "legendFormat": "Heap total" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }}
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Event Loop Lag",
+      "gridPos": { "x": 8, "y": 12, "w": 8, "h": 6 },
+      "targets": [{ "expr": "nodejs_eventloop_lag_seconds", "legendFormat": "lag" }],
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [
+        { "value": 0, "color": "green" }, { "value": 0.1, "color": "yellow" }, { "value": 0.5, "color": "red" }
+      ]}}}
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Active DB Pool Connections",
+      "gridPos": { "x": 16, "y": 12, "w": 8, "h": 6 },
+      "targets": [
+        { "expr": "fedhost_db_pool_connections_active", "legendFormat": "active" },
+        { "expr": "fedhost_db_pool_connections_idle", "legendFormat": "idle" }
+      ]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Storage Operations",
+      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "rate(fedhost_storage_uploads_total[5m]) * 60", "legendFormat": "uploads/min" },
+        { "expr": "rate(fedhost_storage_downloads_total[5m]) * 60", "legendFormat": "downloads/min" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }}
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Deploy Rate",
+      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 6 },
+      "targets": [
+        { "expr": "rate(fedhost_deployments_total[5m]) * 300", "legendFormat": "deploys/5min" },
+        { "expr": "rate(fedhost_deployments_total{status=\"failed\"}[5m]) * 300", "legendFormat": "failures/5min" }
+      ]
+    }
+  ],
+  "schemaVersion": 37
+}

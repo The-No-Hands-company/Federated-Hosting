@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { useAuth } from "@workspace/auth-web";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDistanceToNow } from "date-fns";
 import {
   Settings, Globe, Lock, Eye, EyeOff, ArrowRight, Plus, Trash2,
-  AlertTriangle, Save, ChevronLeft, Shield, KeyRound, Eye as EyeIcon, EyeOff as EyeOffIcon,
+  AlertTriangle, Save, ChevronLeft, Shield, KeyRound, Eye as EyeIcon,
+  EyeOff as EyeOffIcon, Users, UserPlus, RefreshCw, CheckCircle2,
+  XCircle, Clock, ExternalLink, Mail, Copy, Check,
 } from "lucide-react";
 
 interface EnvVar { id: number; key: string; value: string; secret: number; }
@@ -194,6 +198,350 @@ function MaintenanceModeCard({ siteId, initialStatus }: { siteId: number; initia
   );
 }
 
+// ── Custom Domains panel ──────────────────────────────────────────────────────
+
+interface CustomDomain {
+  id: number; domain: string; status: string;
+  verificationToken: string; verifiedAt: string | null;
+  lastError: string | null; createdAt: string;
+}
+
+function DomainsPanel({ siteId, siteDomain }: { siteId: number; siteDomain: string }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [newDomain, setNewDomain] = useState("");
+  const [copied, setCopied] = useState<number | null>(null);
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  const { data: domains = [], isLoading } = useQuery<CustomDomain[]>({
+    queryKey: ["custom-domains", siteId],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/domains`, { credentials: "include" });
+      return r.ok ? r.json() : [];
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/domains`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: newDomain.trim().toLowerCase() }),
+      });
+      if (!r.ok) { const b = await r.json() as { message?: string }; throw new Error(b.message ?? "Failed"); }
+      return r.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["custom-domains", siteId] }); setNewDomain(""); toast({ title: "Domain added" }); },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async (domainId: number) => {
+      const r = await fetch(`${BASE}/api/domains/${domainId}/verify`, {
+        method: "POST", credentials: "include",
+      });
+      if (!r.ok) throw new Error("Verification failed");
+      return r.json() as Promise<{ verified: boolean; lastError: string | null }>;
+    },
+    onSuccess: (data, domainId) => {
+      qc.invalidateQueries({ queryKey: ["custom-domains", siteId] });
+      if (data.verified) toast({ title: "Domain verified!", description: "Your custom domain is now active." });
+      else toast({ title: "Not verified yet", description: data.lastError ?? "DNS record not found", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (domainId: number) => {
+      await fetch(`${BASE}/api/domains/${domainId}`, { method: "DELETE", credentials: "include" });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["custom-domains", siteId] }); toast({ title: "Domain removed" }); },
+  });
+
+  const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
+    pending:  { label: "Pending",  cls: "border-amber-400/30 text-amber-400" },
+    verified: { label: "Verified", cls: "border-status-active/30 text-status-active" },
+    failed:   { label: "Failed",   cls: "border-red-400/30 text-red-400" },
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Add domain */}
+      <Card className="border-white/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Globe className="w-4 h-4 text-primary" />Add Custom Domain
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Point a CNAME from your domain to <code className="text-primary">{siteDomain}</code> then add it here.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              placeholder="mysite.example.com"
+              value={newDomain}
+              onChange={e => setNewDomain(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && addMutation.mutate()}
+              className="bg-muted/20 border-white/8 font-mono text-sm flex-1"
+            />
+            <Button
+              onClick={() => addMutation.mutate()}
+              disabled={!newDomain.trim() || addMutation.isPending}
+              className="shrink-0"
+            >
+              {addMutation.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 mr-1" />}
+              Add
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Domain list */}
+      {isLoading ? <LoadingState /> : domains.length === 0 ? (
+        <p className="text-muted-foreground text-sm py-2">No custom domains yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {domains.map(d => {
+            const badge = STATUS_BADGE[d.status] ?? STATUS_BADGE.pending;
+            return (
+              <Card key={d.id} className="border-white/5">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono text-white text-sm truncate">{d.domain}</span>
+                      <Badge variant="outline" className={`text-xs shrink-0 ${badge.cls}`}>{badge.label}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {d.status !== "verified" && (
+                        <Button size="sm" variant="outline" className="border-white/10 h-7 text-xs"
+                          onClick={() => verifyMutation.mutate(d.id)}
+                          disabled={verifyMutation.isPending && verifyMutation.variables === d.id}>
+                          {verifyMutation.isPending && verifyMutation.variables === d.id
+                            ? <RefreshCw className="w-3 h-3 animate-spin" />
+                            : "Verify"}
+                        </Button>
+                      )}
+                      <Button size="icon" variant="ghost" className="w-7 h-7 text-muted-foreground hover:text-red-400"
+                        onClick={() => deleteMutation.mutate(d.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {d.status !== "verified" && (
+                    <div className="bg-muted/20 rounded-lg p-3 space-y-1.5 text-xs">
+                      <p className="text-white font-semibold">DNS Setup Required</p>
+                      <p className="text-muted-foreground">Add this TXT record to verify ownership:</p>
+                      <div className="flex items-center gap-2 bg-black/40 rounded px-2 py-1.5 font-mono">
+                        <span className="text-muted-foreground shrink-0">TXT</span>
+                        <span className="text-primary/80 shrink-0">_fh-verify.{d.domain}</span>
+                        <span className="text-white/70 truncate flex-1">{d.verificationToken}</span>
+                        <button onClick={() => {
+                          navigator.clipboard.writeText(d.verificationToken);
+                          setCopied(d.id); setTimeout(() => setCopied(null), 2000);
+                        }} className="text-muted-foreground hover:text-white shrink-0">
+                          {copied === d.id ? <Check className="w-3.5 h-3.5 text-status-active" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                      {d.lastError && <p className="text-red-400">{d.lastError}</p>}
+                    </div>
+                  )}
+
+                  {d.status === "verified" && d.verifiedAt && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-status-active" />
+                      Verified {formatDistanceToNow(new Date(d.verifiedAt), { addSuffix: true })}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Team panel ────────────────────────────────────────────────────────────────
+
+interface Member {
+  id: number; userId: string; role: string; acceptedAt: string | null;
+  createdAt: string; email: string | null; firstName: string | null; lastName: string | null;
+}
+interface Invitation {
+  id: number; email: string; role: string; expiresAt: string; createdAt: string;
+}
+
+function TeamPanel({ siteId }: { siteId: number }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("editor");
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  const { data: members = [] } = useQuery<Member[]>({
+    queryKey: ["members", siteId],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/members`, { credentials: "include" });
+      return r.ok ? r.json() : [];
+    },
+  });
+
+  const { data: invitations = [] } = useQuery<Invitation[]>({
+    queryKey: ["invitations", siteId],
+    queryFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/invitations`, { credentials: "include" });
+      return r.ok ? r.json() : [];
+    },
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      const r = await fetch(`${BASE}/api/sites/${siteId}/invitations`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+      });
+      if (!r.ok) { const b = await r.json() as { message?: string }; throw new Error(b.message ?? "Failed"); }
+      return r.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["invitations", siteId] });
+      setInviteEmail("");
+      toast({ title: "Invitation sent", description: `${inviteEmail.trim()} will receive an email.` });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: async (memberId: number) => {
+      await fetch(`${BASE}/api/sites/${siteId}/members/${memberId}`, { method: "DELETE", credentials: "include" });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["members", siteId] }); toast({ title: "Member removed" }); },
+  });
+
+  const revokeInviteMutation = useMutation({
+    mutationFn: async (inviteId: number) => {
+      await fetch(`${BASE}/api/sites/${siteId}/invitations/${inviteId}`, { method: "DELETE", credentials: "include" });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["invitations", siteId] }); toast({ title: "Invitation revoked" }); },
+  });
+
+  const roleColor: Record<string, string> = {
+    admin:  "border-red-400/30 text-red-400",
+    editor: "border-primary/30 text-primary",
+    viewer: "border-white/20 text-muted-foreground",
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Invite form */}
+      <Card className="border-white/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <UserPlus className="w-4 h-4 text-primary" />Invite a collaborator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              type="email" placeholder="colleague@example.com"
+              value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && inviteMutation.mutate()}
+              className="bg-muted/20 border-white/8 text-sm flex-1"
+            />
+            <Select value={inviteRole} onValueChange={setInviteRole}>
+              <SelectTrigger className="w-28 bg-muted/20 border-white/8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="viewer">Viewer</SelectItem>
+                <SelectItem value="editor">Editor</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => inviteMutation.mutate()}
+              disabled={!inviteEmail.trim() || inviteMutation.isPending}
+              className="shrink-0">
+              {inviteMutation.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <>
+                <Mail className="w-4 h-4 mr-1.5" />Invite
+              </>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Current members */}
+      {members.length > 0 && (
+        <Card className="border-white/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Users className="w-4 h-4" />Members ({members.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            {members.map(m => (
+              <div key={m.id} className="flex items-center gap-3 py-1.5">
+                <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                  {(m.firstName?.[0] ?? m.email?.[0] ?? "?").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm truncate">
+                    {m.firstName ? `${m.firstName} ${m.lastName ?? ""}`.trim() : m.email ?? "Unknown"}
+                  </p>
+                  {m.firstName && <p className="text-muted-foreground text-xs truncate">{m.email}</p>}
+                </div>
+                <Badge variant="outline" className={`text-xs shrink-0 ${roleColor[m.role] ?? roleColor.viewer}`}>
+                  {m.role}
+                </Badge>
+                <Button size="icon" variant="ghost" className="w-7 h-7 text-muted-foreground hover:text-red-400 shrink-0"
+                  onClick={() => removeMemberMutation.mutate(m.id)} title="Remove member">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending invitations */}
+      {invitations.length > 0 && (
+        <Card className="border-white/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-400" />Pending Invitations ({invitations.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            {invitations.map(inv => (
+              <div key={inv.id} className="flex items-center gap-3 py-1.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm truncate">{inv.email}</p>
+                  <p className="text-muted-foreground text-xs">
+                    Expires {formatDistanceToNow(new Date(inv.expiresAt), { addSuffix: true })}
+                  </p>
+                </div>
+                <Badge variant="outline" className={`text-xs shrink-0 ${roleColor[inv.role] ?? roleColor.viewer}`}>
+                  {inv.role}
+                </Badge>
+                <Button size="icon" variant="ghost" className="w-7 h-7 text-muted-foreground hover:text-red-400 shrink-0"
+                  onClick={() => revokeInviteMutation.mutate(inv.id)} title="Revoke invitation">
+                  <XCircle className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {members.length === 0 && invitations.length === 0 && (
+        <p className="text-muted-foreground text-sm py-2">No collaborators yet. Invite someone above.</p>
+      )}
+    </div>
+  );
+}
+
 export default function SiteSettings() {
   const { id } = useParams<{ id: string }>();
   const siteId = parseInt(id!, 10);
@@ -308,6 +656,8 @@ export default function SiteSettings() {
           <TabsTrigger value="redirects">Redirects</TabsTrigger>
           <TabsTrigger value="headers">Headers</TabsTrigger>
           <TabsTrigger value="env">Env Vars</TabsTrigger>
+          <TabsTrigger value="domains">Domains</TabsTrigger>
+          <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
           <TabsTrigger value="danger" className="text-red-400 data-[state=active]:text-red-300">Danger</TabsTrigger>
         </TabsList>
@@ -459,6 +809,14 @@ export default function SiteSettings() {
         {/* ── Env Vars ── */}
         <TabsContent value="env" className="space-y-4 mt-4">
           <EnvVarsPanel siteId={siteId} />
+        </TabsContent>
+
+        <TabsContent value="domains" className="mt-4">
+          <DomainsPanel siteId={siteId} siteDomain={site.domain} />
+        </TabsContent>
+
+        <TabsContent value="team" className="mt-4">
+          <TeamPanel siteId={siteId} />
         </TabsContent>
 
         {/* ── Danger Zone ── */}

@@ -1,0 +1,14 @@
+# Grafana dashboard provisioning
+# Place this file at /etc/grafana/provisioning/dashboards/fedhost.yaml
+
+apiVersion: 1
+
+providers:
+  - name: FedHost
+    orgId: 1
+    folder: FedHost
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards
