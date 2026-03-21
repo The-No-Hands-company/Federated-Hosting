@@ -208,7 +208,7 @@ export default function AdminPage() {
       )}
 
       {/* Summary stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {summaryCards.map((c, i) => {
           const Icon = c.icon;
           return (
@@ -515,7 +515,7 @@ function SiteHealthTab() {
   return (
     <div className="space-y-4">
       {data && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
           {(["up", "degraded", "down"] as const).map(s => {
             const Icon = STATUS_ICON[s];
             return (

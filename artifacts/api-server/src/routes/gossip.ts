@@ -19,6 +19,7 @@ import { signMessage, verifyMessage, generateKeyPair } from "../lib/federation";
 import logger from "../lib/logger";
 import { z } from "zod/v4";
 import { webhookNewPeer } from "../lib/webhooks";
+import { isBlocked } from "./federationBlocks";
 
 const router: IRouter = Router();
 
@@ -70,6 +71,12 @@ router.post("/federation/gossip/push", asyncHandler(async (req: Request, res: Re
   if (!parsed.success) throw AppError.badRequest(parsed.error.message);
 
   const { fromDomain, peers, timestamp } = parsed.data;
+
+  // Reject gossip from blocked nodes
+  if (isBlocked(fromDomain)) {
+    logger.warn({ fromDomain }, "[gossip] Push rejected — sender is on blocklist");
+    throw AppError.forbidden("This node is not permitted to federate with us.");
+  }
 
   // Reject stale messages (older than 5 minutes)
   if (Math.abs(Date.now() - timestamp) > 5 * 60 * 1000) {
@@ -136,10 +143,13 @@ router.post("/federation/gossip/discover", writeLimiter, asyncHandler(async (req
     .from(nodesTable)
     .where(and(eq(nodesTable.status, "active"), ne(nodesTable.isLocalNode, 1)));
 
+  // Skip blocked nodes — don't query or register peers from them
+  const allowedPeers = activePeers.filter((p) => !isBlocked(p.domain));
+
   const results: Array<{ peer: string; newNodes: number; error?: string }> = [];
 
   await Promise.allSettled(
-    activePeers.map(async ({ domain }) => {
+    allowedPeers.map(async ({ domain }) => {
       const peerUrl = domain.startsWith("http") ? domain : `https://${domain}`;
       try {
         const res2 = await fetch(`${peerUrl}/api/federation/gossip`, {
@@ -185,7 +195,7 @@ router.post("/federation/gossip/discover", writeLimiter, asyncHandler(async (req
   const totalNew = results.reduce((s, r) => s + r.newNodes, 0);
   logger.info({ results, totalNew }, "Gossip discover cycle complete");
 
-  res.json({ peersQueried: activePeers.length, totalNewNodes: totalNew, results });
+  res.json({ peersQueried: allowedPeers.length, blocked: activePeers.length - allowedPeers.length, totalNewNodes: totalNew, results });
 }));
 
 // ── Background gossip pusher ──────────────────────────────────────────────────
@@ -207,15 +217,19 @@ export function startGossipPusher(intervalMs = 5 * 60 * 1000): void {
 
       if (activePeers.length === 0) return;
 
-      // Build the peer list we'll share (all active, excluding local)
-      const peersToShare = activePeers.map((p) => ({ domain: p.domain, publicKey: p.publicKey ?? "" }));
+      // Exclude blocked nodes — don't broadcast to them or share them with others
+      const allowedPeers = activePeers.filter((p) => !isBlocked(p.domain));
+      if (allowedPeers.length === 0) return;
+
+      // Build the peer list to share — also exclude blocked nodes so we don't spread them
+      const peersToShare = allowedPeers.map((p) => ({ domain: p.domain, publicKey: p.publicKey ?? "" }));
 
       const timestamp = Date.now();
       const payload = JSON.stringify({ fromDomain: localNode.domain, peers: peersToShare, timestamp });
       const signature = signMessage(localNode.privateKey, payload);
 
       await Promise.allSettled(
-        activePeers.map(({ domain }) => {
+        allowedPeers.map(({ domain }) => {
           const url = domain.startsWith("http") ? domain : `https://${domain}`;
           return fetch(`${url}/api/federation/gossip/push`, {
             method: "POST",
@@ -226,7 +240,7 @@ export function startGossipPusher(intervalMs = 5 * 60 * 1000): void {
         }),
       );
 
-      logger.debug({ peers: activePeers.length }, "Gossip push cycle complete");
+      logger.debug({ peers: allowedPeers.length, blocked: activePeers.length - allowedPeers.length }, "Gossip push cycle complete");
     } catch (err) {
       logger.warn({ err }, "Gossip pusher error");
     }
@@ -263,9 +277,10 @@ router.get("/federation/bootstrap", asyncHandler(async (_req: Request, res: Resp
     .limit(50);
 
   // Only include nodes verified within the last 24 hours for bootstrap reliability
+  // Also exclude any nodes on the blocklist
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const healthy = verifiedPeers.filter(
-    (p) => p.verifiedAt && new Date(p.verifiedAt) > since,
+    (p) => p.verifiedAt && new Date(p.verifiedAt) > since && !isBlocked(p.domain),
   );
 
   res.json({

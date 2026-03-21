@@ -132,7 +132,11 @@ export default function AcceptInvitation() {
                   </p>
                   <Button
                     className="w-full gap-2"
-                    onClick={() => window.location.href = `${BASE}/api/auth/login?returnTo=${encodeURIComponent(window.location.href)}`}
+                    onClick={() => {
+                      // Preserve the full URL including token so the user is returned here after login
+                      const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+                      window.location.href = `${BASE}/api/auth/login?returnTo=${returnTo}`;
+                    }}
                   >
                     <LogIn className="w-4 h-4" />
                     Sign in to accept

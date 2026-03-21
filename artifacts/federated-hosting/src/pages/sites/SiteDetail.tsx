@@ -197,13 +197,13 @@ export default function SiteDetail() {
               <CardContent className="space-y-4">
                 <div className="bg-black/20 p-4 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
                   <HardDrive className="w-8 h-8 text-white/20 mb-2" />
-                  <div className="text-3xl font-display font-bold text-white">{formatBytes(site.storageUsedMb * 1024 * 1024)}</div>
+                  <div className="text-2xl sm:text-3xl font-display font-bold text-white">{formatBytes(site.storageUsedMb * 1024 * 1024)}</div>
                   <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Storage Consumed</div>
                 </div>
                 
                 <div className="bg-black/20 p-4 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
                   <Activity className="w-8 h-8 text-white/20 mb-2" />
-                  <div className="text-3xl font-display font-bold text-white">{formatGb(site.monthlyBandwidthGb)}</div>
+                  <div className="text-2xl sm:text-3xl font-display font-bold text-white">{formatGb(site.monthlyBandwidthGb)}</div>
                   <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Bandwidth (30d)</div>
                 </div>
               </CardContent>
