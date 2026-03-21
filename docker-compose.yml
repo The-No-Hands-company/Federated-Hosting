@@ -129,6 +129,9 @@ services:
       # ── Redis (shared rate limiting + cache) ─────────────────────────────
       REDIS_URL: redis://redis:6379
 
+      # ── Low-resource mode (uncomment for Raspberry Pi / small VMs) ───────
+      # LOW_RESOURCE: "true"
+
       # ── Security ──────────────────────────────────────────────────────────
       COOKIE_SECRET:  ${COOKIE_SECRET}         # Required — random 32+ char string
       METRICS_TOKEN:  ${METRICS_TOKEN:-}       # Optional — bearer token for /metrics

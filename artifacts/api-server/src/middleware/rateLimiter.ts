@@ -2,6 +2,7 @@ import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import { getRedisClient } from "../lib/redis";
 import logger from "../lib/logger";
+import { GLOBAL_RATE_LIMIT, UPLOAD_RATE_LIMIT } from "../lib/resourceConfig";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -34,10 +35,10 @@ function makeHandler(message: string, code: string) {
   };
 }
 
-// Global limiter — 300 requests / minute per IP
+// Global limiter — 300 requests / minute per IP (60 in LOW_RESOURCE mode)
 export const globalLimiter = rateLimit({
   windowMs: 60_000,
-  max: isProd ? 300 : 10_000,
+  max: isProd ? GLOBAL_RATE_LIMIT : 10_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   store,
@@ -58,10 +59,10 @@ export const authLimiter = rateLimit({
   ),
 });
 
-// Upload endpoints — 60 uploads / minute per IP
+// Upload endpoints — 60 uploads / minute per IP (10 in LOW_RESOURCE mode)
 export const uploadLimiter = rateLimit({
   windowMs: 60_000,
-  max: isProd ? 60 : 1_000,
+  max: isProd ? UPLOAD_RATE_LIMIT : 1_000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   store,

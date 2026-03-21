@@ -2,7 +2,26 @@ import app from "./app";
 import { db, nodesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { generateKeyPair } from "./lib/federation";
-import { startHealthMonitor } from "./lib/healthMonitor";
+// ── Resource configuration — MUST be imported before anything that reads env vars ──
+import {
+  LOW_RESOURCE, DB_POOL, LOG_LEVEL,
+  ANALYTICS_FLUSH_INTERVAL_MS, HEALTH_CHECK_INTERVAL_MS, GOSSIP_INTERVAL_MS,
+} from "./lib/resourceConfig";
+
+// Apply LOW_RESOURCE overrides to process.env NOW so all downstream modules
+// (db pool, logger, caches, rate limiters) pick up constrained values at init time.
+if (LOW_RESOURCE) {
+  process.env.DB_POOL_MAX                 = String(DB_POOL.max);
+  process.env.DB_POOL_MIN                 = String(DB_POOL.min);
+  process.env.DB_IDLE_TIMEOUT_MS          = String(DB_POOL.idleTimeoutMillis);
+  process.env.DB_CONNECT_TIMEOUT_MS       = String(DB_POOL.connectionTimeoutMillis);
+  process.env.LOG_LEVEL                   = LOG_LEVEL;
+  process.env.ANALYTICS_FLUSH_INTERVAL_MS = String(ANALYTICS_FLUSH_INTERVAL_MS);
+  process.env.HEALTH_CHECK_INTERVAL_MS    = String(HEALTH_CHECK_INTERVAL_MS);
+  process.env.GOSSIP_INTERVAL_MS          = String(GOSSIP_INTERVAL_MS);
+  process.env.DOMAIN_CACHE_MAX            = process.env.DOMAIN_CACHE_MAX ?? "500";
+  process.env.FILE_CACHE_MAX              = process.env.FILE_CACHE_MAX   ?? "2000";
+}
 import { startAnalyticsFlusher, stopAnalyticsFlusher } from "./lib/analyticsFlush";
 import { startGossipPusher, stopGossipPusher } from "./routes/gossip";
 import { getRedisClient, closeRedis } from "./lib/redis";

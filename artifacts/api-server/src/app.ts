@@ -2,6 +2,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
+import { COMPRESSION_LEVEL } from "./lib/resourceConfig";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import { randomUUID } from "crypto";
@@ -56,7 +57,7 @@ app.use(
 app.use(cors({ credentials: true, origin: allowedOrigins }));
 
 // ── Response compression ──────────────────────────────────────────────────────
-app.use(compression());
+app.use(compression({ level: COMPRESSION_LEVEL }));
 
 // ── Request IDs ───────────────────────────────────────────────────────────────
 app.use((req: Request, res: Response, next: NextFunction) => {

@@ -432,3 +432,42 @@ docker compose logs -f app       # live app logs
 docker compose logs db           # postgres logs
 docker compose logs minio        # object storage logs
 ```
+
+## Low-Resource Mode (Raspberry Pi / Volunteer Nodes)
+
+FedHost can run on constrained hardware common in volunteer-operated community nodes — Raspberry Pi 3/4, old laptops, or small cloud VMs (512 MB–1 GB RAM). Set `LOW_RESOURCE=true` in your `.env` to activate a profile tuned for these environments.
+
+```bash
+LOW_RESOURCE=true
+```
+
+**What changes:**
+
+| Setting | Normal | Low-resource |
+|---|---|---|
+| DB pool connections | 20 | 5 |
+| Domain LRU cache | 10 000 entries | 500 entries |
+| File LRU cache | 50 000 entries | 2 000 entries |
+| Analytics flush interval | 1 minute | 5 minutes |
+| Node health check interval | 2 minutes | 10 minutes |
+| Log level | info | warn |
+| Global rate limit | 300 req/min | 60 req/min |
+| Response compression | level 6 | level 1 (fastest) |
+
+**What does NOT change:**
+- All API routes remain fully available
+- Federation protocol is identical — low-resource nodes federate normally
+- ACME/TLS still works
+- Redis integration still works if `REDIS_URL` is set
+- Auth is unchanged
+
+**Expected capacity on a Raspberry Pi 4 (4 GB) with `LOW_RESOURCE=true`:**
+- ~50 concurrent static site requests
+- ~5–10 small static sites with light traffic
+- Full federation participant (handshakes, gossip, sync)
+
+**Tips for constrained nodes:**
+- Use Caddy as the reverse proxy — it uses less RAM than nginx
+- Set `REDIS_URL` pointing at a small Redis instance to share rate limiting
+- Consider `DYNAMIC_PORT_START` / `DYNAMIC_PORT_END` range of just 10–20 ports if you don't host dynamic sites
+- Use an external managed PostgreSQL (Neon free tier works) to avoid running Postgres on the same Pi
