@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
  *   - Port allocation is unique per site and within bounds
  *   - Runtime → command mapping is correct and stable
  *   - Status transitions follow the defined lifecycle
- *   - FEDERATED_STATIC_ONLY blocks process start
+ *   - NEXUS_STATIC_ONLY blocks process start
  *
  * The Rust proxy relies on getSiteProxyTarget() to know where to forward
  * requests — the status/port contract here defines that interface.
@@ -193,31 +193,31 @@ describe("Process manager — status transitions", () => {
   });
 });
 
-describe("Process manager — FEDERATED_STATIC_ONLY guard", () => {
-  const originalEnv = process.env.FEDERATED_STATIC_ONLY;
+describe("Process manager — NEXUS_STATIC_ONLY guard", () => {
+  const originalEnv = process.env.NEXUS_STATIC_ONLY;
   afterEach(() => {
-    process.env.FEDERATED_STATIC_ONLY = originalEnv ?? "";
+    process.env.NEXUS_STATIC_ONLY = originalEnv ?? "";
   });
 
   function checkStaticOnly() {
-    if (process.env.FEDERATED_STATIC_ONLY === "true") {
-      throw new Error("Dynamic site hosting is disabled on this node (FEDERATED_STATIC_ONLY=true).");
+    if (process.env.NEXUS_STATIC_ONLY === "true") {
+      throw new Error("Dynamic site hosting is disabled on this node (NEXUS_STATIC_ONLY=true).");
     }
   }
 
-  it("does not throw when FEDERATED_STATIC_ONLY is unset", () => {
-    delete process.env.FEDERATED_STATIC_ONLY;
+  it("does not throw when NEXUS_STATIC_ONLY is unset", () => {
+    delete process.env.NEXUS_STATIC_ONLY;
     expect(() => checkStaticOnly()).not.toThrow();
   });
 
-  it("does not throw when FEDERATED_STATIC_ONLY=false", () => {
-    process.env.FEDERATED_STATIC_ONLY = "false";
+  it("does not throw when NEXUS_STATIC_ONLY=false", () => {
+    process.env.NEXUS_STATIC_ONLY = "false";
     expect(() => checkStaticOnly()).not.toThrow();
   });
 
-  it("throws with clear message when FEDERATED_STATIC_ONLY=true", () => {
-    process.env.FEDERATED_STATIC_ONLY = "true";
-    expect(() => checkStaticOnly()).toThrow("FEDERATED_STATIC_ONLY=true");
+  it("throws with clear message when NEXUS_STATIC_ONLY=true", () => {
+    process.env.NEXUS_STATIC_ONLY = "true";
+    expect(() => checkStaticOnly()).toThrow("NEXUS_STATIC_ONLY=true");
   });
 });
 

@@ -41,7 +41,7 @@ test.describe("Federation discovery", () => {
       capabilities: string[];
     };
 
-    expect(body.protocol).toBe("fedhost/1.0");
+    expect(body.protocol).toBe("nexushosting/1.0");
     expect(body.domain).toBeTruthy();
     expect(Array.isArray(body.capabilities)).toBe(true);
     expect(body.capabilities).toContain("site-hosting");
@@ -53,7 +53,7 @@ test.describe("Federation discovery", () => {
     expect(res.status()).toBe(200);
 
     const body = await res.json() as { protocol: string; name: string; domain: string };
-    expect(body.protocol).toBe("fedhost/1.0");
+    expect(body.protocol).toBe("nexushosting/1.0");
     expect(body.name).toBeTruthy();
   });
 
@@ -66,7 +66,7 @@ test.describe("Federation discovery", () => {
       nodes: unknown[];
       generatedAt: string;
     };
-    expect(body.protocol).toBe("fedhost/1.0");
+    expect(body.protocol).toBe("nexushosting/1.0");
     expect(Array.isArray(body.nodes)).toBe(true);
     expect(body.generatedAt).toBeTruthy();
   });

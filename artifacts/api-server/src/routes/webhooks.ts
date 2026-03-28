@@ -108,7 +108,7 @@ router.get("/webhooks/config", asyncHandler(async (req: Request, res: Response) 
       "deploy_failed",
       "new_peer",
     ],
-    signingInfo: "Each delivery is signed with X-FedHost-Signature (Ed25519). Verify against your node's public key from /.well-known/federation",
+    signingInfo: "Each delivery is signed with X-NexusHosting-Signature (Ed25519). Verify against your node's public key from /.well-known/federation",
   });
 }));
 
@@ -133,7 +133,7 @@ router.post("/webhooks/test", webhookLimiter, asyncHandler(async (req: Request, 
     event: "deploy",
     timestamp: new Date().toISOString(),
     siteId: 0,
-    siteDomain: "test.fedhosting.network",
+    siteDomain: "test.nexushosting.network",
     deploymentId: 0,
     version: 1,
     fileCount: 3,

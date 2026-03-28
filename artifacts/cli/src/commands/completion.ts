@@ -3,7 +3,7 @@ import chalk from "chalk";
 
 const BASH_COMPLETION = `
 # fh bash completion
-# Add to ~/.bashrc: eval "$(fh completion bash)"
+# Add to ~/.bashrc: eval "$(nh completion bash)"
 
 _fh_completion() {
   local cur prev words cword
@@ -46,7 +46,7 @@ complete -F _fh_completion fh
 
 const ZSH_COMPLETION = `
 # fh zsh completion
-# Add to ~/.zshrc: eval "$(fh completion zsh)"
+# Add to ~/.zshrc: eval "$(nh completion zsh)"
 
 _fh() {
   local state
@@ -60,7 +60,7 @@ _fh() {
       local commands=(
         'create:Scaffold a new project from a template'
         'init:Initialise a new site in the current directory'
-        'login:Authenticate with a FedHost node'
+        'login:Authenticate with a NexusHosting node'
         'logout:Remove stored credentials'
         'whoami:Show current authenticated user'
         'status:Show site deployment status'
@@ -160,13 +160,13 @@ export const completionCommand = new Command("completion")
   .addHelpText("after", `
 Examples:
   # Bash — add to ~/.bashrc
-  eval "$(fh completion bash)"
+  eval "$(nh completion bash)"
 
   # Zsh — add to ~/.zshrc
-  eval "$(fh completion zsh)"
+  eval "$(nh completion zsh)"
 
   # Fish — install directly
-  fh completion fish > ~/.config/fish/completions/fh.fish
+  nh completion fish > ~/.config/fish/completions/fh.fish
 `)
   .action((shell: string) => {
     switch (shell.toLowerCase()) {

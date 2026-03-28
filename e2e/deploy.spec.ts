@@ -13,18 +13,18 @@
  *   9. Rollback the deployment
  *   10. Verify the rollback deployment is active
  *
- * Requires FH_TEST_TOKEN env var pointing at a valid API token for the test node.
+ * Requires NH_TEST_TOKEN env var pointing at a valid API token for the test node.
  * Skip gracefully if no token is available (safe for open PRs from forks).
  */
 
 import { test, expect } from "./helpers";
 
-const TEST_DOMAIN = `e2e-test-${Date.now()}.fedhost.test`;
+const TEST_DOMAIN = `e2e-test-${Date.now()}.nexushosting.test`;
 
 test.describe("End-to-end deploy flow", () => {
   test.skip(
-    !process.env.FH_TEST_TOKEN,
-    "FH_TEST_TOKEN not set — skipping authenticated E2E tests",
+    !process.env.NH_TEST_TOKEN,
+    "NH_TEST_TOKEN not set — skipping authenticated E2E tests",
   );
 
   let siteId: number;

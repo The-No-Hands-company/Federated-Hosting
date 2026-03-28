@@ -2,7 +2,7 @@
  * Security smoke tests.
  *
  * Verifies that protected endpoints correctly reject unauthenticated requests
- * and that ownership rules are enforced. These tests do NOT require FH_TEST_TOKEN
+ * and that ownership rules are enforced. These tests do NOT require NH_TEST_TOKEN
  * — they test the unauthenticated path and expect 401/403 responses.
  */
 

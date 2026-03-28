@@ -23,8 +23,8 @@ import { createCommand }     from "./commands/create.js";
 const program = new Command();
 
 program
-  .name("fh")
-  .description("FedHost CLI — deploy static sites to your Federated Hosting node")
+  .name("nh")
+  .description("NexusHosting CLI — deploy static sites to your Nexus Hosting node")
   .version("0.1.0");
 
 program.addCommand(initCommand);

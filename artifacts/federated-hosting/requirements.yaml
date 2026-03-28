@@ -8,10 +8,10 @@ packages:
   "tailwind-merge": "Utility to cleanly merge Tailwind classes"
 
 images:
-  - path: "artifacts/federated-hosting/public/images/network-bg.png"
+  - path: "artifacts/nexus-hosting/public/images/network-bg.png"
     description: "Subtle abstract dark background with a glowing cyan and purple wireframe network mesh, very faint, low opacity"
     aspect_ratio: "16:9"
-  - path: "artifacts/federated-hosting/public/images/logo-mark.png"
+  - path: "artifacts/nexus-hosting/public/images/logo-mark.png"
     description: "Minimalist tech logo mark consisting of interconnected nodes or glowing geometric shapes in neon cyan and purple, transparent background"
     aspect_ratio: "1:1"
 

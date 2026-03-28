@@ -119,7 +119,7 @@ export default function FormInbox() {
           <div className="text-center py-16 text-muted-foreground">
             <Inbox className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No submissions yet.</p>
-            <p className="text-xs mt-1">Add a form to your site pointing to your FedHost node.</p>
+            <p className="text-xs mt-1">Add a form to your site pointing to your NexusHosting node.</p>
           </div>
         ) : submissions.map(sub => (
           <button key={sub.id} onClick={() => { setSelected(sub); markReadMutation.mutate(sub.id); }}

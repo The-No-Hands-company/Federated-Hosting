@@ -91,7 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-2 text-primary">
           <Activity className="w-6 h-6" />
-          <span className="font-display font-bold text-lg tracking-tight">FedHost</span>
+          <span className="font-display font-bold text-lg tracking-tight">NexusHosting</span>
         </div>
         <div className="flex items-center gap-2">
           <UserMenu user={user} isAuthenticated={isAuthenticated} login={login} logout={logout} />

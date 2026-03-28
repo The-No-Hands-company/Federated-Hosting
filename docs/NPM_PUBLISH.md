@@ -1,9 +1,9 @@
-# Publishing `@fedhost/cli` to npm
+# Publishing `@nexushosting/cli` to npm
 
 ## Prerequisites
 
 1. npm account at npmjs.com
-2. Member of (or owner of) the `fedhost` npm organisation
+2. Member of (or owner of) the `nexushosting` npm organisation
 3. `NPM_TOKEN` secret set in the GitHub repository
 
 ---
@@ -16,21 +16,21 @@
 # Log in to npm
 npm login
 
-# Create the @fedhost organisation (if it doesn't exist)
+# Create the @nexushosting organisation (if it doesn't exist)
 # Go to: https://www.npmjs.com/org/create
-# Organisation name: fedhost
+# Organisation name: nexus
 # Visibility: Public (free)
 ```
 
 Or via CLI:
 ```bash
-npm org create fedhost
+npm org create nexushosting
 ```
 
 ### 2. Add team members
 
 ```bash
-npm team add fedhost:developers <username>
+npm team add nexushosting:developers <username>
 ```
 
 ### 3. Generate an automation token
@@ -38,10 +38,10 @@ npm team add fedhost:developers <username>
 1. Go to npmjs.com → Account Settings → Access Tokens
 2. Click **Generate New Token** → **Granular Access Token**
 3. Set:
-   - Token name: `fedhost-cli-publish`
+   - Token name: `nexus-cli-publish`
    - Expiration: 365 days (rotate annually)
-   - Packages and scopes: **Read and write** → `@fedhost/cli`
-   - Organisations: `fedhost` (read-only)
+   - Packages and scopes: **Read and write** → `@nexushosting/cli`
+   - Organisations: `nexushosting` (read-only)
 4. Copy the token — you only see it once
 
 ### 4. Add the token to GitHub
@@ -61,7 +61,7 @@ Value: npm_xxxxxxxxxxxxxxxxxxxx
 The `publish-cli.yml` workflow triggers on:
 
 **Manual dispatch** (with optional version bump):
-1. GitHub repo → Actions → "Publish @fedhost/cli to npm"
+1. GitHub repo → Actions → "Publish @nexushosting/cli to npm"
 2. Click **Run workflow**
 3. Optionally enter a version like `0.2.0`
 4. Click **Run workflow**
@@ -89,8 +89,8 @@ Follow semantic versioning:
 | Change type | Example | Version bump |
 |---|---|---|
 | Bug fix | Fix rollback crash | `0.1.1` |
-| New feature | Add `fh logs` command | `0.2.0` |
-| Breaking change | Rename `fh deploy` flags | `1.0.0` |
+| New feature | Add `nh logs` command | `0.2.0` |
+| Breaking change | Rename `nh deploy` flags | `1.0.0` |
 
 Update `artifacts/cli/package.json` version before publishing, or let the workflow handle it with the version input.
 
@@ -102,20 +102,20 @@ After publishing:
 
 ```bash
 # Install globally and verify
-npm install -g @fedhost/cli@latest
+npm install -g @nexushosting/cli@latest
 fh --version   # should print the new version
 fh --help
 ```
 
-Check the package page: https://www.npmjs.com/package/@fedhost/cli
+Check the package page: https://www.npmjs.com/package/@nexushosting/cli
 
 ---
 
 ## Troubleshooting
 
-**`403 Forbidden`** — Token doesn't have write access to `@fedhost/cli`. Regenerate with correct scopes.
+**`403 Forbidden`** — Token doesn't have write access to `@nexushosting/cli`. Regenerate with correct scopes.
 
-**`402 Payment Required`** — The `fedhost` organisation doesn't exist or package is set to private. Run `npm publish --access public`.
+**`402 Payment Required`** — The `nexushosting` organisation doesn't exist or package is set to private. Run `npm publish --access public`.
 
 **`ENEEDAUTH`** — `NPM_TOKEN` secret is not set or expired in GitHub Actions.
 

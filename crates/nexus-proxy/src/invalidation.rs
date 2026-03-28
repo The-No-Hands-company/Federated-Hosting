@@ -2,7 +2,7 @@
 //!
 //! When the TypeScript API server deploys a site or changes its settings,
 //! it publishes:
-//!   `PUBLISH fedhost:cache:invalidate <siteId>`
+//!   `PUBLISH nexushosting:cache:invalidate <siteId>`
 //!
 //! This subscriber listens on that channel and evicts the relevant entries
 //! from both the domain cache and file cache immediately, so subsequent
@@ -17,7 +17,7 @@ use tracing::{info, warn, error};
 
 use crate::cache::{DomainCache, FileCache};
 
-const CHANNEL: &str = "fedhost:cache:invalidate";
+const CHANNEL: &str = "nexushosting:cache:invalidate";
 const RECONNECT_DELAY_MS: u64 = 2_000;
 
 /// Spawn the Redis subscriber as a background Tokio task.

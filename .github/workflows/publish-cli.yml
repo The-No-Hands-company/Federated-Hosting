@@ -1,4 +1,4 @@
-name: Publish @fedhost/cli to npm
+name: Publish @nexushosting/cli to npm
 
 on:
   # Trigger manually from the Actions tab
@@ -15,7 +15,7 @@ on:
 # ──────────────────────────────────────────────────────────────────────────────
 # Required repository secret:
 #   NPM_TOKEN — Automation token from npmjs.com (Settings → Access Tokens → Granular)
-#               Needs: Read+Write access to @fedhost/cli package
+#               Needs: Read+Write access to @nexushosting/cli package
 # ──────────────────────────────────────────────────────────────────────────────
 
 jobs:
@@ -82,9 +82,9 @@ jobs:
       - name: Summary
         run: |
           VERSION=$(node -p "require('./artifacts/cli/package.json').version")
-          echo "## ✅ Published @fedhost/cli@${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Published @nexushosting/cli@${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Install with:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "npm install -g @fedhost/cli" >> $GITHUB_STEP_SUMMARY
+          echo "npm install -g @nexushosting/cli" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

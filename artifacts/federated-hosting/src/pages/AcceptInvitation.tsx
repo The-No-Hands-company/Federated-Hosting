@@ -67,7 +67,7 @@ export default function AcceptInvitation() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <span className="text-2xl font-black text-primary tracking-tight">⚡ FedHost</span>
+          <span className="text-2xl font-black text-primary tracking-tight">⚡ NexusHosting</span>
         </div>
 
         {isLoading && (

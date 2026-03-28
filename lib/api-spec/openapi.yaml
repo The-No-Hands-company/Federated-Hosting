@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Federated Hosting API
+  title: Nexus Hosting API
   version: 1.0.0
   description: |
     Production-grade federated static site hosting network.
@@ -8,7 +8,7 @@ info:
     or Bearer API tokens (CLI / CI). Inter-node requests use Ed25519 signatures.
   contact:
     name: The No Hands Company
-    url: https://github.com/The-No-Hands-company/Federated-Hosting
+    url: https://github.com/The-No-Hands-company/Nexus-Hosting
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -4197,7 +4197,7 @@ components:
       description: |
         Sets a per-user storage cap in MB. Use 0 to remove the cap (user is unlimited,
         only node-level capacity applies). This is an operator administration tool —
-        NOT a pricing tier. FedHost is always free.
+        NOT a pricing tier. NexusHosting is always free.
       tags: [Admin]
       security: [{cookieAuth: []}]
       parameters:

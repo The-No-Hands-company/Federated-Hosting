@@ -1,6 +1,6 @@
 version: "3.9"
 
-# ── Federated Hosting — self-hosted stack ──────────────────────────────────────
+# ── Nexus Hosting — self-hosted stack ──────────────────────────────────────
 #
 # Usage:
 #   cp .env.example .env          # fill in secrets
@@ -24,25 +24,25 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - fedhost
+      - nexus
 
   # ── PostgreSQL ─────────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       ${POSTGRES_DB:-fedhost}
-      POSTGRES_USER:     ${POSTGRES_USER:-fedhost}
+      POSTGRES_DB:       ${POSTGRES_DB:-nexus}
+      POSTGRES_USER:     ${POSTGRES_USER:-nexus}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fedhost} -d ${POSTGRES_DB:-fedhost}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus} -d ${POSTGRES_DB:-nexus}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - fedhost
+      - nexus
 
   # ── MinIO (S3-compatible object storage) ───────────────────────────────────
   # Remove this block and point OBJECT_STORAGE_* at an external provider if you
@@ -52,7 +52,7 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-fedhost}
+      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-nexus}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     volumes:
       - minio_data:/data
@@ -65,7 +65,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - fedhost
+      - nexus
 
   # ── DB migration job (runs once, then exits) ───────────────────────────────
   migrate:
@@ -75,12 +75,12 @@ services:
     command: >
       sh -c "pnpm --filter @workspace/db run push"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-fedhost}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fedhost}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nexus}
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - fedhost
+      - nexus
     restart: "no"
 
   # ── API + frontend server ──────────────────────────────────────────────────
@@ -96,15 +96,15 @@ services:
       PORT: 8080
 
       # ── Database ───────────────────────────────────────────────────────────
-      DATABASE_URL: postgresql://${POSTGRES_USER:-fedhost}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fedhost}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nexus}
 
       # ── Object storage (MinIO — swap for S3/R2 as needed) ─────────────────
       # When using MinIO locally, set these.  For external providers see docs.
       OBJECT_STORAGE_ENDPOINT:    http://minio:9000
-      OBJECT_STORAGE_ACCESS_KEY:  ${MINIO_ROOT_USER:-fedhost}
+      OBJECT_STORAGE_ACCESS_KEY:  ${MINIO_ROOT_USER:-nexus}
       OBJECT_STORAGE_SECRET_KEY:  ${MINIO_ROOT_PASSWORD}
-      OBJECT_STORAGE_BUCKET:      ${OBJECT_STORAGE_BUCKET:-fedhost-sites}
-      DEFAULT_OBJECT_STORAGE_BUCKET_ID: ${OBJECT_STORAGE_BUCKET:-fedhost-sites}
+      OBJECT_STORAGE_BUCKET:      ${OBJECT_STORAGE_BUCKET:-nexus-sites}
+      DEFAULT_OBJECT_STORAGE_BUCKET_ID: ${OBJECT_STORAGE_BUCKET:-nexus-sites}
       PRIVATE_OBJECT_DIR:         private
       PUBLIC_OBJECT_SEARCH_PATHS: public
 
@@ -114,7 +114,7 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
 
       # ── Node identity ─────────────────────────────────────────────────────
-      NODE_NAME:            ${NODE_NAME:-My FedHost Node}
+      NODE_NAME:            ${NODE_NAME:-My NexusHosting Node}
       NODE_REGION:          ${NODE_REGION:-self-hosted}
       OPERATOR_NAME:        ${OPERATOR_NAME:-Node Operator}
       OPERATOR_EMAIL:       ${OPERATOR_EMAIL:-admin@example.com}
@@ -143,7 +143,7 @@ services:
       SMTP_USER:       ${SMTP_USER:-}
       SMTP_PASS:       ${SMTP_PASS:-}
       EMAIL_FROM:      ${EMAIL_FROM:-noreply@example.com}
-      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-FedHost}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-NexusHosting}
 
       # ── TLS / ACME ────────────────────────────────────────────────────────
       ACME_ENABLED:     ${ACME_ENABLED:-false}
@@ -177,30 +177,30 @@ services:
       start_period: 15s
       retries: 3
     networks:
-      - fedhost
+      - nexus
 
   # ── Rust static site proxy ──────────────────────────────────────────────────
   # Handles all site-serving traffic (Host-header routing → S3 streaming).
-  # Requires a pre-built binary at ./crates/fedhost-proxy/target/release/fedhost-proxy
-  # Build with: cd crates/fedhost-proxy && cargo build --release
+  # Requires a pre-built binary at ./crates/nexus-proxy/target/release/nexus-proxy
+  # Build with: cd crates/nexus-proxy && cargo build --release
   #
   # To run WITHOUT the Rust proxy (TypeScript-only), comment this service out
   # and update the Caddyfile to route all traffic to app:8080.
   proxy:
     build:
-      context: crates/fedhost-proxy
+      context: crates/nexus-proxy
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8090:8090"       # Site-serving port (Caddy routes site traffic here)
       - "9091:9091"       # Prometheus metrics
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-fedhost}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fedhost}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nexus}
 
       OBJECT_STORAGE_ENDPOINT:   http://minio:9000
-      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-fedhost}
+      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-nexus}
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      OBJECT_STORAGE_BUCKET:     ${OBJECT_STORAGE_BUCKET:-fedhost-sites}
+      OBJECT_STORAGE_BUCKET:     ${OBJECT_STORAGE_BUCKET:-nexus-sites}
       OBJECT_STORAGE_REGION:     auto
 
       REDIS_URL:     redis://redis:6379
@@ -227,7 +227,7 @@ services:
       start_period: 20s
       retries: 3
     networks:
-      - fedhost
+      - nexus
 
 volumes:
   db_data:
@@ -235,5 +235,5 @@ volumes:
   redis_data:
 
 networks:
-  fedhost:
+  nexushosting:
     driver: bridge

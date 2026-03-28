@@ -38,13 +38,13 @@ export const test = base.extend<FhFixtures>({
     // Create a short-lived test token via the API
     // In a real test environment this would use a pre-seeded test user session.
     // For now we expose the fixture for future auth integration.
-    const token = process.env.FH_TEST_TOKEN ?? "";
+    const token = process.env.NH_TEST_TOKEN ?? "";
     await use(token);
   },
 
   authedRequest: async ({ playwright, apiToken }, use) => {
     const ctx = await playwright.request.newContext({
-      baseURL: process.env.FH_BASE_URL ?? "http://localhost:8080",
+      baseURL: process.env.NH_BASE_URL ?? "http://localhost:8080",
       extraHTTPHeaders: apiToken
         ? { Authorization: `Bearer ${apiToken}` }
         : {},

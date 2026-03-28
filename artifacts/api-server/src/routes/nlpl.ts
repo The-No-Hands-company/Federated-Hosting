@@ -88,7 +88,7 @@ router.get("/nlpl/runtime-info", asyncHandler(async (req: Request, res: Response
     nlplVersion,
     pythonVersion,
     pythonBin: PYTHON_BIN,
-    staticOnlyMode: process.env.FEDERATED_STATIC_ONLY === "true",
+    staticOnlyMode: process.env.NEXUS_STATIC_ONLY === "true",
     portRange: {
       start: parseInt(process.env.DYNAMIC_PORT_START ?? "9000"),
       end: parseInt(process.env.DYNAMIC_PORT_END ?? "9999"),

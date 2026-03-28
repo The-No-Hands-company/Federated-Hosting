@@ -1,10 +1,10 @@
-# Federated Hosting Protocol Specification
+# Nexus Hosting Protocol Specification
 
 **Version:** 1.0  
 **Status:** Stable  
-**Reference implementation:** [The No Hands Company / Federated-Hosting](https://github.com/The-No-Hands-company/Federated-Hosting)
+**Reference implementation:** [The No Hands Company / Federated-Hosting](https://github.com/The-No-Hands-company/Nexus-Hosting)
 
-This document specifies the federation protocol for nodes in the Federated Hosting network. Any server that correctly implements this specification can join the network.
+This document specifies the federation protocol for nodes in the Nexus Hosting network. Any server that correctly implements this specification can join the network.
 
 ---
 
@@ -154,7 +154,7 @@ Response:
 
 ```json
 {
-  "protocol": "fedhost/1.0",
+  "protocol": "nexushosting/1.0",
   "nodeCount": 42,
   "generatedAt": "2024-01-01T12:00:00Z",
   "nodes": [

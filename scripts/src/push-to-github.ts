@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 
 const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
-const repoUrl = `https://x-access-token:${token}@github.com/The-No-Hands-company/Federated-Hosting.git`;
+const repoUrl = `https://x-access-token:${token}@github.com/The-No-Hands-company/Nexus-Hosting.git`;
 
 if (!token) {
   console.error("GITHUB_PERSONAL_ACCESS_TOKEN is not set");

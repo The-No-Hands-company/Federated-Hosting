@@ -137,7 +137,7 @@ fn region_continent(r: &str) -> Continent {
 pub fn fly_region_to_aws(fly: &str) -> String {
     match fly.to_lowercase().as_str() {
         "sin" => "ap-southeast-1",
-        "jkt" => "ap-southeast-3",  // Jakarta — primary FedHost market
+        "jkt" => "ap-southeast-3",  // Jakarta — primary NexusHosting market
         "nrt" => "ap-northeast-1",
         "syd" => "ap-southeast-2",
         "ams" => "eu-west-1",
@@ -159,7 +159,7 @@ pub fn fly_region_to_aws(fly: &str) -> String {
 }
 
 /// Map ISO 3166-1 alpha-2 country codes to AWS-style region strings.
-/// Indonesia gets the Jakarta region (ap-southeast-3) — the primary FedHost market.
+/// Indonesia gets the Jakarta region (ap-southeast-3) — the primary NexusHosting market.
 pub fn country_to_aws_region(cc: &str) -> String {
     match cc.to_uppercase().as_str() {
         // Southeast Asia — primary market

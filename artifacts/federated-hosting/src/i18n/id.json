@@ -48,7 +48,7 @@
   "dashboard": {
     "title": "Ikhtisar Federasi",
     "subtitle": "Telemetri real-time dan status konsensus jaringan.",
-    "welcome": "Selamat Datang di Federated Hosting",
+    "welcome": "Selamat Datang di Nexus Hosting",
     "welcomeSubtitle": "Masuk untuk mendaftarkan situs Anda, mengunggah file, dan menerapkan ke jaringan federasi.",
     "stats": {
       "activeNodes": "Node Aktif",
@@ -163,7 +163,7 @@
     "never": "tidak pernah",
     "expires": "Kedaluwarsa",
     "quickstart": {
-      "title": "CLI FedHost",
+      "title": "CLI NexusHosting",
       "subtitle": "Buat token di atas, lalu autentikasi CLI dengan satu perintah."
     }
   },
@@ -210,7 +210,7 @@
   "onboarding": {
     "title": "Memulai",
     "banner": {
-      "title": "Selamat Datang di Federated Hosting",
+      "title": "Selamat Datang di Nexus Hosting",
       "subtitle": "Terapkan situs pertama Anda dalam 4 langkah — masuk, daftar, unggah, aktifkan."
     },
     "steps": {

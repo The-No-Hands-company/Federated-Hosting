@@ -522,7 +522,7 @@ router.get("/sites/serve/:domain/*filePath", asyncHandler(async (req: Request, r
     try {
       res.setHeader("Content-Type", fileRecord.contentType);
       res.setHeader("Cache-Control", "public, max-age=3600");
-      res.setHeader("X-Served-By", "federated-hosting");
+      res.setHeader("X-Served-By", "nexus-hosting");
       res.setHeader("X-Site-Domain", site.domain);
 
       await storage.streamToResponse(fileRecord.objectPath, res);

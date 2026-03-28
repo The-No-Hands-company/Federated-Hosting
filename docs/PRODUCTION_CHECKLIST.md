@@ -1,6 +1,6 @@
 # Production Launch Checklist
 
-This checklist is for node operators preparing a Federated Hosting node for public traffic. Work through every item before announcing your node to the network.
+This checklist is for node operators preparing a Nexus Hosting node for public traffic. Work through every item before announcing your node to the network.
 
 **Scale context:** This software is designed for networks serving 1.5 billion+ users. Every item on this list exists for a reason. Do not skip steps.
 
@@ -119,7 +119,7 @@ See `.env.example` for every variable with examples and defaults.
 ## Deployment
 
 - [ ] **GitHub Actions** — `FH_NODE_URL`, `FH_TOKEN`, `FH_SITE_ID` secrets set in every repository that deploys to this node
-- [ ] **CLI installed** — `npm install -g @fedhost/cli` on all developer machines
+- [ ] **CLI installed** — `npm install -g @nexushosting/cli` on all developer machines
 - [ ] **Rollback tested** — do a test deploy, then rollback, verify the previous version serves correctly
 - [ ] **Drizzle migrations** — never run `db push` in production; always use `pnpm --filter @workspace/db run migrate`
 
@@ -130,7 +130,7 @@ See `.env.example` for every variable with examples and defaults.
 - [ ] **DNS** — A record (or CNAME) pointing `node.yourdomain.com` at your server's IP
 - [ ] **TLS certificate** — valid and auto-renewing
 - [ ] **Smoke test** — deploy a real site end-to-end from your machine to the live node
-- [ ] **Federation handshake** — verified handshake with the public bootstrap node at `nodes.fedhosting.network`
+- [ ] **Federation handshake** — verified handshake with the public bootstrap node at `nodes.nexushosting.network`
 - [ ] **Announce your node** — submit to the community directory (coming soon)
 
 ---

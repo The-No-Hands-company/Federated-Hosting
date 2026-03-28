@@ -1,4 +1,4 @@
-# FedHost Incident Response Runbook
+# NexusHosting Incident Response Runbook
 
 Playbooks for common failure scenarios. Each entry covers: how to detect it, immediate mitigation, and root cause investigation.
 
@@ -33,13 +33,13 @@ psql $DATABASE_URL -c "UPDATE users SET suspended_at = NOW() WHERE id = '<user-i
 ```bash
 # Find what's eating space in object storage
 # For MinIO:
-mc du local/fedhost-sites --recursive | sort -k1 -rh | head -20
+mc du local/nexus-sites --recursive | sort -k1 -rh | head -20
 
 # Check analytics buffer table (can grow large)
 psql $DATABASE_URL -c "SELECT COUNT(*), pg_size_pretty(pg_relation_size('analytics_buffer')) FROM analytics_buffer;"
 
 # Check build artifacts that weren't cleaned up
-ls -lah /tmp/fedhost-builds-* 2>/dev/null | head -10
+ls -lah /tmp/nexus-builds-* 2>/dev/null | head -10
 ```
 
 **Long-term fix:** Increase `STORAGE_CAPACITY_GB`, add a persistent volume, or enable CDN offloading.
@@ -178,8 +178,8 @@ psql $DATABASE_URL -c "SELECT log FROM build_jobs WHERE id = <build-id>;"
 psql $DATABASE_URL -c "UPDATE build_jobs SET status = 'failed', finished_at = NOW(), log = log || '\n[manual] Marked failed by operator' WHERE id = <build-id>;"
 
 # If the tmp directory is taking disk space
-ls /tmp/fedhost-build-* 2>/dev/null
-rm -rf /tmp/fedhost-build-<build-id>
+ls /tmp/nexus-build-* 2>/dev/null
+rm -rf /tmp/nexus-build-<build-id>
 ```
 
 ---
@@ -283,6 +283,6 @@ docker compose restart caddy
 
 ## Emergency Contacts / Escalation
 
-- **Project issues:** https://github.com/The-No-Hands-company/Federated-Hosting/issues
+- **Project issues:** https://github.com/The-No-Hands-company/Nexus-Hosting/issues
 - **Security vulnerabilities:** Open a private security advisory on GitHub
 - **CSAM reports:** https://report.iwf.org.uk and https://www.missingkids.org/gethelpnow/cybertipline (do not delay)

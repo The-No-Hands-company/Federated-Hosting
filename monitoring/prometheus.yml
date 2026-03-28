@@ -1,4 +1,4 @@
-# Prometheus scrape configuration for FedHost
+# Prometheus scrape configuration for NexusHosting
 #
 # Usage:
 #   Place at /etc/prometheus/prometheus.yml and restart Prometheus.
@@ -15,7 +15,7 @@ global:
 
   external_labels:
     # Used to identify this Prometheus instance in federation/remote_write
-    monitor: fedhost
+    monitor: nexus
 
 # Alerting (optional — configure Alertmanager)
 # alerting:
@@ -25,15 +25,15 @@ global:
 
 # Load alerting rules (optional)
 # rule_files:
-#   - "alerts/fedhost.yml"
+#   - "alerts/nexushosting.yml"
 
 scrape_configs:
 
-  # ── Main FedHost API server ────────────────────────────────────────────────
+  # ── Main NexusHosting API server ────────────────────────────────────────────────
   #
   # The /metrics endpoint is exposed by prom-client on the same port as the API.
   # Set METRICS_TOKEN env var on the node to require bearer auth.
-  - job_name: fedhost-node
+  - job_name: nexus-node
     static_configs:
       - targets:
           - app:8080   # Docker Compose service name; use hostname:port for bare-metal
@@ -58,10 +58,10 @@ scrape_configs:
   # If you operate multiple nodes, add one entry per node.
   # Example for a second node:
   #
-  # - job_name: fedhost-node-sg
+  # - job_name: nexus-node-sg
   #   static_configs:
   #     - targets:
-  #         - sg-node.fedhost.example.com:443
+  #         - sg-node.nexushosting.example.com:443
   #       labels:
   #         node: sg-1
   #         region: ap-southeast-1

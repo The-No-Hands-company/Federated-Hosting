@@ -1,5 +1,5 @@
 /*!
- * fedhost-proxy — High-performance static site serving for Federated Hosting.
+ * nexus-proxy — High-performance static site serving for Nexus Hosting.
  *
  * This binary is the Rust extraction of the TypeScript host router hot path.
  * It handles every HTTP request to a hosted site domain, replacing the Node.js
@@ -8,7 +8,7 @@
  * ## Architecture
  *
  * ```
- * Internet → Caddy/nginx (TLS) → fedhost-proxy (this binary) → S3/MinIO
+ * Internet → Caddy/nginx (TLS) → nexus-proxy (this binary) → S3/MinIO
  *                                       ↕
  *                              TypeScript API server
  *                         (auth, deploy, admin, federation)
@@ -66,7 +66,7 @@
  * node artifacts/api-server/dist/index.js
  *
  * # Start Rust proxy on :8090 for site serving
- * ./fedhost-proxy
+ * ./nexus-proxy
  *
  * # Caddy routes:
  * # /api/* → :8080 (TypeScript)
@@ -103,13 +103,13 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "fedhost_proxy=info,tower_http=warn".into()),
+                .unwrap_or_else(|_| "nexus_proxy=info,tower_http=warn".into()),
         )
         .json()
         .init();
 
     let cfg = config::Config::from_env()?;
-    info!(version = env!("CARGO_PKG_VERSION"), addr = %cfg.listen_addr, "fedhost-proxy starting");
+    info!(version = env!("CARGO_PKG_VERSION"), addr = %cfg.listen_addr, "nexus-proxy starting");
 
     // Install Prometheus metrics recorder (must be before any metrics calls)
     let metrics_handle = metrics::install_recorder();

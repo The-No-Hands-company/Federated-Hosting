@@ -173,7 +173,7 @@ export default function TokensPage() {
                 <div className="bg-muted/20 border border-white/5 rounded-xl p-4">
                   <p className="text-muted-foreground text-sm font-mono mb-2">Use with the CLI:</p>
                   <code className="font-mono text-xs text-white break-all">
-                    fh login --token {createdToken.token}
+                    nh login --token {createdToken.token}
                   </code>
                 </div>
                 <Button onClick={handleCreateClose} className="w-full">{t("common.done")}</Button>
@@ -250,13 +250,13 @@ export default function TokensPage() {
             <Terminal className="w-5 h-5 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-white font-semibold text-sm mb-1">FedHost CLI</p>
+            <p className="text-white font-semibold text-sm mb-1">NexusHosting CLI</p>
             <p className="text-muted-foreground text-xs mb-3">
               Create a token above, then authenticate the CLI in one command.
             </p>
             <div className="bg-black/40 rounded-lg px-3 py-2 font-mono text-xs text-primary flex items-center justify-between gap-2">
-              <span>fh login --node https://your-node.example.com --token fh_your_token</span>
-              <CopyButton text="fh login --node https://your-node.example.com --token fh_your_token" />
+              <span>nh login --node https://your-node.example.com --token fh_your_token</span>
+              <CopyButton text="nh login --node https://your-node.example.com --token fh_your_token" />
             </div>
           </div>
         </CardContent>

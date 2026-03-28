@@ -8,7 +8,7 @@ export const domainVerificationStatusEnum = pgEnum("domain_verification_status",
 ]);
 
 /**
- * Custom domains attached to a site (beyond the default *.fedhost domain).
+ * Custom domains attached to a site (beyond the default *.nexushosting domain).
  * Users add a CNAME record + TXT verification record to prove domain ownership.
  */
 export const customDomainsTable = pgTable("custom_domains", {

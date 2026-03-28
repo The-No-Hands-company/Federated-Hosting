@@ -77,7 +77,7 @@ export const logsCommand = new Command("logs")
     spinner.stop();
 
     if (builds.length === 0) {
-      console.log(chalk.dim("  No builds yet. Run: fh build <site-id>"));
+      console.log(chalk.dim("  No builds yet. Run: nh build <site-id>"));
       return;
     }
 
@@ -96,7 +96,7 @@ export const logsCommand = new Command("logs")
       );
     }
     console.log();
-    console.log(chalk.dim(`  View full log: fh logs ${siteId} --build <id>`));
+    console.log(chalk.dim(`  View full log: nh logs ${siteId} --build <id>`));
     console.log();
   });
 

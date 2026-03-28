@@ -1,6 +1,6 @@
-# fedhost-proxy
+# nexus-proxy
 
-High-performance Rust reverse proxy for [Federated Hosting](https://github.com/The-No-Hands-company/Federated-Hosting) static site serving.
+High-performance Rust reverse proxy for [Nexus Hosting](https://github.com/The-No-Hands-company/Nexus-Hosting) static site serving.
 
 This crate is the **Rust extraction** of the TypeScript `hostRouter` middleware — the single hottest path in the entire system. Every HTTP request to every hosted site goes through it.
 
@@ -30,7 +30,7 @@ Internet
 Caddy / nginx  (TLS termination)
     ↓
 ┌───────────────────────────────────────────────────────┐
-│  fedhost-proxy  (this crate)           :8090           │
+│  nexus-proxy  (this crate)           :8090           │
 │                                                        │
 │  Host: mysite.example.com → lookup → S3 stream → resp  │
 │  Analytics hit → background queue                      │
@@ -95,15 +95,15 @@ All 9 original implementation TODOs are done:
    `LruCache<K, V>` from the `lru` crate provides true O(1) LRU eviction.
 
 5. **`cache.rs` → Redis invalidation subscriber**
-   Subscribe to `fedhost:cache:invalidate` channel.
-   TypeScript publishes `PUBLISH fedhost:cache:invalidate <siteId>` on every deploy.
+   Subscribe to `nexushosting:cache:invalidate` channel.
+   TypeScript publishes `PUBLISH nexushosting:cache:invalidate <siteId>` on every deploy.
 
 6. **`geo.rs` → `select_closest_node()`**
    Query active peers from `nodes` table, match regions, return redirect URL.
 
 7. **`metrics.rs` → `metrics-exporter-prometheus`**
    Wire `metrics::counter!` and `metrics::histogram!` macros.
-   Export `fedhost_proxy_requests_total`, `fedhost_proxy_latency_seconds`, `fedhost_proxy_cache_hits_total`.
+   Export `nexus_proxy_requests_total`, `nexus_proxy_latency_seconds`, `nexus_proxy_cache_hits_total`.
 
 8. **Handler → SPA fallback routing**
    Currently falls back to `index.html` for any missing path.
@@ -121,14 +121,14 @@ All 9 original implementation TODOs are done:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Build (debug)
-cd crates/fedhost-proxy
+cd crates/nexus-proxy
 cargo build
 
 # Build (release — optimised for production, strips symbols)
 cargo build --release
 
 # The binary
-./target/release/fedhost-proxy
+./target/release/nexus-proxy
 ```
 
 ## Running alongside the TypeScript server
@@ -140,11 +140,11 @@ node artifacts/api-server/dist/index.js
 # 2. Rust proxy on :8090
 DATABASE_URL=postgresql://... \
 OBJECT_STORAGE_ENDPOINT=http://localhost:9000 \
-OBJECT_STORAGE_ACCESS_KEY=fedhost \
+OBJECT_STORAGE_ACCESS_KEY=nexus \
 OBJECT_STORAGE_SECRET_KEY=... \
-OBJECT_STORAGE_BUCKET=fedhost-sites \
+OBJECT_STORAGE_BUCKET=nexus-sites \
 COOKIE_SECRET=... \
-./target/release/fedhost-proxy
+./target/release/nexus-proxy
 ```
 
 **Caddy config** to route requests to the right server:
@@ -181,7 +181,7 @@ The Rust proxy must remain **protocol-compatible** with the TypeScript server. S
 - **HMAC cookie format** must match `verifyUnlockCookie` in `hostRouter.ts` exactly
 - **Cache-Control headers** must match the TypeScript `getCacheControl` function
 - **Analytics buffer** inserts must match the TypeScript schema exactly
-- **`X-Served-By: fedhost-proxy/rust`** header distinguishes responses in logs
+- **`X-Served-By: nexus-proxy/rust`** header distinguishes responses in logs
 
 Any change to cookie signing, cache header logic, or analytics schema in TypeScript must be mirrored here.
 

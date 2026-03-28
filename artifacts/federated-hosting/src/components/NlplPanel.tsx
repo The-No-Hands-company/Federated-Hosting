@@ -210,7 +210,7 @@ export function NlplPanel({ siteId, siteDomain, siteType }: NlplPanelProps) {
             <div className="text-xs">
               <p className="text-amber-400 font-semibold mb-0.5">Static-only node</p>
               <p className="text-muted-foreground">
-                This node has dynamic hosting disabled (<code className="text-amber-300">FEDERATED_STATIC_ONLY=true</code>).
+                This node has dynamic hosting disabled (<code className="text-amber-300">NEXUS_STATIC_ONLY=true</code>).
                 To run {meta.label} apps, use a node with dynamic hosting enabled.
               </p>
             </div>

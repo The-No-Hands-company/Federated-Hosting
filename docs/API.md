@@ -131,7 +131,7 @@ Tokens start with `fh_` and are SHA-256 hashed before storage — plaintext show
 {
   "instructions": {
     "txt": { "name": "_fh-verify.yourdomain.com", "type": "TXT", "value": "fhv_abc123..." },
-    "cname": { "name": "yourdomain.com", "type": "CNAME", "value": "nodes.fedhosting.network" }
+    "cname": { "name": "yourdomain.com", "type": "CNAME", "value": "nodes.nexushosting.network" }
   }
 }
 ```

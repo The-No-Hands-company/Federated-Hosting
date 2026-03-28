@@ -15,7 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `SECURITY.md` — vulnerability disclosure policy, security model
 - `ARCHITECTURE.md` — system design, data flow, schema reference, technology choices
 - `API.md` — full REST API reference with request/response examples
-- `FEDERATION_PROTOCOL.md` — complete specification for the `fedhost/1.0` protocol
+- `FEDERATION_PROTOCOL.md` — complete specification for the `nexushosting/1.0` protocol
 - `DEPLOYMENT.md` — production setup guide, nginx config, scaling notes, federation joining
 
 ---
@@ -107,14 +107,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Wired into health monitor (node offline/online), deploy route (deploy), gossip (new peer)
 
 **Playwright E2E test suite** (`e2e/`)
-- `playwright.config.ts` — configured for Chromium + mobile Safari, `FH_BASE_URL` env var
+- `playwright.config.ts` — configured for Chromium + mobile Safari, `NH_BASE_URL` env var
 - `e2e/health.spec.ts` — health endpoints, federation discovery, public site endpoints, rate limit smoke
 - `e2e/deploy.spec.ts` — 11-step critical path test: auth → create site → upload → deploy → serve → analytics → rollback → cleanup
 - `e2e/helpers.ts` — shared fixtures including `authedRequest` context with Bearer token
 
 **CLI additions**
-- `fh analytics --site <id> [--period 24h|7d|30d]` — traffic stats with ASCII bar charts, top paths + referrers
-- `fh status` — node health, federation metadata, network capacity summary
+- `nh analytics --site <id> [--period 24h|7d|30d]` — traffic stats with ASCII bar charts, top paths + referrers
+- `nh status` — node health, federation metadata, network capacity summary
 
 **CI pipeline** (`.github/workflows/ci.yml`)
 - TypeScript typecheck, OpenAPI validation (Redocly lint), build (API + frontend + CLI), Docker build check
@@ -166,7 +166,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Links to FEDERATION.md, SELF_HOSTING.md, GitHub repo
 
 **CLI npm publish readiness**
-- Package renamed `@fedhost/cli` (was `@workspace/cli`)
+- Package renamed `@nexushosting/cli` (was `@workspace/cli`)
 - Added `author`, `license`, `homepage`, `repository`, `bugs`, `keywords`, `engines` fields
 - `files` list: `dist/`, `README.md`
 - `prepublishOnly` script runs `build` automatically
@@ -224,7 +224,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - `e2e/security.spec.ts` — 20+ auth enforcement tests, public endpoint tests, conflict/rate-limit smoke tests
-- `.github/workflows/publish-cli.yml` — npm publish workflow for `@fedhost/cli` (manual trigger + `cli-v*` tags)
+- `.github/workflows/publish-cli.yml` — npm publish workflow for `@nexushosting/cli` (manual trigger + `cli-v*` tags)
 - `.env.example` — fully documented: all 18 env vars with descriptions, examples, correct defaults
   (previously only covered 4 vars)
 

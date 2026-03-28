@@ -2,7 +2,7 @@
  * Site invitation routes.
  *
  * Invitations allow site owners to add collaborators by email address,
- * even before the invitee has a FedHost account.
+ * even before the invitee has a NexusHosting account.
  *
  * Flow:
  *   1. Owner POSTs /api/sites/:id/invitations with email + role

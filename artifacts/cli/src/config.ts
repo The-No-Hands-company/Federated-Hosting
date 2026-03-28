@@ -7,7 +7,7 @@ export interface FhConfig {
 }
 
 const store = new Conf<Partial<FhConfig>>({
-  projectName: "fedhost-cli",
+  projectName: "nexus-cli",
   schema: {
     nodeUrl:   { type: "string" },
     token:     { type: "string" },
@@ -37,7 +37,7 @@ export function requireAuth(): { nodeUrl: string; token: string } {
   const cfg = getConfig();
   if (!cfg.nodeUrl || !cfg.token) {
     console.error(
-      "Not logged in. Run:  fh login --node https://your-node.example.com",
+      "Not logged in. Run:  nh login --node https://your-node.example.com",
     );
     process.exit(1);
   }

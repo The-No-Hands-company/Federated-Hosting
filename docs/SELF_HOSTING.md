@@ -1,6 +1,6 @@
 # Self-Hosting Guide
 
-A complete walkthrough for running your own Federated Hosting node anywhere — a VPS, bare metal, or any Linux host. .
+A complete walkthrough for running your own Nexus Hosting node anywhere — a VPS, bare metal, or any Linux host. .
 
 ---
 
@@ -39,8 +39,8 @@ A complete walkthrough for running your own Federated Hosting node anywhere — 
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/The-No-Hands-company/Federated-Hosting.git
-cd Federated-Hosting
+git clone https://github.com/The-No-Hands-company/Nexus-Hosting.git
+cd Nexus-Hosting
 ```
 
 ### 2. Configure environment
@@ -55,7 +55,7 @@ Edit `.env` with your values (see [Environment Variables Reference](#environment
 POSTGRES_PASSWORD=choose-a-strong-password
 MINIO_ROOT_PASSWORD=choose-a-strong-password
 PUBLIC_DOMAIN=node.yourdomain.com
-NODE_NAME=My FedHost Node
+NODE_NAME=My NexusHosting Node
 OPERATOR_EMAIL=you@example.com
 ```
 
@@ -86,7 +86,7 @@ Expected response:
 ### 5. Open the MinIO console
 
 Visit `http://your-server:9001` and log in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`.  
-Create a bucket named `fedhost-sites` (or whatever you set `OBJECT_STORAGE_BUCKET` to).
+Create a bucket named `nexus-sites` (or whatever you set `OBJECT_STORAGE_BUCKET` to).
 
 ---
 
@@ -180,7 +180,7 @@ Without SMTP, invitations, deploy notifications, certificate expiry warnings, an
 | `SMTP_USER` | — | SMTP username / login |
 | `SMTP_PASS` | — | SMTP password or API key |
 | `EMAIL_FROM` | `noreply@<PUBLIC_DOMAIN>` | From address for outgoing mail |
-| `EMAIL_FROM_NAME` | `FedHost` | From display name |
+| `EMAIL_FROM_NAME` | `NexusHosting` | From display name |
 
 **Provider examples:**
 ```bash
@@ -231,7 +231,7 @@ See [docs/TLS.md](TLS.md) for the full guide including Caddy, certbot, and DNS-0
 
 ## Auth
 
-FedHost uses **OpenID Connect (OIDC)** for authentication. `ISSUER_URL` and `OIDC_CLIENT_ID` are both **required** — the server throws at startup if either is missing.
+NexusHosting uses **OpenID Connect (OIDC)** for authentication. `ISSUER_URL` and `OIDC_CLIENT_ID` are both **required** — the server throws at startup if either is missing.
 
 The OIDC client must support **Authorization Code flow with PKCE** and the `offline_access` scope. Standard compliant providers work without any code changes.
 
@@ -243,7 +243,7 @@ docker compose -f authentik-docker-compose.yml up -d
 
 # Create an application:
 # 1. Applications → Providers → Create → OAuth2/OpenID Provider
-# 2. Name: fedhost
+# 2. Name: nexushosting
 # 3. Client type: Public (PKCE)
 # 4. Redirect URIs: https://your-node.example.com/api/auth/callback
 # 5. Scopes: openid profile email offline_access
@@ -251,7 +251,7 @@ docker compose -f authentik-docker-compose.yml up -d
 ```
 
 ```env
-ISSUER_URL=https://auth.yourdomain.com/application/o/fedhost/
+ISSUER_URL=https://auth.yourdomain.com/application/o/nexushosting/
 OIDC_CLIENT_ID=your-client-id-from-authentik
 ```
 
@@ -259,7 +259,7 @@ OIDC_CLIENT_ID=your-client-id-from-authentik
 
 ```bash
 # In your Keycloak realm:
-# 1. Clients → Create → Client ID: fedhost
+# 1. Clients → Create → Client ID: nexushosting
 # 2. Client type: Public
 # 3. Valid redirect URIs: https://your-node.example.com/api/auth/callback
 # 4. Standard flow: Enabled
@@ -267,7 +267,7 @@ OIDC_CLIENT_ID=your-client-id-from-authentik
 
 ```env
 ISSUER_URL=https://auth.yourdomain.com/realms/your-realm
-OIDC_CLIENT_ID=fedhost
+OIDC_CLIENT_ID=nexushosting
 ```
 
 ### Option 3 — Auth0
@@ -301,7 +301,7 @@ The `lib/storageProvider` package wraps S3-compatible object storage. To replace
    OBJECT_STORAGE_ENDPOINT=https://s3.amazonaws.com  # or R2/MinIO endpoint
    OBJECT_STORAGE_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
    OBJECT_STORAGE_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-   DEFAULT_OBJECT_STORAGE_BUCKET_ID=my-fedhost-bucket
+   DEFAULT_OBJECT_STORAGE_BUCKET_ID=my-nexus-bucket
    ```
 
 2. Storage is handled by `artifacts/api-server/src/lib/storageProvider.ts`. Set `OBJECT_STORAGE_ENDPOINT` to activate the S3 provider:
@@ -382,7 +382,7 @@ Set `BOOTSTRAP_URLS` in your `.env` to a comma-separated list of bootstrap endpo
 
 ```env
 # .env
-BOOTSTRAP_URLS=https://bootstrap.fedhosting.network/api/federation/bootstrap
+BOOTSTRAP_URLS=https://bootstrap.nexushosting.network/api/federation/bootstrap
 ```
 
 Multiple bootstrap nodes for redundancy:
@@ -390,7 +390,7 @@ Multiple bootstrap nodes for redundancy:
 BOOTSTRAP_URLS=https://bootstrap1.example.com/api/federation/bootstrap,https://bootstrap2.example.com/api/federation/bootstrap
 ```
 
-The bootstrap URL is just any running FedHost node's `/api/federation/bootstrap` endpoint. You can use any node operator willing to act as a seed for new nodes.
+The bootstrap URL is just any running NexusHosting node's `/api/federation/bootstrap` endpoint. You can use any node operator willing to act as a seed for new nodes.
 
 **After setting BOOTSTRAP_URLS**, restart your node and check the logs:
 ```bash
@@ -418,7 +418,7 @@ curl -X POST https://your-node.example.com/api/federation/handshake \
 
 ### Running your own bootstrap node
 
-Any FedHost node can serve as a bootstrap node — the endpoint is always available at `GET /api/federation/bootstrap`. To make your node discoverable, simply share your `/api/federation/bootstrap` URL with other operators.
+Any NexusHosting node can serve as a bootstrap node — the endpoint is always available at `GET /api/federation/bootstrap`. To make your node discoverable, simply share your `/api/federation/bootstrap` URL with other operators.
 
 There is no central authority or required registration. The network is as decentralised as its operators choose to make it.
 
@@ -436,7 +436,7 @@ To register with the public bootstrap node (if one exists for your deployment):
 curl -X POST https://your-node.example.com/api/federation/handshake \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <admin-token>" \
-  -d '{"targetNodeUrl": "https://bootstrap.fedhosting.network"}'
+  -d '{"targetNodeUrl": "https://bootstrap.nexushosting.network"}'
 ```
 
 ---
@@ -467,7 +467,7 @@ Check that PostgreSQL is healthy: `docker compose ps db`
 Confirm `DATABASE_URL` is correct in `.env`.
 
 **Object storage errors**
-Ensure the MinIO bucket exists. Log into the console at `:9001` and create `fedhost-sites`.
+Ensure the MinIO bucket exists. Log into the console at `:9001` and create `nexus-sites`.
 
 **Node not reachable from federation peers**
 Confirm `PUBLIC_DOMAIN` is set to the public hostname (not `localhost`).  
@@ -486,7 +486,7 @@ docker compose logs minio        # object storage logs
 
 ## Low-Resource Mode (Raspberry Pi / Volunteer Nodes)
 
-FedHost can run on constrained hardware common in volunteer-operated community nodes — Raspberry Pi 3/4, old laptops, or small cloud VMs (512 MB–1 GB RAM). Set `LOW_RESOURCE=true` in your `.env` to activate a profile tuned for these environments.
+NexusHosting can run on constrained hardware common in volunteer-operated community nodes — Raspberry Pi 3/4, old laptops, or small cloud VMs (512 MB–1 GB RAM). Set `LOW_RESOURCE=true` in your `.env` to activate a profile tuned for these environments.
 
 ```bash
 LOW_RESOURCE=true
@@ -522,3 +522,109 @@ LOW_RESOURCE=true
 - Set `REDIS_URL` pointing at a small Redis instance to share rate limiting
 - Consider `DYNAMIC_PORT_START` / `DYNAMIC_PORT_END` range of just 10–20 ports if you don't host dynamic sites
 - Use an external managed PostgreSQL (Neon free tier works) to avoid running Postgres on the same Pi
+
+---
+
+## Moderation & Content Safety
+
+### Content Scanning
+
+By default, NexusHosting accepts all uploaded files without scanning. For public-facing nodes, configuring an external content scanner is strongly recommended.
+
+Set `CONTENT_SCAN_WEBHOOK_URL` to enable scanning on every deployment:
+
+```env
+# .env
+CONTENT_SCAN_WEBHOOK_URL=http://clamav-rest:9000/scan
+CONTENT_SCAN_FAIL_CLOSED=false   # true = block deploy if scanner is unreachable
+```
+
+NexusHosting POSTs deployment metadata to this URL and expects `{ "safe": true }` or `{ "safe": false, "reason": "..." }` in response.
+
+**Example integrations:**
+
+| Scanner | URL format | Notes |
+|---|---|---|
+| [clamav-rest](https://github.com/benzino77/clamav-rest) | `http://clamav-rest:9000/scan` | Run as a sidecar container |
+| Custom blocklist | Any HTTP endpoint | Write your own policy service |
+| VirusTotal | Requires API wrapper | Rate-limited on free tier |
+
+**Docker Compose example (ClamAV sidecar):**
+
+```yaml
+services:
+  clamav-rest:
+    image: benzino77/clamav-rest
+    environment:
+      APP_MAX_FILE_SIZE: 104857600  # 100 MB
+    restart: unless-stopped
+    networks:
+      - nexus
+
+  app:
+    environment:
+      CONTENT_SCAN_WEBHOOK_URL: http://clamav-rest:9000/scan
+      CONTENT_SCAN_FAIL_CLOSED: "false"
+```
+
+If `CONTENT_SCAN_WEBHOOK_URL` is not set, no scanning occurs. No blocking, no errors — just no scanning.
+
+### Abuse Reports
+
+Users and site visitors can submit abuse reports via the **Report abuse** button on site cards, or directly via `POST /api/abuse/report`.
+
+Node operators review reports in **Admin → Moderation**. Actions available:
+- **Mark reviewing** — flags as under investigation
+- **No action** — closes the report without action
+- **Takedown site** — suspends the site immediately and records in the audit log
+
+Reports are stored in the `abuse_reports` table with full history.
+
+### IP Banning
+
+Ban specific IPs or subnets from the **Admin → Moderation → IP Bans** panel, or via the API:
+
+```bash
+# Ban a single IP
+curl -X POST https://your-node/api/admin/ip-bans \
+  -H "Authorization: Bearer <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"ipAddress": "1.2.3.4", "reason": "Spam", "scope": "all"}'
+
+# Ban a subnet (CIDR)
+curl -X POST https://your-node/api/admin/ip-bans \
+  -H "Authorization: Bearer <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"ipAddress": "1.2.3.4", "cidrRange": "1.2.3.0/24", "reason": "Spam network", "scope": "all"}'
+
+# Temporary ban (expires in 24 hours)
+curl -X POST https://your-node/api/admin/ip-bans \
+  -H "Authorization: Bearer <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"ipAddress": "1.2.3.4", "scope": "api", "expiresAt": "2026-12-31T00:00:00Z"}'
+```
+
+**Scope options:**
+- `api` — blocks the IP from using the API (login, deploy, etc.)
+- `sites` — blocks the IP from viewing hosted sites
+- `all` — blocks everything
+
+Bans are cached in memory for 60 seconds. They take effect immediately for new requests after the cache expires.
+
+### User Management
+
+Suspend abusive users without deleting their data via **Admin → Users → ⋯ → Suspend user**. Suspended users:
+- Cannot log in (OIDC callback redirects to `/?error=account_suspended`)
+- Cannot make any API requests (403 `ACCOUNT_SUSPENDED`)
+- Their sites remain in place (suspend the sites separately if needed)
+
+Set a per-user storage cap to prevent one user filling the node:
+
+```bash
+curl -X PATCH https://your-node/api/admin/users/<user-id>/storage-cap \
+  -H "Authorization: Bearer <admin-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"storageCapMb": 2048}'   # 2 GB cap; 0 = unlimited
+```
+
+This is an operator administration tool — **not a pricing tier**. NexusHosting is free for everyone, always.

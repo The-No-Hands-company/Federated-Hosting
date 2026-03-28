@@ -23,7 +23,7 @@ impl ObjectStorage {
         let creds = Credentials::new(
             &cfg.storage_access_key,
             &cfg.storage_secret_key,
-            None, None, "fedhost-proxy",
+            None, None, "nexus-proxy",
         );
 
         let mut builder = S3ConfigBuilder::new()

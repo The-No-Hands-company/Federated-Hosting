@@ -1,7 +1,7 @@
 /**
  * Malware / content scanning hook.
  *
- * FedHost does not bundle a scanner — that would require ClamAV or a cloud
+ * NexusHosting does not bundle a scanner — that would require ClamAV or a cloud
  * service as a sidecar, adding significant operational complexity for self-hosted
  * nodes. Instead, this module provides a configurable webhook that the node
  * operator can point at any scanner they choose.

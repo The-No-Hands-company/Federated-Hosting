@@ -1,5 +1,5 @@
 # Grafana datasource provisioning
-# Place this file at /etc/grafana/provisioning/datasources/fedhost.yaml
+# Place this file at /etc/grafana/provisioning/datasources/nexushosting.yaml
 
 apiVersion: 1
 

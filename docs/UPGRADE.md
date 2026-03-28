@@ -1,6 +1,6 @@
-# FedHost Upgrade Runbook
+# NexusHosting Upgrade Runbook
 
-How to safely upgrade a running FedHost node to a new version without data loss.
+How to safely upgrade a running NexusHosting node to a new version without data loss.
 
 ---
 
@@ -61,7 +61,7 @@ curl http://localhost:8080/api/federation/peers | jq .meta.total
 
 ## Checking Current Schema Version
 
-FedHost uses a single cumulative migration file (`0000_initial_schema.sql`). All statements use `IF NOT EXISTS` / `IF NOT EXISTS` so they are safe to re-run. To verify what's in your database:
+NexusHosting uses a single cumulative migration file (`0000_initial_schema.sql`). All statements use `IF NOT EXISTS` / `IF NOT EXISTS` so they are safe to re-run. To verify what's in your database:
 
 ```bash
 # Check if a specific table exists
@@ -136,7 +136,7 @@ Check each release's CHANGELOG for new required vars. Common pattern for new fea
 
 ## Rust Proxy Upgrade
 
-The Rust proxy (`crates/fedhost-proxy`) is a separate binary. It is rebuilt by Docker:
+The Rust proxy (`crates/nexus-proxy`) is a separate binary. It is rebuilt by Docker:
 
 ```bash
 # Rebuild the proxy image

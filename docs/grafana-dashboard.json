@@ -18,7 +18,7 @@
     { "type": "panel", "id": "table", "name": "Table", "version": "" }
   ],
   "annotations": { "list": [] },
-  "description": "FedHost node health, traffic, federation, and system metrics",
+  "description": "NexusHosting node health, traffic, federation, and system metrics",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -46,7 +46,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "colorMode": "background" },
       "title": "Active Sites",
       "type": "stat",
-      "targets": [{ "expr": "fedhost_sites_total{status=\"active\"}", "legendFormat": "Active sites" }]
+      "targets": [{ "expr": "nexus_sites_total{status=\"active\"}", "legendFormat": "Active sites" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -60,7 +60,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
       "title": "Federation Peers",
       "type": "stat",
-      "targets": [{ "expr": "fedhost_federation_peers_total{status=\"active\"}", "legendFormat": "Active peers" }]
+      "targets": [{ "expr": "nexus_federation_peers_total{status=\"active\"}", "legendFormat": "Active peers" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -70,7 +70,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
       "title": "Request Rate (RPS)",
       "type": "stat",
-      "targets": [{ "expr": "sum(rate(fedhost_http_requests_total[5m]))", "legendFormat": "RPS" }]
+      "targets": [{ "expr": "sum(rate(nexus_http_requests_total[5m]))", "legendFormat": "RPS" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -84,7 +84,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
       "title": "P99 Latency",
       "type": "stat",
-      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(fedhost_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99" }]
+      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(nexus_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -98,7 +98,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
       "title": "Sync Queue Depth",
       "type": "stat",
-      "targets": [{ "expr": "fedhost_sync_queue_depth", "legendFormat": "Pending" }]
+      "targets": [{ "expr": "nexus_sync_queue_depth", "legendFormat": "Pending" }]
     },
     {
       "collapsed": false,
@@ -116,9 +116,9 @@
       "title": "HTTP Requests/s by Status",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum(rate(fedhost_http_requests_total{status_code=~\"2..\"}[5m]))", "legendFormat": "2xx" },
-        { "expr": "sum(rate(fedhost_http_requests_total{status_code=~\"4..\"}[5m]))", "legendFormat": "4xx" },
-        { "expr": "sum(rate(fedhost_http_requests_total{status_code=~\"5..\"}[5m]))", "legendFormat": "5xx" }
+        { "expr": "sum(rate(nexus_http_requests_total{status_code=~\"2..\"}[5m]))", "legendFormat": "2xx" },
+        { "expr": "sum(rate(nexus_http_requests_total{status_code=~\"4..\"}[5m]))", "legendFormat": "4xx" },
+        { "expr": "sum(rate(nexus_http_requests_total{status_code=~\"5..\"}[5m]))", "legendFormat": "5xx" }
       ]
     },
     {
@@ -129,9 +129,9 @@
       "title": "HTTP Latency Percentiles",
       "type": "timeseries",
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum(rate(fedhost_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(fedhost_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(fedhost_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99" }
+        { "expr": "histogram_quantile(0.50, sum(rate(nexus_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(nexus_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(nexus_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99" }
       ]
     },
     {
@@ -149,9 +149,9 @@
       "title": "Memory Usage",
       "type": "timeseries",
       "targets": [
-        { "expr": "fedhost_nodejs_heap_size_used_bytes", "legendFormat": "Heap used" },
-        { "expr": "fedhost_nodejs_heap_size_total_bytes", "legendFormat": "Heap total" },
-        { "expr": "fedhost_nodejs_external_memory_bytes", "legendFormat": "External" }
+        { "expr": "nexus_nodejs_heap_size_used_bytes", "legendFormat": "Heap used" },
+        { "expr": "nexus_nodejs_heap_size_total_bytes", "legendFormat": "Heap total" },
+        { "expr": "nexus_nodejs_external_memory_bytes", "legendFormat": "External" }
       ]
     },
     {
@@ -162,8 +162,8 @@
       "title": "Event Loop Lag",
       "type": "timeseries",
       "targets": [
-        { "expr": "fedhost_nodejs_eventloop_lag_seconds", "legendFormat": "Lag" },
-        { "expr": "fedhost_nodejs_eventloop_lag_p99_seconds", "legendFormat": "P99 lag" }
+        { "expr": "nexus_nodejs_eventloop_lag_seconds", "legendFormat": "Lag" },
+        { "expr": "nexus_nodejs_eventloop_lag_p99_seconds", "legendFormat": "P99 lag" }
       ]
     },
     {
@@ -181,8 +181,8 @@
       "title": "LRU Cache Entries",
       "type": "timeseries",
       "targets": [
-        { "expr": "fedhost_cache_entries{cache_type=\"domain\"}", "legendFormat": "Domain cache" },
-        { "expr": "fedhost_cache_entries{cache_type=\"file\"}", "legendFormat": "File cache" }
+        { "expr": "nexus_cache_entries{cache_type=\"domain\"}", "legendFormat": "Domain cache" },
+        { "expr": "nexus_cache_entries{cache_type=\"file\"}", "legendFormat": "File cache" }
       ]
     },
     {
@@ -193,19 +193,19 @@
       "title": "Storage Operations/s",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum(rate(fedhost_storage_operations_total{result=\"success\"}[5m])) by (operation)", "legendFormat": "{{operation}} ok" },
-        { "expr": "sum(rate(fedhost_storage_operations_total{result=\"error\"}[5m])) by (operation)", "legendFormat": "{{operation}} err" }
+        { "expr": "sum(rate(nexus_storage_operations_total{result=\"success\"}[5m])) by (operation)", "legendFormat": "{{operation}} ok" },
+        { "expr": "sum(rate(nexus_storage_operations_total{result=\"error\"}[5m])) by (operation)", "legendFormat": "{{operation}} err" }
       ]
     }
   ],
   "refresh": "30s",
   "schemaVersion": 38,
-  "tags": ["fedhost", "hosting", "federation"],
+  "tags": ["nexushosting", "hosting", "federation"],
   "templating": { "list": [] },
   "time": { "from": "now-3h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "FedHost Node",
-  "uid": "fedhost-node-dashboard",
+  "title": "NexusHosting Node",
+  "uid": "nexus-node-dashboard",
   "version": 1
 }

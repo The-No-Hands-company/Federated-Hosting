@@ -1,6 +1,6 @@
-# NLPL on Federated Hosting
+# NLPL on Nexus Hosting
 
-[NLPL](https://github.com/Zajfan/NLPL) is a programming language designed for clarity and simplicity. Federated Hosting supports NLPL as a first-class runtime alongside static sites.
+[NLPL](https://github.com/Zajfan/NLPL) is a programming language designed for clarity and simplicity. Nexus Hosting supports NLPL as a first-class runtime alongside static sites.
 
 ## How it works
 

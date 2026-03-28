@@ -391,7 +391,7 @@ export async function hostRouter(req: Request, res: Response, next: NextFunction
         for (const [key, val] of Object.entries(proxyRes.headers)) {
           if (val !== undefined) res.setHeader(key, val);
         }
-        res.setHeader("X-Served-By", "federated-hosting-proxy");
+        res.setHeader("X-Served-By", "nexus-hosting-proxy");
         proxyRes.pipe(res);
         recordHit(site.id, req.path, req, 0);
       },
@@ -474,7 +474,7 @@ ${urls}
         if (fileRecord) {
           applyCustomHeaders(res, req.path, await db.select().from(siteCustomHeadersTable).where(eq(siteCustomHeadersTable.siteId, site.id)));
           res.setHeader("Content-Type", fileRecord.contentType);
-          res.setHeader("X-Served-By", "federated-hosting");
+          res.setHeader("X-Served-By", "nexus-hosting");
           res.setHeader("Cache-Control", "public, max-age=3600");
           await storage.streamToResponse(fileRecord.objectPath, res);
           recordHit(site.id, rewritePath, req, fileRecord.sizeBytes ?? 0);
@@ -506,7 +506,7 @@ ${urls}
     try {
       applyCustomHeaders(res, req.path, customHeaders);
       res.setHeader("Content-Type",  fileRecord.contentType);
-      res.setHeader("X-Served-By",   "federated-hosting");
+      res.setHeader("X-Served-By",   "nexus-hosting");
       res.setHeader("X-Site-Domain", site!.domain);
       res.setHeader("Cache-Control", getCacheControl(fileRecord.contentType));
 

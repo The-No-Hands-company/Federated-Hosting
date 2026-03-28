@@ -37,7 +37,7 @@ function getTransporter(): Transporter | null {
 }
 
 function fromAddress(): string {
-  const name   = process.env.EMAIL_FROM_NAME ?? "FedHost";
+  const name   = process.env.EMAIL_FROM_NAME ?? "NexusHosting";
   const domain = process.env.PUBLIC_DOMAIN ?? "localhost";
   const addr   = process.env.EMAIL_FROM ?? `noreply@${domain}`;
   return `"${name}" <${addr}>`;
@@ -143,9 +143,9 @@ function layout(content: string, title: string): string {
 </head>
 <body>
 <div class="wrap">
-  <div class="header"><span class="logo">⚡ FedHost</span></div>
+  <div class="header"><span class="logo">⚡ NexusHosting</span></div>
   ${content}
-  <div class="footer">This email was sent by your FedHost node. If you did not expect this email, you can safely ignore it.</div>
+  <div class="footer">This email was sent by your NexusHosting node. If you did not expect this email, you can safely ignore it.</div>
 </div>
 </body>
 </html>`;
@@ -265,7 +265,7 @@ export async function emailInvitation(opts: {
       <p><strong style="color:#fff">${opts.inviterName}</strong> has invited you to collaborate on <strong style="color:#fff">${opts.siteName}</strong> (${opts.domain}) as a <strong style="color:#00e5ff">${opts.role}</strong>.</p>
       <br>
       <a href="${opts.acceptUrl}" class="btn">Accept Invitation →</a>
-      <p class="meta" style="margin-top:16px">This invitation expires in 7 days. If you don't have a FedHost account, you'll be prompted to create one.</p>
+      <p class="meta" style="margin-top:16px">This invitation expires in 7 days. If you don't have a NexusHosting account, you'll be prompted to create one.</p>
     </div>
   `, subject);
   const text = `${opts.inviterName} invited you to ${opts.siteName} (${opts.domain}) as ${opts.role}.\nAccept: ${opts.acceptUrl}`;

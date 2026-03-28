@@ -91,7 +91,7 @@ export const buildCommand = new Command("build")
         }
       }
     } else {
-      console.log(chalk.dim(`  Stream logs with: ${chalk.white(`fh logs ${siteId} --build ${job.buildId} --follow`)}`));
+      console.log(chalk.dim(`  Stream logs with: ${chalk.white(`nh logs ${siteId} --build ${job.buildId} --follow`)}`));
       console.log();
     }
   });

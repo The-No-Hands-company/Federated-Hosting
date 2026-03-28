@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering a contribution to Federated Hosting. This document covers how to set up a local development environment, the code style we follow, and the process for submitting changes.
+Thank you for considering a contribution to Nexus Hosting. This document covers how to set up a local development environment, the code style we follow, and the process for submitting changes.
 
 ---
 
@@ -15,8 +15,8 @@ Be respectful and constructive. Harassment of any kind will not be tolerated. We
 ### 1. Fork and clone
 
 ```bash
-git clone https://github.com/your-username/Federated-Hosting.git
-cd Federated-Hosting
+git clone https://github.com/your-username/Nexus-Hosting.git
+cd Nexus-Hosting
 ```
 
 ### 2. Install dependencies
@@ -37,7 +37,7 @@ cp .env.example .env
 Required variables:
 
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/fedhosting
+DATABASE_URL=postgresql://user:password@localhost:5432/nexushosting
 DEFAULT_OBJECT_STORAGE_BUCKET_ID=your-bucket-id
 PRIVATE_OBJECT_DIR=private
 PUBLIC_OBJECT_SEARCH_PATHS=public
@@ -57,7 +57,7 @@ pnpm --filter @workspace/db run push
 pnpm --filter @workspace/api-server run dev
 
 # Frontend (port 25231)
-pnpm --filter @workspace/federated-hosting run dev
+pnpm --filter @workspace/nexus-hosting run dev
 ```
 
 ---
@@ -66,7 +66,7 @@ pnpm --filter @workspace/federated-hosting run dev
 
 ```
 artifacts/api-server/     Express 5 API + federation node
-artifacts/federated-hosting/  React + Vite frontend
+artifacts/nexus-hosting/  React + Vite frontend
 lib/db/                   Drizzle ORM schema + migrations
 lib/api-spec/             OpenAPI 3.1 specification (source of truth)
 lib/api-zod/              Auto-generated Zod validators (do not edit)
@@ -210,7 +210,7 @@ To connect two local development nodes for testing:
 
 ## Reporting Bugs
 
-Open a [GitHub issue](https://github.com/The-No-Hands-company/Federated-Hosting/issues) with:
+Open a [GitHub issue](https://github.com/The-No-Hands-company/Nexus-Hosting/issues) with:
 
 - A clear title describing the problem
 - Steps to reproduce

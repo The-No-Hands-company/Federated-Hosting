@@ -1,6 +1,6 @@
-# Federated Hosting — Federation Protocol Specification
+# Nexus Hosting — Federation Protocol Specification
 
-**Protocol version:** `fedhost/1.0`  
+**Protocol version:** `nexushosting/1.0`  
 **Status:** Draft  
 **Last updated:** March 2026
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-The Federated Hosting protocol allows independent nodes to form a verifiable, decentralized network for hosting static websites. Each node is cryptographically identified using Ed25519 key pairs. Nodes discover each other, verify identity through signed handshakes, and propagate site-deployment events across the network.
+The Nexus Hosting protocol allows independent nodes to form a verifiable, decentralized network for hosting static websites. Each node is cryptographically identified using Ed25519 key pairs. Nodes discover each other, verify identity through signed handshakes, and propagate site-deployment events across the network.
 
 This document is implementation-language agnostic. A conforming node may be written in TypeScript, Rust, Go, or any other language.
 
@@ -44,7 +44,7 @@ GET /.well-known/federation
 
 ```json
 {
-  "protocol": "fedhost/1.0",
+  "protocol": "nexushosting/1.0",
   "name": "My Hosting Node",
   "domain": "node.example.com",
   "region": "ap-southeast-1",
@@ -63,7 +63,7 @@ GET /.well-known/federation
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `protocol` | yes | Must be `fedhost/1.0` |
+| `protocol` | yes | Must be `nexushosting/1.0` |
 | `name` | yes | Human-readable node name |
 | `domain` | yes | Canonical domain of this node |
 | `region` | yes | Geographic region (free-form string) |
@@ -166,7 +166,7 @@ GET https://peer.example.com/.well-known/federation
 
 ```json
 {
-  "protocol":      "fedhost/1.0",
+  "protocol":      "nexushosting/1.0",
   "name":          "My Node",
   "domain":        "peer.example.com",
   "region":        "ap-southeast-3",
@@ -183,7 +183,7 @@ GET https://peer.example.com/.well-known/federation
 
 `capabilities` is an array of feature strings. Conforming implementations must:
 - Treat unknown capability strings as a no-op (forward compatibility)
-- Only omit `"dynamic-hosting"` / `"nlpl"` when `FEDERATED_STATIC_ONLY=true`
+- Only omit `"dynamic-hosting"` / `"nlpl"` when `NEXUS_STATIC_ONLY=true`
 
 ---
 
@@ -342,7 +342,7 @@ POST /api/nodes/:id/update-capacity  — Update node's capacity figures
 
 - Implementations in any language are welcome. The wire format is JSON over HTTPS.
 - The Ed25519 signing algorithm is standardized (RFC 8032). Standard libraries in Rust (`ed25519-dalek`), Go (`crypto/ed25519`), Python (`cryptography`), and Node.js (`crypto`) all produce compatible signatures.
-- Future versions of this spec will be versioned as `fedhost/1.1`, `fedhost/2.0`, etc. Nodes SHOULD advertise the highest version they support.
+- Future versions of this spec will be versioned as `nexushosting/1.1`, `nexushosting/2.0`, etc. Nodes SHOULD advertise the highest version they support.
 
 ---
 

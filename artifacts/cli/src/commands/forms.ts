@@ -99,6 +99,6 @@ export const formsCommand = new Command("forms")
     }
 
     if (opts.form) {
-      console.log(chalk.dim(`  Export: fh forms ${siteId} --form ${opts.form} --export submissions.csv`));
+      console.log(chalk.dim(`  Export: nh forms ${siteId} --form ${opts.form} --export submissions.csv`));
     }
   });

@@ -1,4 +1,4 @@
-//! Prometheus metrics for fedhost-proxy.
+//! Prometheus metrics for nexus-proxy.
 //!
 //! Exposes a /metrics endpoint on a separate port (METRICS_LISTEN_ADDR).
 //! Metric names mirror the TypeScript metricsCollector.ts so Grafana
@@ -34,52 +34,52 @@ pub fn record_request(
     bytes_served: i64,
 ) {
     counter!(
-        "fedhost_proxy_requests_total",
+        "nexus_proxy_requests_total",
         "method"       => method.to_string(),
         "status"       => status.to_string(),
         "content_type" => simplify_content_type(content_type),
     ).increment(1);
 
     histogram!(
-        "fedhost_proxy_request_duration_seconds",
+        "nexus_proxy_request_duration_seconds",
         "method" => method.to_string(),
     ).record(duration.as_secs_f64());
 
     if bytes_served > 0 {
-        counter!("fedhost_proxy_bytes_served_total").increment(bytes_served as u64);
+        counter!("nexus_proxy_bytes_served_total").increment(bytes_served as u64);
     }
 }
 
 /// Record a cache hit or miss.
 pub fn record_cache_event(cache: &str, hit: bool) {
     if hit {
-        counter!("fedhost_proxy_cache_hits_total",   "cache" => cache.to_string()).increment(1);
+        counter!("nexus_proxy_cache_hits_total",   "cache" => cache.to_string()).increment(1);
     } else {
-        counter!("fedhost_proxy_cache_misses_total", "cache" => cache.to_string()).increment(1);
+        counter!("nexus_proxy_cache_misses_total", "cache" => cache.to_string()).increment(1);
     }
 }
 
 /// Update current cache sizes (call periodically or on insert/evict).
 pub fn record_cache_sizes(domain_size: usize, file_size: usize) {
-    gauge!("fedhost_proxy_domain_cache_size").set(domain_size as f64);
-    gauge!("fedhost_proxy_file_cache_size").set(file_size as f64);
+    gauge!("nexus_proxy_domain_cache_size").set(domain_size as f64);
+    gauge!("nexus_proxy_file_cache_size").set(file_size as f64);
 }
 
 /// Record a storage fetch.
 pub fn record_storage_fetch(success: bool, duration: Duration) {
     counter!(
-        "fedhost_proxy_storage_fetches_total",
+        "nexus_proxy_storage_fetches_total",
         "result" => if success { "success" } else { "error" }
     ).increment(1);
 
-    histogram!("fedhost_proxy_storage_fetch_duration_seconds")
+    histogram!("nexus_proxy_storage_fetch_duration_seconds")
         .record(duration.as_secs_f64());
 }
 
 /// Record a geo-routing redirect.
 pub fn record_geo_redirect(from_region: &str, to_region: &str) {
     counter!(
-        "fedhost_proxy_geo_redirects_total",
+        "nexus_proxy_geo_redirects_total",
         "from" => from_region.to_string(),
         "to"   => to_region.to_string(),
     ).increment(1);
@@ -87,7 +87,7 @@ pub fn record_geo_redirect(from_region: &str, to_region: &str) {
 
 /// Record a blocklist rejection.
 pub fn record_blocked_request() {
-    counter!("fedhost_proxy_blocked_requests_total").increment(1);
+    counter!("nexus_proxy_blocked_requests_total").increment(1);
 }
 
 /// Serve Prometheus metrics on the dedicated port.

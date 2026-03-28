@@ -1,6 +1,6 @@
 # Federation Protocol
 
-This document specifies the **Federated Hosting federation protocol** (`fedhost/1.0`) — the mechanism by which independent nodes discover each other, verify cryptographic identity, and coordinate site replication.
+This document specifies the **Nexus Hosting federation protocol** (`nexushosting/1.0`) — the mechanism by which independent nodes discover each other, verify cryptographic identity, and coordinate site replication.
 
 ---
 
@@ -41,7 +41,7 @@ Response:
 
 ```json
 {
-  "protocol": "fedhost/1.0",
+  "protocol": "nexushosting/1.0",
   "name": "My Node",
   "domain": "node1.example.com",
   "region": "us-east",
@@ -179,7 +179,7 @@ Future capabilities under consideration:
 
 ## Protocol Version
 
-The current version is **`fedhost/1.0`**. It is included in all discovery and ping responses. Future breaking changes will increment the major version. Nodes should check the `protocol` field before peering.
+The current version is **`nexushosting/1.0`**. It is included in all discovery and ping responses. Future breaking changes will increment the major version. Nodes should check the `protocol` field before peering.
 
 ---
 

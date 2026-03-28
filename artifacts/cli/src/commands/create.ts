@@ -28,8 +28,8 @@ const TEMPLATES: Record<string, {
 </head>
 <body>
   <main>
-    <h1>Hello from FedHost 🚀</h1>
-    <p>Edit <code>index.html</code> and deploy with <code>fh deploy . --site &lt;id&gt;</code></p>
+    <h1>Hello from NexusHosting 🚀</h1>
+    <p>Edit <code>index.html</code> and deploy with <code>nh deploy . --site &lt;id&gt;</code></p>
   </main>
   <script src="app.js"></script>
 </body>
@@ -50,7 +50,7 @@ code { background: #1a1a26; padding: 0.2em 0.5em; border-radius: 4px; font-size:
     desc:  "React 18, Vite 5, TypeScript. Build → dist/. Fast HMR in dev.",
     files: {
       "package.json": `{
-  "name": "my-fedhost-site",
+  "name": "my-nexus-site",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -76,8 +76,8 @@ createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictM
   return (
     <main style={{ fontFamily: "system-ui", background: "#0a0a0f", color: "#e4e4f0", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "2rem" }}>
       <div>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>Hello from FedHost 🚀</h1>
-        <p style={{ color: "#9ca3af" }}>Edit <code>src/App.tsx</code> and run <code>fh deploy dist --site &lt;id&gt;</code></p>
+        <h1 style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>Hello from NexusHosting 🚀</h1>
+        <p style={{ color: "#9ca3af" }}>Edit <code>src/App.tsx</code> and run <code>nh deploy dist --site &lt;id&gt;</code></p>
       </div>
     </main>
   );
@@ -96,7 +96,7 @@ createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictM
     desc:  "Content-focused. Static output by default. Zero JS unless needed.",
     files: {
       "package.json": `{
-  "name": "my-fedhost-site",
+  "name": "my-nexus-site",
   "version": "0.1.0",
   "type": "module",
   "scripts": { "dev": "astro dev", "build": "astro build", "preview": "astro preview" },
@@ -104,14 +104,14 @@ createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictM
 }`,
       "astro.config.mjs": `import { defineConfig } from "astro/config";\nexport default defineConfig({});`,
       "src/pages/index.astro": `---
-const title = "My FedHost Site";
+const title = "My NexusHosting Site";
 ---
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><title>{title}</title>
 <style>body{font-family:system-ui;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}h1{font-size:2.5rem}p{color:#9ca3af}</style>
 </head>
-<body><h1>Hello from FedHost 🚀</h1><p>Edit <code>src/pages/index.astro</code></p></body>
+<body><h1>Hello from NexusHosting 🚀</h1><p>Edit <code>src/pages/index.astro</code></p></body>
 </html>`,
       ".fh/config.json": `{"buildCommand": "npm run build", "outputDir": "dist"}`,
       ".gitignore": "node_modules\ndist\n.env\n",
@@ -127,7 +127,7 @@ const title = "My FedHost Site";
     desc:  "Next.js 15 with static export. Full RSC + SSG. Deploy the out/ folder.",
     files: {
       "package.json": `{
-  "name": "my-fedhost-site",
+  "name": "my-nexus-site",
   "version": "0.1.0",
   "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
   "dependencies": { "next": "^15.1.3", "react": "^19.0.0", "react-dom": "^19.0.0" },
@@ -140,7 +140,7 @@ export default config;`,
   return (
     <main style={{ fontFamily: "system-ui", background: "#0a0a0f", color: "#e4e4f0", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
       <div>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>Hello from FedHost 🚀</h1>
+        <h1 style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>Hello from NexusHosting 🚀</h1>
         <p style={{ color: "#9ca3af" }}>Edit <code>app/page.tsx</code> and deploy the <code>out/</code> folder</p>
       </div>
     </main>
@@ -165,7 +165,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     desc:  "SvelteKit with static adapter. Minimal, fast, no virtual DOM.",
     files: {
       "package.json": `{
-  "name": "my-fedhost-site",
+  "name": "my-nexus-site",
   "version": "0.1.0",
   "type": "module",
   "scripts": { "dev": "vite dev", "build": "vite build", "preview": "vite preview" },
@@ -175,7 +175,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 export default { kit: { adapter: adapter({ fallback: "404.html" }) } };`,
       "vite.config.ts": `import { sveltekit } from "@sveltejs/kit/vite";\nimport { defineConfig } from "vite";\nexport default defineConfig({ plugins: [sveltekit()] });`,
       "src/routes/+page.svelte": `<main>
-  <h1>Hello from FedHost 🚀</h1>
+  <h1>Hello from NexusHosting 🚀</h1>
   <p>Edit <code>src/routes/+page.svelte</code></p>
 </main>
 <style>
@@ -200,7 +200,7 @@ const NLPL_MAIN = [
   "import network",
   "import io",
   "",
-  "// FedHost injects PORT via environment.",
+  "// NexusHosting injects PORT via environment.",
   "// Your server MUST call network.serve_http to handle requests.",
   "",
   "function handle_request with request returns String",
@@ -246,7 +246,7 @@ const NODE_MAIN = [
 ].join("\n");
 
 const NODE_PKG = JSON.stringify({
-  name: "my-fedhost-node-app",
+  name: "my-nexus-node-app",
   version: "0.1.0",
   main: "server.js",
   scripts: { start: "node server.js", dev: "PORT=3000 node server.js" },
@@ -254,7 +254,7 @@ const NODE_PKG = JSON.stringify({
 }, null, 2);
 
 const PY_MAIN = [
-  '"""FedHost Python HTTP server scaffold. Uses stdlib only."""',
+  '"""NexusHosting Python HTTP server scaffold. Uses stdlib only."""',
   "import os, json, signal, http.server, urllib.parse",
   "PORT        = int(os.environ.get('PORT', '3000'))",
   "SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'localhost')",
@@ -284,7 +284,7 @@ const DYNAMIC_SCAFFOLDS: Record<string, { label: string; desc: string; entryFile
     desc:  "NLPL HTTP server — requires NLPL interpreter on the node.",
     files: {
       "server.nlpl": NLPL_MAIN,
-      "README.md": "# NLPL App\n\nDeploy: `fh deploy . --site <id>`\nStart the process from the FedHost dashboard.\n\nLocal dev: `PORT=3000 python3 /opt/nlpl/src/main.py server.nlpl`\n",
+      "README.md": "# NLPL App\n\nDeploy: `nh deploy . --site <id>`\nStart the process from the NexusHosting dashboard.\n\nLocal dev: `PORT=3000 python3 /opt/nlpl/src/main.py server.nlpl`\n",
     },
   },
   node: {
@@ -293,7 +293,7 @@ const DYNAMIC_SCAFFOLDS: Record<string, { label: string; desc: string; entryFile
     files: {
       "server.js":    NODE_MAIN,
       "package.json": NODE_PKG,
-      "README.md": "# Node.js App\n\nDeploy: `fh deploy . --site <id>`\nStart the process from the FedHost dashboard.\n\nLocal dev: `PORT=3000 node server.js`\n",
+      "README.md": "# Node.js App\n\nDeploy: `nh deploy . --site <id>`\nStart the process from the NexusHosting dashboard.\n\nLocal dev: `PORT=3000 node server.js`\n",
     },
   },
   python: {
@@ -301,7 +301,7 @@ const DYNAMIC_SCAFFOLDS: Record<string, { label: string; desc: string; entryFile
     desc:  "Python 3 HTTP server — stdlib only, no pip required.",
     files: {
       "server.py": PY_MAIN,
-      "README.md": "# Python App\n\nDeploy: `fh deploy . --site <id>`\nStart the process from the FedHost dashboard.\n\nLocal dev: `PORT=3000 python3 server.py`\n",
+      "README.md": "# Python App\n\nDeploy: `nh deploy . --site <id>`\nStart the process from the NexusHosting dashboard.\n\nLocal dev: `PORT=3000 python3 server.py`\n",
     },
   },
 };
@@ -320,7 +320,7 @@ ${Object.entries(TEMPLATES).map(([k, v]) => `  ${k.padEnd(10)} ${v.label.padEnd(
 `)
   .action(async (dir: string | undefined, opts: { template?: string; type?: string; install: boolean }) => {
     console.log();
-    console.log(chalk.bold("  ⚡ FedHost — Create new site\n"));
+    console.log(chalk.bold("  ⚡ Nexus Hosting — Create new site\n"));
 
     // ── Dynamic site type (--type nlpl|node|python) ──────────────────────────
     if (opts.type && opts.type !== "static") {
@@ -350,11 +350,11 @@ ${Object.entries(TEMPLATES).map(([k, v]) => `  ${k.padEnd(10)} ${v.label.padEnd(
       console.log(`  ${chalk.dim("Entry:")}     ${scaffold.entryFile}`);
       console.log();
       console.log(chalk.bold("  Next steps:\n"));
-      console.log(`  ${chalk.dim("1.")} Create an ${opts.type} site on FedHost:`);
-      console.log(`     ${chalk.cyan(`fh sites create --name "${dirName}" --type ${opts.type}`)}`);
+      console.log(`  ${chalk.dim("1.")} Create an ${opts.type} site on NexusHosting:`);
+      console.log(`     ${chalk.cyan(`nh sites create --name "${dirName}" --type ${opts.type}`)}`);
       console.log(`  ${chalk.dim("2.")} Deploy your files:`);
-      console.log(`     ${chalk.cyan(`fh deploy . --site <id>`)}`);
-      console.log(`  ${chalk.dim("3.")} Start the process from the FedHost dashboard`);
+      console.log(`     ${chalk.cyan(`nh deploy . --site <id>`)}`);
+      console.log(`  ${chalk.dim("3.")} Start the process from the NexusHosting dashboard`);
       console.log(`     ${chalk.dim("(Deploy page → Runtime Server panel → Start)")}`);
       console.log();
       return;
@@ -437,9 +437,9 @@ ${Object.entries(TEMPLATES).map(([k, v]) => `  ${k.padEnd(10)} ${v.label.padEnd(
     if (template.dev)   console.log(`  ${chalk.dim("$")} ${template.dev}   ${chalk.dim("# start dev server")}`);
     if (template.build) console.log(`  ${chalk.dim("$")} ${template.build}  ${chalk.dim("# build for production")}`);
     if (template.out) {
-      console.log(`  ${chalk.dim("$")} fh deploy ${template.out} --site <id>  ${chalk.dim("# deploy to FedHost")}`);
+      console.log(`  ${chalk.dim("$")} nh deploy ${template.out} --site <id>  ${chalk.dim("# deploy to NexusHosting")}`);
     } else {
-      console.log(`  ${chalk.dim("$")} fh deploy . --site <id>  ${chalk.dim("# deploy to FedHost")}`);
+      console.log(`  ${chalk.dim("$")} nh deploy . --site <id>  ${chalk.dim("# deploy to NexusHosting")}`);
     }
     console.log();
   });

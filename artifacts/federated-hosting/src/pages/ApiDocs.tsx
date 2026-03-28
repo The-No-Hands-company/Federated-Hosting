@@ -124,7 +124,7 @@ export default function ApiDocs() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">API Reference</h1>
           <p className="text-muted-foreground mt-1 font-mono text-sm">
-            Federated Hosting REST API — v0.7.0 · OpenAPI 3.1
+            Nexus Hosting REST API — v0.7.0 · OpenAPI 3.1
           </p>
         </div>
         <div className="flex gap-2">
@@ -134,7 +134,7 @@ export default function ApiDocs() {
               OpenAPI JSON
             </Button>
           </a>
-          <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/docs/API.md" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/docs/API.md" target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm" className="border-white/10 text-muted-foreground hover:text-white gap-1.5">
               <BookOpen className="w-4 h-4" />
               Full Docs
@@ -226,13 +226,13 @@ export default function ApiDocs() {
               title: "Deploy a site (CLI)",
               lang: "bash",
               code: `# Install the CLI
-npm install -g @fedhost/cli
+npm install -g @nexushosting/cli
 
 # Authenticate
-fh login --node https://your-node.example.com
+nh login --node https://your-node.example.com
 
 # Deploy your built site
-fh deploy ./dist --site 42`,
+nh deploy ./dist --site 42`,
             },
             {
               title: "Deploy via API (fetch)",
@@ -301,17 +301,17 @@ curl -X POST /api/domains/7/verify`,
 
       {/* Links */}
       <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5">
-        <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/FEDERATION.md" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/FEDERATION.md" target="_blank" rel="noopener noreferrer">
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white gap-1.5">
             <ExternalLink className="w-3.5 h-3.5" /> Federation Protocol Spec
           </Button>
         </a>
-        <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/docs/SELF_HOSTING.md" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/docs/SELF_HOSTING.md" target="_blank" rel="noopener noreferrer">
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white gap-1.5">
             <ExternalLink className="w-3.5 h-3.5" /> Self-Hosting Guide
           </Button>
         </a>
-        <a href="https://github.com/The-No-Hands-company/Federated-Hosting" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/The-No-Hands-company/Nexus-Hosting" target="_blank" rel="noopener noreferrer">
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white gap-1.5">
             <ExternalLink className="w-3.5 h-3.5" /> GitHub Repository
           </Button>

@@ -53,13 +53,13 @@ function makeConfig(env: Record<string, string | undefined>) {
     ? parseInt(env.GOSSIP_INTERVAL_MS ?? "600000")
     : parseInt(env.GOSSIP_INTERVAL_MS ?? "300000");
 
-  const FEDERATED_STATIC_ONLY = env.FEDERATED_STATIC_ONLY === "true";
+  const NEXUS_STATIC_ONLY = env.NEXUS_STATIC_ONLY === "true";
 
   return {
     LOW_RESOURCE, DB_POOL, LOG_LEVEL, DOMAIN_CACHE_MAX, FILE_CACHE_MAX,
     ANALYTICS_FLUSH_INTERVAL_MS, HEALTH_CHECK_INTERVAL_MS,
     GLOBAL_RATE_LIMIT, UPLOAD_RATE_LIMIT, COMPRESSION_LEVEL,
-    GOSSIP_INTERVAL_MS, FEDERATED_STATIC_ONLY,
+    GOSSIP_INTERVAL_MS, NEXUS_STATIC_ONLY,
   };
 }
 
@@ -85,7 +85,7 @@ describe("resourceConfig — normal mode (LOW_RESOURCE=false)", () => {
   it("upload rate limit 60/min",  () => expect(cfg.UPLOAD_RATE_LIMIT).toBe(60));
   it("compression level 6",       () => expect(cfg.COMPRESSION_LEVEL).toBe(6));
 
-  it("FEDERATED_STATIC_ONLY is false", () => expect(cfg.FEDERATED_STATIC_ONLY).toBe(false));
+  it("NEXUS_STATIC_ONLY is false", () => expect(cfg.NEXUS_STATIC_ONLY).toBe(false));
 });
 
 describe("resourceConfig — LOW_RESOURCE=true (Raspberry Pi / volunteer node profile)", () => {
@@ -140,25 +140,25 @@ describe("resourceConfig — env var overrides", () => {
   });
 });
 
-describe("resourceConfig — FEDERATED_STATIC_ONLY", () => {
+describe("resourceConfig — NEXUS_STATIC_ONLY", () => {
   it("is false by default", () => {
-    expect(makeConfig({}).FEDERATED_STATIC_ONLY).toBe(false);
+    expect(makeConfig({}).NEXUS_STATIC_ONLY).toBe(false);
   });
 
   it("is true when env var is 'true'", () => {
-    expect(makeConfig({ FEDERATED_STATIC_ONLY: "true" }).FEDERATED_STATIC_ONLY).toBe(true);
+    expect(makeConfig({ NEXUS_STATIC_ONLY: "true" }).NEXUS_STATIC_ONLY).toBe(true);
   });
 
   it("is false for 'True', '1', 'yes' — must be exactly 'true'", () => {
-    expect(makeConfig({ FEDERATED_STATIC_ONLY: "True" }).FEDERATED_STATIC_ONLY).toBe(false);
-    expect(makeConfig({ FEDERATED_STATIC_ONLY: "1"    }).FEDERATED_STATIC_ONLY).toBe(false);
-    expect(makeConfig({ FEDERATED_STATIC_ONLY: "yes"  }).FEDERATED_STATIC_ONLY).toBe(false);
+    expect(makeConfig({ NEXUS_STATIC_ONLY: "True" }).NEXUS_STATIC_ONLY).toBe(false);
+    expect(makeConfig({ NEXUS_STATIC_ONLY: "1"    }).NEXUS_STATIC_ONLY).toBe(false);
+    expect(makeConfig({ NEXUS_STATIC_ONLY: "yes"  }).NEXUS_STATIC_ONLY).toBe(false);
   });
 
   it("can be combined with LOW_RESOURCE", () => {
-    const cfg = makeConfig({ LOW_RESOURCE: "true", FEDERATED_STATIC_ONLY: "true" });
+    const cfg = makeConfig({ LOW_RESOURCE: "true", NEXUS_STATIC_ONLY: "true" });
     expect(cfg.LOW_RESOURCE).toBe(true);
-    expect(cfg.FEDERATED_STATIC_ONLY).toBe(true);
+    expect(cfg.NEXUS_STATIC_ONLY).toBe(true);
     expect(cfg.DB_POOL.max).toBe(5); // LOW_RESOURCE still applies
   });
 });

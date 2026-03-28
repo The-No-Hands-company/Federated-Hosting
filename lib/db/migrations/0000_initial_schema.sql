@@ -1,4 +1,4 @@
--- Federated Hosting — Initial Database Migration
+-- Nexus Hosting — Initial Database Migration
 -- Generated: March 2026
 -- This migration creates the full schema from scratch.
 -- Run with: pnpm --filter @workspace/db run migrate
@@ -519,7 +519,7 @@ ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "spa_routing" INTEGER NOT NULL DEFA
 -- storage_cap_mb: operator-set per-user cap (0 = no cap, node capacity is the only limit)
 -- suspended_at:   operator can suspend a user without deleting their account
 --
--- NOTE: FedHost is free — there are NO paid tiers, NO pricing, NO limits except
+-- NOTE: NexusHosting is free — there are NO paid tiers, NO pricing, NO limits except
 -- what the node operator sets for capacity reasons. storage_cap_mb is a node
 -- administration tool, not a paywall.
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified"  INTEGER  NOT NULL DEFAULT 0;

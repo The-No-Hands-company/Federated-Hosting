@@ -193,7 +193,7 @@ async function deploySite(opts: {
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("\n🌐  Federated Hosting — Site Seeder");
+  console.log("\n🌐  Nexus Hosting — Site Seeder");
   console.log("=".repeat(44) + "\n");
 
   const [localNode] = await db.select().from(nodesTable).where(eq(nodesTable.isLocalNode, 1));
@@ -205,16 +205,16 @@ async function main() {
   }
   console.log(`Node: ${localNode.name ?? "Local"} (id=${localNode.id}, domain=${localNode.domain})\n`);
 
-  // ── Site 1: Federated Hosting landing page ──
-  console.log("📄 Site 1: Federated Hosting landing page");
+  // ── Site 1: Nexus Hosting landing page ──
+  console.log("📄 Site 1: Nexus Hosting landing page");
   await deploySite({
-    name: "Federated Hosting",
-    domain: "fedhosting.app",
-    description: "The official website for the Federated Hosting project — for everyday users who want to understand what it is and how to get started.",
+    name: "Nexus Hosting",
+    domain: "nexushosting.app",
+    description: "The official website for the Nexus Hosting project — for everyday users who want to understand what it is and how to get started.",
     siteType: "static",
     ownerName: "The No Hands Company",
     ownerEmail: "hello@nohands.company",
-    sourceDir: path.join(ROOT, "sites/fedhosting-landing"),
+    sourceDir: path.join(ROOT, "sites/nexushosting-landing"),
     localNodeId: localNode.id,
   });
 

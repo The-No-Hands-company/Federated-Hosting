@@ -59,7 +59,7 @@ router.post("/tokens", tokenLimiter, asyncHandler(async (req: Request, res: Resp
 
   const plaintext = generateToken();
   const tokenHash = hashToken(plaintext);
-  const tokenPrefix = plaintext.slice(0, 10); // "fh_" + 7 chars
+  const tokenPrefix = plaintext.slice(0, 10); // "nh_" + 7 chars
 
   const expiresAt = parsed.data.expiresInDays
     ? new Date(Date.now() + parsed.data.expiresInDays * 86400_000)

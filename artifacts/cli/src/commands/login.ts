@@ -14,7 +14,7 @@ interface TokenCreateResponse {
 }
 
 export const loginCommand = new Command("login")
-  .description("Authenticate to a FedHost node and store credentials")
+  .description("Authenticate to a NexusHosting node and store credentials")
   .option("-n, --node <url>", "Node URL (e.g. https://mynode.example.com)")
   .option("-t, --token <token>", "Existing API token (skip interactive flow)")
   .action(async (opts: { node?: string; token?: string }) => {
@@ -76,7 +76,7 @@ export const loginCommand = new Command("login")
 
         token = await rl.question(chalk.cyan("Paste your API token: "));
         token = token.trim();
-        if (!token.startsWith("fh_")) {
+        if (!token.startsWith("nh_")) {
           console.error(chalk.red("Invalid token format (should start with fh_)"));
           process.exit(1);
         }
@@ -107,7 +107,7 @@ export const loginCommand = new Command("login")
       console.log();
       console.log(chalk.green("✓ Logged in!"));
       console.log(chalk.dim(`  Config saved to local store`));
-      console.log(chalk.dim(`  Run ${chalk.white("fh deploy <dir> --site <id>")} to deploy a site`));
+      console.log(chalk.dim(`  Run ${chalk.white("nh deploy <dir> --site <id>")} to deploy a site`));
     } finally {
       rl.close();
     }

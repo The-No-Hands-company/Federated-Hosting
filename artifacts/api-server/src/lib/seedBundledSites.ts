@@ -121,14 +121,14 @@ export async function seedBundledSites(): Promise<void> {
 
 // ─── HTML Content (defined before use in getBundledSites) ─────────────────────
 
-// ─── fedhosting.network ───────────────────────────────────────────────────────
+// ─── nexushosting.network ───────────────────────────────────────────────────────
 
-const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
+const NEXUSHOSTING_LANDING = /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Federated Hosting — Own Your Corner of the Web</title>
+  <title>Nexus Hosting — Own Your Corner of the Web</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -364,7 +364,7 @@ const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
   </div>
   <div style="display:flex;align-items:center;gap:1rem;">
     <span class="node-tag">node online</span>
-    <a href="/api/sites/serve/fedhosting.network/" class="cta">Launch App</a>
+    <a href="/api/sites/serve/nexushosting.network/" class="cta">Launch App</a>
   </div>
 </nav>
 
@@ -372,12 +372,12 @@ const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
   <div class="badge">Open-Source · Federated · Cryptographically Verified</div>
   <h1>Own Your Corner<br />of the Web</h1>
   <p class="subtitle">
-    Federated Hosting is an open-source network where independent nodes
+    Nexus Hosting is an open-source network where independent nodes
     cooperate to host websites — no central authority, no single point of failure.
   </p>
   <div class="hero-actions">
     <a href="#how" class="btn btn-primary">⚡ Get Started</a>
-    <a href="https://github.com/The-No-Hands-company/Federated-Hosting" class="btn btn-ghost" target="_blank">
+    <a href="https://github.com/The-No-Hands-company/Nexus-Hosting" class="btn btn-ghost" target="_blank">
       ★ View on GitHub
     </a>
   </div>
@@ -397,7 +397,7 @@ const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
     <div class="stat-label">Cryptographic Trust</div>
   </div>
   <div class="stat">
-    <div class="stat-value">fedhost/1.0</div>
+    <div class="stat-value">nexushosting/1.0</div>
     <div class="stat-label">Protocol Version</div>
   </div>
 </div>
@@ -456,7 +456,7 @@ const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
     <div class="feature">
       <span class="feature-icon">🛡️</span>
       <h3>Open Protocol</h3>
-      <p>The <code>fedhost/1.0</code> spec is language-agnostic and fully documented. Build your own node in any language.</p>
+      <p>The <code>nexushosting/1.0</code> spec is language-agnostic and fully documented. Build your own node in any language.</p>
     </div>
   </div>
 </section>
@@ -469,10 +469,10 @@ const FEDHOSTING_LANDING = /* html */ `<!DOCTYPE html>
 
 <footer>
   <div class="footer-links">
-    <a href="https://github.com/The-No-Hands-company/Federated-Hosting">GitHub</a>
+    <a href="https://github.com/The-No-Hands-company/Nexus-Hosting">GitHub</a>
     <a href="/api/federation/meta">Node Metadata</a>
     <a href="/.well-known/federation">Discovery</a>
-    <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/FEDERATION.md">Protocol Spec</a>
+    <a href="https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/FEDERATION.md">Protocol Spec</a>
   </div>
   <p>Built with ❤ by <a href="/api/sites/serve/nohands.company/">The No Hands Company</a> · Open-source under MIT</p>
 </footer>
@@ -645,15 +645,15 @@ const NOHANDS_COMPANY = /* html */ `<!DOCTYPE html>
   <div class="projects">
     <div class="project">
       <div class="project-tag">Infrastructure · Open Source</div>
-      <h3>⚡ Federated Hosting</h3>
-      <p>A cryptographically verified mesh network for hosting websites without centralised control. Independent nodes cooperate using the <code>fedhost/1.0</code> protocol.</p>
-      <a href="https://github.com/The-No-Hands-company/Federated-Hosting" target="_blank">View on GitHub →</a>
+      <h3>⚡ Nexus Hosting</h3>
+      <p>A cryptographically verified mesh network for hosting websites without centralised control. Independent nodes cooperate using the <code>nexushosting/1.0</code> protocol.</p>
+      <a href="https://github.com/The-No-Hands-company/Nexus-Hosting" target="_blank">View on GitHub →</a>
     </div>
     <div class="project">
       <div class="project-tag">Protocol · Specification</div>
-      <h3>📡 fedhost Protocol</h3>
-      <p>The open, language-agnostic specification powering Federated Hosting. Ed25519 signed handshakes, site sync events, and a standard discovery format.</p>
-      <a href="https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/FEDERATION.md" target="_blank">Read the spec →</a>
+      <h3>📡 NexusHosting Protocol</h3>
+      <p>The open, language-agnostic specification powering Nexus Hosting. Ed25519 signed handshakes, site sync events, and a standard discovery format.</p>
+      <a href="https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/FEDERATION.md" target="_blank">Read the spec →</a>
     </div>
     <div class="project">
       <div class="project-tag">Coming Soon</div>
@@ -694,7 +694,7 @@ const NOHANDS_COMPANY = /* html */ `<!DOCTYPE html>
 <footer>
   <div class="footer-links">
     <a href="https://github.com/The-No-Hands-company">GitHub</a>
-    <a href="/api/sites/serve/fedhosting.network/">Federated Hosting</a>
+    <a href="/api/sites/serve/nexushosting.network/">Nexus Hosting</a>
   </div>
   <p>The No Hands Company · Open source with ❤</p>
 </footer>
@@ -707,10 +707,10 @@ const NOHANDS_COMPANY = /* html */ `<!DOCTYPE html>
 function getBundledSites(): BundledSite[] {
   return [
     {
-      name: "Federated Hosting — Home",
-      domain: "fedhosting.network",
-      description: "Official home page for the Federated Hosting open-source project.",
-      files: [{ filePath: "index.html", contentType: "text/html", content: FEDHOSTING_LANDING }],
+      name: "Nexus Hosting — Home",
+      domain: "nexushosting.network",
+      description: "Official home page for the Nexus Hosting open-source project.",
+      files: [{ filePath: "index.html", contentType: "text/html", content: NEXUSHOSTING_LANDING }],
     },
     {
       name: "The No Hands Company",

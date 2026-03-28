@@ -1,7 +1,7 @@
 /**
  * Low-resource mode configuration.
  *
- * Set LOW_RESOURCE=true to run FedHost on constrained hardware:
+ * Set LOW_RESOURCE=true to run NexusHosting on constrained hardware:
  * Raspberry Pi, old laptops, small VMs (1 vCPU / 512 MB RAM).
  *
  * This is the Indonesian volunteer-node profile. A node running in
@@ -87,11 +87,11 @@ export const GOSSIP_INTERVAL_MS = LOW_RESOURCE
   : parseInt(process.env.GOSSIP_INTERVAL_MS ?? "300000"); // 5 minutes
 
 /** Whether dynamic site hosting (NLPL/Node/Python) is disabled on this node */
-export const FEDERATED_STATIC_ONLY = process.env.FEDERATED_STATIC_ONLY === "true";
+export const NEXUS_STATIC_ONLY = process.env.NEXUS_STATIC_ONLY === "true";
 
-if (FEDERATED_STATIC_ONLY) {
+if (NEXUS_STATIC_ONLY) {
   console.warn(
-    "[config] FEDERATED_STATIC_ONLY=true — dynamic site hosting disabled. " +
+    "[config] NEXUS_STATIC_ONLY=true — dynamic site hosting disabled. " +
     "This node only serves static sites (HTML/CSS/JS)."
   );
 }

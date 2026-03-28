@@ -1,4 +1,4 @@
-# Multi-stage build for fedhost-proxy
+# Multi-stage build for nexus-proxy
 #
 # Stage 1: Build the Rust binary
 # Stage 2: Minimal runtime image (~20 MB)
@@ -32,12 +32,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user for security
-RUN useradd -r -s /bin/false -u 1001 fedhost
+RUN useradd -r -s /bin/false -u 1001 nexus
 
-COPY --from=builder /build/target/release/fedhost-proxy /usr/local/bin/fedhost-proxy
+COPY --from=builder /build/target/release/nexus-proxy /usr/local/bin/nexus-proxy
 
-USER fedhost
+USER nexus
 
 EXPOSE 8090 9091
 
-ENTRYPOINT ["/usr/local/bin/fedhost-proxy"]
+ENTRYPOINT ["/usr/local/bin/nexus-proxy"]

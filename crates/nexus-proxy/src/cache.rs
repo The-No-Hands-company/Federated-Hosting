@@ -4,13 +4,13 @@
 //!
 //! - In-process `lru::LruCache` behind a `RwLock` — zero network overhead
 //! - Optional Redis layer for cache invalidation signals across multiple proxy
-//!   instances (subscribe to `fedhost:cache:invalidate <siteId>` channel)
+//!   instances (subscribe to `nexushosting:cache:invalidate <siteId>` channel)
 //!
 //! ## Invalidation
 //!
 //! The TypeScript API server publishes a Redis PUBLISH whenever a site is
 //! deployed or settings change:
-//!   `PUBLISH fedhost:cache:invalidate <siteId>`
+//!   `PUBLISH nexushosting:cache:invalidate <siteId>`
 //!
 //! The Redis subscriber (TODO #4) calls `invalidate_site()` on both caches.
 

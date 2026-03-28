@@ -18,7 +18,7 @@ export const envCommand = new Command("env")
         const spinner = ora("  Fetching env vars…").start();
         const vars = await apiFetch<EnvVar[]>(cfg, `/sites/${siteId}/env`);
         spinner.stop();
-        if (vars.length === 0) { console.log(chalk.dim("  No env vars set. Add with: fh env set <site-id> KEY value")); return; }
+        if (vars.length === 0) { console.log(chalk.dim("  No env vars set. Add with: nh env set <site-id> KEY value")); return; }
         console.log();
         for (const v of vars) {
           const display = v.secret && !opts.showSecrets ? chalk.dim("***hidden***") : chalk.cyan(v.value);

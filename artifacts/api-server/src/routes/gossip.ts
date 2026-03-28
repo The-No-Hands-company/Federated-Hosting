@@ -284,8 +284,8 @@ router.get("/federation/bootstrap", asyncHandler(async (_req: Request, res: Resp
   );
 
   res.json({
-    protocol: "fedhost/1.0",
-    description: "FedHost bootstrap node registry — seed your peer list from here",
+    protocol: "nexushosting/1.0",
+    description: "NexusHosting bootstrap node registry — seed your peer list from here",
     servedBy: localNode?.domain ?? "unknown",
     generatedAt: new Date().toISOString(),
     nodeCount: healthy.length,
@@ -296,7 +296,7 @@ router.get("/federation/bootstrap", asyncHandler(async (_req: Request, res: Resp
       publicKey: n.publicKey,
       verifiedAt: n.verifiedAt,
     })),
-    docs: "https://github.com/The-No-Hands-company/Federated-Hosting/blob/main/FEDERATION.md",
+    docs: "https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/FEDERATION.md",
   });
 }));
 

@@ -7,7 +7,7 @@
  *
  * Configuration:
  *   BOOTSTRAP_URLS — comma-separated list of bootstrap endpoints, e.g.:
- *     https://bootstrap.fedhost.example/api/federation/bootstrap,https://node2.example/api/federation/bootstrap
+ *     https://bootstrap.nexushosting.example/api/federation/bootstrap,https://node2.example/api/federation/bootstrap
  *
  * The bootstrap endpoint returns the same format as GET /api/federation/bootstrap.
  * Any node operator can run a bootstrap node — there is no central authority.
@@ -19,7 +19,7 @@ import { db, nodesTable, nodeTrustTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import logger from "./logger.js";
 
-const USER_AGENT = "FedHost-Node/1.0 (bootstrap-seed; +https://github.com/The-No-Hands-company/Federated-Hosting)";
+const USER_AGENT = "NexusHosting-Node/1.0 (bootstrap-seed; +https://github.com/The-No-Hands-company/Nexus-Hosting)";
 
 interface BootstrapNode {
   domain: string;

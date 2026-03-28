@@ -21,7 +21,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function EmailVerificationBanner({ email }: { email: string }) {
   const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem("fh_email_banner_dismissed") === "1"
+    () => localStorage.getItem("nh_email_banner_dismissed") === "1"
   );
   const { toast } = useToast();
 
@@ -50,7 +50,7 @@ function EmailVerificationBanner({ email }: { email: string }) {
         {resend.isPending ? "Sending…" : "Resend email"}
       </Button>
       <button className="text-amber-500/60 hover:text-amber-400"
-        onClick={() => { setDismissed(true); localStorage.setItem("fh_email_banner_dismissed", "1"); }}>
+        onClick={() => { setDismissed(true); localStorage.setItem("nh_email_banner_dismissed", "1"); }}>
         <X className="w-4 h-4" />
       </button>
     </div>
@@ -247,7 +247,7 @@ export default function Dashboard() {
                 <Button size="sm" className="bg-primary text-black hover:bg-primary/90 font-semibold" onClick={login}>
                   Get Started <ChevronRight className="w-3.5 h-3.5 ml-1" />
                 </Button>
-                <a href="https://github.com/The-No-Hands-company/Federated-Hosting" target="_blank" rel="noopener noreferrer">
+                <a href="https://github.com/The-No-Hands-company/Nexus-Hosting" target="_blank" rel="noopener noreferrer">
                   <Button size="sm" variant="outline" className="border-white/10 text-muted-foreground hover:text-white">
                     <BookOpen className="w-3.5 h-3.5 mr-1.5" />Learn More
                   </Button>

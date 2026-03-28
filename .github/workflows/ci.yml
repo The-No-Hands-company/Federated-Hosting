@@ -92,7 +92,7 @@ jobs:
         run: pnpm --filter @workspace/api-server run build
 
       - name: Build frontend
-        run: pnpm --filter @workspace/federated-hosting run build
+        run: pnpm --filter @workspace/nexus-hosting run build
 
       - name: Build CLI
         run: pnpm --filter @workspace/cli run build 2>/dev/null || true
@@ -114,6 +114,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: federated-hosting:ci
+          tags: nexus-hosting:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

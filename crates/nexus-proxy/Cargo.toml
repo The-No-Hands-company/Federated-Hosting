@@ -1,17 +1,17 @@
 [package]
-name = "fedhost-proxy"
+name = "nexus-proxy"
 version = "0.1.0"
 edition = "2021"
-description = "High-performance reverse proxy for Federated Hosting static site serving"
+description = "High-performance reverse proxy for Nexus Hosting static site serving"
 license = "MIT"
-repository = "https://github.com/The-No-Hands-company/Federated-Hosting"
+repository = "https://github.com/The-No-Hands-company/Nexus-Hosting"
 authors = ["The No Hands Company <dev@nohands.company>"]
 
 # This crate is not published to crates.io — it is deployed as a binary
 # alongside the TypeScript API server.
 
 [[bin]]
-name = "fedhost-proxy"
+name = "nexus-proxy"
 path = "src/main.rs"
 
 [dependencies]

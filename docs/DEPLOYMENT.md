@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Complete reference for running a Federated Hosting node in production. For a quick start with Docker Compose, see [SELF_HOSTING.md](SELF_HOSTING.md).
+Complete reference for running a Nexus Hosting node in production. For a quick start with Docker Compose, see [SELF_HOSTING.md](SELF_HOSTING.md).
 
 ---
 
@@ -35,15 +35,15 @@ Complete reference for running a Federated Hosting node in production. For a qui
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `DATABASE_URL` | `postgresql://app:pass@db:5432/fedhost` | PostgreSQL connection string |
-| `ISSUER_URL` | `https://auth.example.com/application/o/fedhost/` | OIDC provider issuer URL |
-| `OIDC_CLIENT_ID` | `fedhost-client-id` | OIDC client ID |
+| `DATABASE_URL` | `postgresql://app:pass@db:5432/nexus` | PostgreSQL connection string |
+| `ISSUER_URL` | `https://auth.example.com/application/o/nexushosting/` | OIDC provider issuer URL |
+| `OIDC_CLIENT_ID` | `nexus-client-id` | OIDC client ID |
 | `COOKIE_SECRET` | `(openssl rand -hex 32)` | HMAC signing secret for unlock cookies |
 | `PUBLIC_DOMAIN` | `node.example.com` | Public hostname of this node |
 | `OBJECT_STORAGE_ENDPOINT` | `https://s3.amazonaws.com` | S3-compatible endpoint |
 | `OBJECT_STORAGE_ACCESS_KEY` | `AKIAIOSFODNN7EXAMPLE` | S3 access key ID |
 | `OBJECT_STORAGE_SECRET_KEY` | `wJalrXUtnFEMI...` | S3 secret access key |
-| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | `fedhost-sites` | Bucket for site files |
+| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | `nexus-sites` | Bucket for site files |
 
 ### Strongly recommended
 
@@ -74,7 +74,7 @@ Complete reference for running a Federated Hosting node in production. For a qui
 | `SMTP_USER` | — | SMTP username |
 | `SMTP_PASS` | — | SMTP password / API key |
 | `EMAIL_FROM` | `noreply@<PUBLIC_DOMAIN>` | From address |
-| `EMAIL_FROM_NAME` | `FedHost` | From display name |
+| `EMAIL_FROM_NAME` | `NexusHosting` | From display name |
 
 ### TLS / ACME
 
@@ -125,7 +125,7 @@ This runs all `.sql` files in `lib/db/migrations/` in order, tracking applied mi
 ### 3. Build the applications
 
 ```bash
-pnpm --filter @workspace/federated-hosting run build
+pnpm --filter @workspace/nexus-hosting run build
 pnpm --filter @workspace/api-server run build
 ```
 

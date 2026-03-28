@@ -1,4 +1,4 @@
-# Federated Hosting — Roadmap
+# Nexus Hosting — Roadmap
 
 A living document tracking what is built, what remains, and what the honest gaps are before real production traffic.
 
@@ -48,7 +48,7 @@ A living document tracking what is built, what remains, and what the honest gaps
 | Bahasa Indonesia i18n | ✅ | `i18next-http-backend`, lazy-loaded from /locales/ |
 | React lazy loading | ✅ | All routes code-split |
 | Email verification | ✅ | SHA-256 tokens, 24h TTL, resend banner in dashboard |
-| Per-user storage cap | ✅ | Operator-set cap per user (default: unlimited). FedHost is always free. |
+| Per-user storage cap | ✅ | Operator-set cap per user (default: unlimited). NexusHosting is always free. |
 | User suspension | ✅ | Operators can suspend abusive users without deleting data |
 | Abuse report button | ✅ | On every site card; 8 reason categories |
 
@@ -110,15 +110,15 @@ A living document tracking what is built, what remains, and what the honest gaps
 | Feature | Status | Notes |
 |---|---|---|
 | `fh` CLI core (deploy, rollback, status, sites, tokens) | ✅ | |
-| `fh domains` | ✅ | list/add/verify/delete/tls-status |
-| `fh teams` | ✅ | list/invite/role/remove/revoke |
-| `fh create --type` | ✅ | HTML/React/Vue/Next/Svelte + nlpl/node/python dynamic |
-| `fh env`, `fh forms`, `fh logs`, `fh watch` | ✅ | |
-| `@fedhost/cli` npm package | ⚠️ | Structured correctly; not published to npm |
+| `nh domains` | ✅ | list/add/verify/delete/tls-status |
+| `nh teams` | ✅ | list/invite/role/remove/revoke |
+| `nh create --type` | ✅ | HTML/React/Vue/Next/Svelte + nlpl/node/python dynamic |
+| `nh env`, `nh forms`, `nh logs`, `nh watch` | ✅ | |
+| `@nexushosting/cli` npm package | ⚠️ | Structured correctly; not published to npm |
 | GitHub Actions deploy workflow | ✅ | |
 | Docker Compose | ✅ | Redis + MinIO + Caddy + Rust proxy wired |
 | Dockerfile (multi-stage, non-root) | ✅ | |
-| Rust proxy (`crates/fedhost-proxy`) | ✅ | All 9 TODOs done: streaming, LRU, Redis invalidation, geo, metrics, Brotli |
+| Rust proxy (`crates/nexus-proxy`) | ✅ | All 9 TODOs done: streaming, LRU, Redis invalidation, geo, metrics, Brotli |
 
 ---
 
@@ -152,7 +152,7 @@ A living document tracking what is built, what remains, and what the honest gaps
 
 | Gap | Severity | Status |
 |---|---|---|
-| Billing / payment processing | N/A | FedHost is free. Donations only. No tiers, no Stripe. |
+| Billing / payment processing | N/A | NexusHosting is free. Donations only. No tiers, no Stripe. |
 | Email verification enforced on deploys | MEDIUM | ⚠️ Email sent on login; unverified users can still deploy |
 | Malware scanning on upload | HIGH | ❌ No ClamAV hook or content scanning |
 | CDN integration | LOW | ❌ Not built |
@@ -178,7 +178,7 @@ A living document tracking what is built, what remains, and what the honest gaps
 |---|---|---|
 | Upgrade runbook | HIGH | ❌ Not written |
 | Incident response runbook | MEDIUM | ❌ Not written |
-| `@fedhost/cli` published to npm | LOW | ❌ Not published |
+| `@nexushosting/cli` published to npm | LOW | ❌ Not published |
 
 ---
 
@@ -202,12 +202,12 @@ A living document tracking what is built, what remains, and what the honest gaps
 
 | Feature | Notes |
 |---|---|
-| Donation / sponsorship link | Optional — FedHost is free; donations welcome but never required |
+| Donation / sponsorship link | Optional — NexusHosting is free; donations welcome but never required |
 | Malware scanning (ClamAV) | Hook on upload, async scan, takedown on detection |
 | Canonical public seed node registry | Well-known URL any new node can bootstrap from |
 | Dynamic site federation | Replicate NLPL process config + env (not state) |
 | CIDR-range IP bans | Extend middleware to check subnets |
-| Published `@fedhost/cli` | `npm publish` with `NPM_TOKEN` secret |
+| Published `@nexushosting/cli` | `npm publish` with `NPM_TOKEN` secret |
 | OpenTelemetry tracing | Distributed traces across TS + Rust |
 | Multi-region PostgreSQL | Read replicas for analytics queries |
 | Virtual scrolling for large lists | Admin lists paginated today |

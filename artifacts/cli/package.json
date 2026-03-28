@@ -1,21 +1,21 @@
 {
-  "name": "@fedhost/cli",
+  "name": "@nexushosting/cli",
   "version": "0.1.0",
-  "description": "FedHost CLI — deploy static sites to your Federated Hosting node",
+  "description": "NexusHosting CLI — deploy static sites to your Nexus Hosting node",
   "type": "module",
   "license": "MIT",
   "author": "The No Hands Company <dev@nohands.company>",
-  "homepage": "https://github.com/The-No-Hands-company/Federated-Hosting",
+  "homepage": "https://github.com/The-No-Hands-company/Nexus-Hosting",
   "repository": {
     "type": "git",
-    "url": "https://github.com/The-No-Hands-company/Federated-Hosting.git",
+    "url": "https://github.com/The-No-Hands-company/Nexus-Hosting.git",
     "directory": "artifacts/cli"
   },
   "bugs": {
-    "url": "https://github.com/The-No-Hands-company/Federated-Hosting/issues"
+    "url": "https://github.com/The-No-Hands-company/Nexus-Hosting/issues"
   },
   "keywords": [
-    "fedhost",
+    "nexushosting",
     "federated",
     "hosting",
     "deploy",
@@ -26,7 +26,7 @@
     "node": ">=20.0.0"
   },
   "bin": {
-    "fh": "./dist/index.js"
+    "nh": "./dist/index.js"
   },
   "files": [
     "dist/",

@@ -75,13 +75,13 @@ router.post("/sites", writeLimiter, asyncHandler(async (req, res) => {
   const parsed = CreateSiteBody.safeParse(req.body);
   if (!parsed.success) throw AppError.badRequest(parsed.error.message);
 
-  // No per-user site count limits — FedHost is free for everyone, always.
+  // No per-user site count limits — NexusHosting is free for everyone, always.
 
-  // Enforce FEDERATED_STATIC_ONLY — only allow static/blog/portfolio site types
+  // Enforce NEXUS_STATIC_ONLY — only allow static/blog/portfolio site types
   const dynamicTypes = ["nlpl", "dynamic", "node", "python"];
-  if (process.env.FEDERATED_STATIC_ONLY === "true" && dynamicTypes.includes(parsed.data.siteType ?? "")) {
+  if (process.env.NEXUS_STATIC_ONLY === "true" && dynamicTypes.includes(parsed.data.siteType ?? "")) {
     throw AppError.badRequest(
-      `This node operates in static-only mode (FEDERATED_STATIC_ONLY=true). ` +
+      `This node operates in static-only mode (NEXUS_STATIC_ONLY=true). ` +
       `Dynamic site types (${dynamicTypes.join(", ")}) are not permitted. ` +
       `Create a static site or use a node that supports dynamic hosting.`,
       "STATIC_ONLY_NODE",

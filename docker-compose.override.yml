@@ -32,7 +32,7 @@ services:
       app:
         condition: service_healthy
     networks:
-      - fedhost
+      - nexus
 
 volumes:
   caddy_data:

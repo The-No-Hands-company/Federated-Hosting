@@ -29,7 +29,7 @@ export const initCommand = new Command("init")
 
     try {
       console.log();
-      console.log(chalk.bold("  ⚡ FedHost Setup Wizard"));
+      console.log(chalk.bold("  ⚡ NexusHosting Setup Wizard"));
       console.log(chalk.dim("  Let's get your first site deployed.\n"));
 
       // ── Step 1: Node URL ─────────────────────────────────────────────────
@@ -76,7 +76,7 @@ export const initCommand = new Command("init")
         token = token.trim();
       }
 
-      if (!token.startsWith("fh_")) {
+      if (!token.startsWith("nh_")) {
         console.error(chalk.red("\n  Invalid token format — must start with fh_"));
         rl.close();
         process.exit(1);
@@ -145,7 +145,7 @@ export const initCommand = new Command("init")
             console.log();
             console.log(chalk.bold("  🎉 You're all set!\n"));
             console.log(`  ${chalk.dim("Deploy your site:")}`);
-            console.log(`  ${chalk.white(`fh deploy ./dist --site ${site.id}`)}\n`);
+            console.log(`  ${chalk.white(`nh deploy ./dist --site ${site.id}`)}\n`);
             console.log(`  ${chalk.dim("Or with the GitHub Actions workflow:")}`);
             console.log(`  ${chalk.dim("  Set FH_NODE_URL, FH_TOKEN, and FH_SITE_ID secrets, then push.")}\n`);
           } catch (err: any) {

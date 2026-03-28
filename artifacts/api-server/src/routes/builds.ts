@@ -71,7 +71,7 @@ export async function runBuild(buildId: number, siteId: number, opts: {
   siteName: string;
   siteDomain: string;
 }): Promise<void> {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fedhost-build-"));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nexus-build-"));
   const log = (msg: string) => {
     process.stdout.write(msg + "\n");
     appendLog(buildId, msg + "\n").catch(() => {});

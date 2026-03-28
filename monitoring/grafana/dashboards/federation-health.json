@@ -1,7 +1,7 @@
 {
-  "title": "FedHost — Federation Health",
-  "uid": "fedhost-federation",
-  "tags": ["fedhost", "federation"],
+  "title": "Nexus Hosting — Federation Health",
+  "uid": "nexus-federation",
+  "tags": ["nexushosting", "federation"],
   "timezone": "browser",
   "refresh": "1m",
   "time": { "from": "now-6h", "to": "now" },
@@ -9,14 +9,14 @@
     {
       "id": 1, "type": "stat", "title": "Active Peers",
       "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "fedhost_federation_peers_total{status=\"active\"}", "legendFormat": "active" }],
+      "targets": [{ "expr": "nexus_federation_peers_total{status=\"active\"}", "legendFormat": "active" }],
       "options": { "colorMode": "background" },
       "fieldConfig": { "defaults": { "color": { "fixedColor": "green", "mode": "fixed" }}}
     },
     {
       "id": 2, "type": "stat", "title": "Offline Peers",
       "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "fedhost_federation_peers_total{status=\"inactive\"}", "legendFormat": "offline" }],
+      "targets": [{ "expr": "nexus_federation_peers_total{status=\"inactive\"}", "legendFormat": "offline" }],
       "options": { "colorMode": "background" },
       "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [
         { "value": 0, "color": "green" }, { "value": 1, "color": "yellow" }, { "value": 3, "color": "red" }
@@ -25,14 +25,14 @@
     {
       "id": 3, "type": "stat", "title": "Blocked Nodes",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "fedhost_federation_blocked_nodes_total", "legendFormat": "blocked" }],
+      "targets": [{ "expr": "nexus_federation_blocked_nodes_total", "legendFormat": "blocked" }],
       "options": { "colorMode": "value" },
       "fieldConfig": { "defaults": { "color": { "fixedColor": "red", "mode": "fixed" }}}
     },
     {
       "id": 4, "type": "stat", "title": "Sync Success Rate (1h)",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "rate(fedhost_federation_syncs_total{result=\"success\"}[1h]) / rate(fedhost_federation_syncs_total[1h])", "legendFormat": "success rate" }],
+      "targets": [{ "expr": "rate(nexus_federation_syncs_total{result=\"success\"}[1h]) / rate(nexus_federation_syncs_total[1h])", "legendFormat": "success rate" }],
       "options": { "colorMode": "background" },
       "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1,
         "color": { "mode": "thresholds" }, "thresholds": { "steps": [
@@ -44,24 +44,24 @@
       "id": 5, "type": "timeseries", "title": "Federation Events/min",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "rate(fedhost_federation_events_total{type=\"ping\"}[1m]) * 60", "legendFormat": "pings" },
-        { "expr": "rate(fedhost_federation_events_total{type=\"sync\"}[1m]) * 60", "legendFormat": "syncs" },
-        { "expr": "rate(fedhost_federation_events_total{type=\"handshake\"}[1m]) * 60", "legendFormat": "handshakes" },
-        { "expr": "rate(fedhost_federation_events_total{type=\"gossip\"}[1m]) * 60", "legendFormat": "gossip" }
+        { "expr": "rate(nexus_federation_events_total{type=\"ping\"}[1m]) * 60", "legendFormat": "pings" },
+        { "expr": "rate(nexus_federation_events_total{type=\"sync\"}[1m]) * 60", "legendFormat": "syncs" },
+        { "expr": "rate(nexus_federation_events_total{type=\"handshake\"}[1m]) * 60", "legendFormat": "handshakes" },
+        { "expr": "rate(nexus_federation_events_total{type=\"gossip\"}[1m]) * 60", "legendFormat": "gossip" }
       ]
     },
     {
       "id": 6, "type": "timeseries", "title": "Signature Verification",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
       "targets": [
-        { "expr": "rate(fedhost_signature_verifications_total{result=\"valid\"}[5m]) * 60", "legendFormat": "valid" },
-        { "expr": "rate(fedhost_signature_verifications_total{result=\"invalid\"}[5m]) * 60", "legendFormat": "invalid" }
+        { "expr": "rate(nexus_signature_verifications_total{result=\"valid\"}[5m]) * 60", "legendFormat": "valid" },
+        { "expr": "rate(nexus_signature_verifications_total{result=\"invalid\"}[5m]) * 60", "legendFormat": "invalid" }
       ]
     },
     {
       "id": 7, "type": "timeseries", "title": "Sync Retry Queue Depth",
       "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
-      "targets": [{ "expr": "fedhost_sync_retry_queue_depth", "legendFormat": "queued" }],
+      "targets": [{ "expr": "nexus_sync_retry_queue_depth", "legendFormat": "queued" }],
       "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [
         { "value": 0, "color": "green" }, { "value": 5, "color": "yellow" }, { "value": 20, "color": "red" }
       ]}}}
@@ -69,7 +69,7 @@
     {
       "id": 8, "type": "timeseries", "title": "Blocked Request Attempts",
       "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
-      "targets": [{ "expr": "rate(fedhost_blocked_request_attempts_total[5m]) * 60", "legendFormat": "blocked/min" }],
+      "targets": [{ "expr": "rate(nexus_blocked_request_attempts_total[5m]) * 60", "legendFormat": "blocked/min" }],
       "fieldConfig": { "defaults": { "color": { "fixedColor": "red", "mode": "fixed" }}}
     }
   ],

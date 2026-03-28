@@ -49,7 +49,7 @@ function GitWebhookGuide({ siteId }: { siteId: number }) {
       {open && (
         <CardContent className="space-y-5 pt-0">
           <p className="text-muted-foreground text-sm">
-            FedHost can automatically build and deploy your site when you push to a Git branch.
+            NexusHosting can automatically build and deploy your site when you push to a Git branch.
             Set up a webhook in your repository to trigger builds.
           </p>
 
@@ -98,7 +98,7 @@ function GitWebhookGuide({ siteId }: { siteId: number }) {
           <div className="bg-muted/20 border border-white/5 rounded-xl p-3 text-xs text-muted-foreground space-y-1">
             <p className="text-white font-semibold mb-1.5">What happens on push</p>
             <p>1. GitHub/GitLab sends a signed POST to the webhook URL</p>
-            <p>2. FedHost verifies the signature using <code className="text-primary">GIT_WEBHOOK_SECRET</code></p>
+            <p>2. NexusHosting verifies the signature using <code className="text-primary">GIT_WEBHOOK_SECRET</code></p>
             <p>3. A build job is queued: clone → install deps → <code className="text-primary">npm run build</code> → deploy</p>
             <p>4. Build logs appear in this page in real time</p>
             <p>5. On success, the new deployment goes live instantly</p>

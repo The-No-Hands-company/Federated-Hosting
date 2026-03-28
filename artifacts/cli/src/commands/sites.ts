@@ -114,7 +114,7 @@ sitesCommand
       console.log(`  ${chalk.bold("Domain:")} ${chalk.cyan(site.domain)}`);
       console.log();
       console.log(
-        chalk.dim(`  Deploy with: `) + chalk.white(`fh deploy ./dist --site ${site.id}`),
+        chalk.dim(`  Deploy with: `) + chalk.white(`nh deploy ./dist --site ${site.id}`),
       );
     } catch (err: any) {
       spinner.fail(chalk.red(err.message));

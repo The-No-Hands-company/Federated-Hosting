@@ -33,8 +33,8 @@ export const watchCommand = new Command("watch")
   .option("--delay <ms>", "Debounce delay in milliseconds", "800")
   .addHelpText("after", `
 Examples:
-  fh watch ./dist --site 42
-  fh watch ./out  --site 42 --delay 1000
+  nh watch ./dist --site 42
+  nh watch ./out  --site 42 --delay 1000
 
 Note: Requires your build tool to output to the watched directory.
 For Vite: vite build --watch
@@ -58,7 +58,7 @@ For Next.js: next dev (serves from memory, not a good fit for watch mode)
     }
 
     console.log();
-    console.log(chalk.bold("  FedHost Watch Mode"));
+    console.log(chalk.bold("  NexusHosting Watch Mode"));
     console.log(`  ${chalk.dim("Site:")}  ${chalk.cyan(opts.site)}`);
     console.log(`  ${chalk.dim("Dir:")}   ${chalk.cyan(absDir)}`);
     console.log(`  ${chalk.dim("Delay:")} ${delay}ms`);

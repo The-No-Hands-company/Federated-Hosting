@@ -1,4 +1,4 @@
-# Federated Hosting
+# Nexus Hosting
 
 A production-grade **federated website hosting service** where users deploy static sites and independent nodes form a cryptographically verified network. No single company controls the infrastructure — anyone can run a node.
 
@@ -9,9 +9,9 @@ A production-grade **federated website hosting service** where users deploy stat
 
 ---
 
-## What is Federated Hosting?
+## What is Nexus Hosting?
 
-Federated Hosting lets users:
+Nexus Hosting lets users:
 
 1. **Log in** via OIDC Auth (OpenID Connect)
 2. **Upload** website files (HTML, CSS, JS, images, fonts) to object storage
@@ -30,8 +30,8 @@ Independent operators run nodes. Each node has an **Ed25519 cryptographic identi
 The short version:
 
 ```bash
-git clone https://github.com/The-No-Hands-company/Federated-Hosting.git
-cd Federated-Hosting
+git clone https://github.com/The-No-Hands-company/Nexus-Hosting.git
+cd Nexus-Hosting
 cp .env.example .env
 # Edit .env — the required vars are: ISSUER_URL, OIDC_CLIENT_ID, COOKIE_SECRET,
 # DATABASE_URL, PUBLIC_DOMAIN, and your S3 credentials
@@ -64,15 +64,15 @@ See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for the complete environment vari
 ### Install
 
 ```bash
-git clone https://github.com/The-No-Hands-company/Federated-Hosting.git
-cd Federated-Hosting
+git clone https://github.com/The-No-Hands-company/Nexus-Hosting.git
+cd Nexus-Hosting
 pnpm install
 ```
 
 ### Minimum environment for development
 
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/fedhost
+DATABASE_URL=postgresql://user:password@localhost:5432/nexus
 ISSUER_URL=https://your-oidc-provider/
 OIDC_CLIENT_ID=your-client-id
 COOKIE_SECRET=dev-only-change-in-production
@@ -80,7 +80,7 @@ PUBLIC_DOMAIN=localhost:8080
 OBJECT_STORAGE_ENDPOINT=http://localhost:9000
 OBJECT_STORAGE_ACCESS_KEY=minioadmin
 OBJECT_STORAGE_SECRET_KEY=minioadmin
-DEFAULT_OBJECT_STORAGE_BUCKET_ID=fedhost-sites
+DEFAULT_OBJECT_STORAGE_BUCKET_ID=nexus-sites
 NODE_ENV=development
 ```
 
@@ -107,7 +107,7 @@ pnpm run build
 ## Features
 
 ### Hosting
-- **Deploy static sites** — drag-and-drop or `fh deploy` CLI — HTML, CSS, JS, images, fonts
+- **Deploy static sites** — drag-and-drop or `nh deploy` CLI — HTML, CSS, JS, images, fonts
 - **Git-powered builds** — connect a repo, push to deploy; build cache skips install on unchanged lockfiles
 - **Preview deployments** — non-main branches automatically get a `{branch}--{domain}` preview URL
 - **Rollback** — one click to revert to any previous deployment
@@ -150,14 +150,14 @@ pnpm run build
 - **Webhook notifications** — Ed25519 signed, delivery log, 5-attempt retry queue
 
 ### CLI (`fh`)
-- `fh deploy` / `fh rollback` / `fh status`
-- `fh sites` / `fh domains` / `fh teams`
-- `fh env` / `fh forms` / `fh logs` / `fh watch`
-- `fh create --type` — static templates (HTML/React/Vue/Next/Svelte) + dynamic (nlpl/node/python)
-- `fh analytics` / `fh tokens`
+- `nh deploy` / `nh rollback` / `nh status`
+- `nh sites` / `nh domains` / `nh teams`
+- `nh env` / `nh forms` / `nh logs` / `nh watch`
+- `nh create --type` — static templates (HTML/React/Vue/Next/Svelte) + dynamic (nlpl/node/python)
+- `nh analytics` / `nh tokens`
 
 ### Infrastructure
-- **Rust proxy** (`crates/fedhost-proxy`) — Brotli/gzip compression, LRU cache, Redis cache invalidation, S3 streaming, Prometheus metrics, geographic routing
+- **Rust proxy** (`crates/nexus-proxy`) — Brotli/gzip compression, LRU cache, Redis cache invalidation, S3 streaming, Prometheus metrics, geographic routing
 - **Docker Compose** — Redis + MinIO + Caddy + Rust proxy, all wired
 - **ACME/Let's Encrypt** — HTTP-01 + DNS-01, 12h renewal scheduler, expiry email notifications
 - **Geographic routing** — closest-node redirect based on request headers, 40+ country mappings
@@ -199,7 +199,7 @@ See [docs/API.md](./docs/API.md) for the full REST API reference.
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full system design.
 
 ```
-Browser → Federated Hosting UI (Vite/React)
+Browser → Nexus Hosting UI (Vite/React)
              ↓
          API Server (Express 5, TypeScript)
              ↓
@@ -224,7 +224,7 @@ Browser → Federated Hosting UI (Vite/React)
 │   │       ├── lib/         # federation, objectStorage, errors, logger, pagination
 │   │       ├── middleware/  # authMiddleware, hostRouter, errorHandler, rateLimiter
 │   │       └── routes/      # auth, deploy, federation, nodes, sites, capacity, health
-│   └── federated-hosting/   # React + Vite frontend
+│   └── nexus-hosting/   # React + Vite frontend
 │       └── src/
 │           ├── pages/       # Dashboard, MySites, DeploySite, Federation, Nodes, Sites
 │           └── components/  # Layout, ErrorBoundary, UI components
@@ -254,10 +254,10 @@ pnpm --filter @workspace/scripts run seed:sites
 
 | Site | Domain | Description |
 |------|--------|-------------|
-| **Federated Hosting** | `fedhosting.app` | Landing page explaining what Federated Hosting is, for everyday users — not developers. Includes animated network visualisation, live node/site stats, and a guided "how it works" section. |
+| **Nexus Hosting** | `nexushosting.app` | Landing page explaining what Nexus Hosting is, for everyday users — not developers. Includes animated network visualisation, live node/site stats, and a guided "how it works" section. |
 | **The No Hands Company** | `nohands.company` | Company portfolio — all No Hands Company projects, values, and contact information. |
 
-Both sites are plain HTML/CSS/JS — no build step required. They are stored in `sites/fedhosting-landing/` and `sites/nohands-company/`.
+Both sites are plain HTML/CSS/JS — no build step required. They are stored in `sites/nexushosting-landing/` and `sites/nohands-company/`.
 
 ---
 

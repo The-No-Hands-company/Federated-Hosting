@@ -82,10 +82,10 @@ describe("Federation blocklist", () => {
 
     it("does not block the local node from its own checks", () => {
       // The blocklist is for REMOTE nodes — local domain should never appear
-      blockDomain("mynode.fedhost.example");
-      expect(isBlocked("mynode.fedhost.example")).toBe(true);
-      unblockDomain("mynode.fedhost.example");
-      expect(isBlocked("mynode.fedhost.example")).toBe(false);
+      blockDomain("mynode.nexushosting.example");
+      expect(isBlocked("mynode.nexushosting.example")).toBe(true);
+      unblockDomain("mynode.nexushosting.example");
+      expect(isBlocked("mynode.nexushosting.example")).toBe(false);
     });
   });
 

@@ -46,7 +46,7 @@ async function checkSite(siteId: number, domain: string): Promise<SiteHealthResu
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: { "User-Agent": "FedHost-HealthCheck/1.0" },
+      headers: { "User-Agent": "NexusHosting-HealthCheck/1.0" },
       redirect: "follow",
     });
 

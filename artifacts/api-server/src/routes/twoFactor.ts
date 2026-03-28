@@ -35,7 +35,7 @@ const router: IRouter = Router();
 // TOTP configuration — 30-second window, allow 1 step past/future for clock skew
 authenticator.options = { step: 30, window: 1 };
 
-const APP_NAME = process.env.APP_NAME ?? "FedHost";
+const APP_NAME = process.env.APP_NAME ?? "NexusHosting";
 const BACKUP_CODE_COUNT = 10;
 
 function generateBackupCodes(): string[] {

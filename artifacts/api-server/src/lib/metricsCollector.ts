@@ -6,10 +6,10 @@
  * because they represent state, not events.
  *
  * Runs every 30 seconds and updates:
- *   fedhost_sites_total         — by status (active/inactive/suspended)
- *   fedhost_federation_peers_total — by status (active/offline/pending)
- *   fedhost_sync_queue_depth    — pending retry items
- *   fedhost_cache_entries       — domain and file LRU cache size
+ *   nexus_sites_total         — by status (active/inactive/suspended)
+ *   nexus_federation_peers_total — by status (active/offline/pending)
+ *   nexus_sync_queue_depth    — pending retry items
+ *   nexus_cache_entries       — domain and file LRU cache size
  */
 
 import { db, sitesTable, nodesTable } from "@workspace/db";

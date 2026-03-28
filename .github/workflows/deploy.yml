@@ -1,4 +1,4 @@
-name: Deploy to FedHost
+name: Deploy to NexusHosting
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       site_id:
-        description: "FedHost site ID to deploy to"
+        description: "NexusHosting site ID to deploy to"
         required: true
         type: string
       dir:
@@ -23,9 +23,9 @@ on:
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Required repository secrets:
-#   FH_TOKEN      — API token from FedHost (My Sites → API Tokens → New Token)
-#   FH_NODE_URL   — URL of your FedHost node (e.g. https://node.example.com)
-#   FH_SITE_ID    — Numeric site ID from FedHost
+#   FH_TOKEN      — API token from NexusHosting (My Sites → API Tokens → New Token)
+#   FH_NODE_URL   — URL of your NexusHosting node (e.g. https://node.example.com)
+#   FH_SITE_ID    — Numeric site ID from NexusHosting
 #
 # Optional:
 #   FH_DEPLOY_DIR — Directory to deploy (default: dist)
@@ -39,7 +39,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy to FedHost
+    name: Deploy to NexusHosting
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -79,15 +79,15 @@ jobs:
           fi
 
       # ── Install the fh CLI ───────────────────────────────────────────────
-      - name: Install FedHost CLI
-        run: npm install -g @fedhost/cli 2>/dev/null || npx --yes @fedhost/cli --version || true
+      - name: Install NexusHosting CLI
+        run: npm install -g @nexushosting/cli 2>/dev/null || npx --yes @nexushosting/cli --version || true
         # Fall back to running from source if not yet on npm
-        # TODO: replace with: npm install -g @fedhost/cli once published
+        # TODO: replace with: npm install -g @nexushosting/cli once published
 
       # ── Authenticate ─────────────────────────────────────────────────────
-      - name: Authenticate with FedHost node
+      - name: Authenticate with NexusHosting node
         run: |
-          fh login \
+          nh login \
             --node "$FH_NODE_URL" \
             --token "$FH_TOKEN"
 
@@ -95,7 +95,7 @@ jobs:
       - name: Deploy site
         id: deploy
         run: |
-          fh deploy "$FH_DEPLOY_DIR" \
+          nh deploy "$FH_DEPLOY_DIR" \
             --site "$FH_SITE_ID" \
             --concurrency 6
 
@@ -103,7 +103,7 @@ jobs:
       - name: Deployment summary
         if: success()
         run: |
-          echo "## ✅ Deployed to FedHost" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Deployed to NexusHosting" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY

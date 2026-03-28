@@ -1,10 +1,10 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 
-/// fedhost-proxy configuration, loaded from environment variables.
+/// nexus-proxy configuration, loaded from environment variables.
 /// All settings mirror or complement the TypeScript server's `.env`.
 #[derive(Debug, Clone, Parser)]
-#[command(name = "fedhost-proxy", about = "Federated Hosting static site proxy")]
+#[command(name = "nexus-proxy", about = "Nexus Hosting static site proxy")]
 pub struct Config {
     /// PostgreSQL connection string (same as TypeScript server)
     #[arg(env = "DATABASE_URL")]
@@ -23,7 +23,7 @@ pub struct Config {
     pub storage_secret_key: String,
 
     /// S3 bucket name
-    #[arg(env = "OBJECT_STORAGE_BUCKET", env = "DEFAULT_OBJECT_STORAGE_BUCKET_ID", default_value = "fedhost-sites")]
+    #[arg(env = "OBJECT_STORAGE_BUCKET", env = "DEFAULT_OBJECT_STORAGE_BUCKET_ID", default_value = "nexus-sites")]
     pub storage_bucket: String,
 
     /// S3 region

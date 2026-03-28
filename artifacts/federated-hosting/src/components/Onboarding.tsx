@@ -33,7 +33,7 @@ const STEPS: OnboardingStep[] = [
     detail: (
       <div className="space-y-3 text-sm text-muted-foreground">
         <p>
-          Federated Hosting uses OpenID Connect for authentication — no separate
+          Nexus Hosting uses OpenID Connect for authentication — no separate
           account needed. Click <strong className="text-white">Get Started</strong> or the sign-in button
           in the top-right corner.
         </p>
@@ -59,7 +59,7 @@ const STEPS: OnboardingStep[] = [
           is the address where your site will be reachable.
         </p>
         <div className="bg-muted/20 border border-white/5 rounded-xl p-3 font-mono text-xs text-primary">
-          mysite.fedhosting.network
+          mysite.nexushosting.network
         </div>
         <p>
           You can also attach a custom domain later (e.g.{" "}
@@ -86,10 +86,10 @@ const STEPS: OnboardingStep[] = [
         </p>
         <div className="bg-black/40 rounded-xl p-3 font-mono text-xs text-primary space-y-1">
           <p className="text-muted-foreground"># Install the CLI</p>
-          <p>npm install -g @fedhost/cli</p>
+          <p>npm install -g @nexushosting/cli</p>
           <p className="text-muted-foreground mt-2"># Log in and deploy</p>
-          <p>fh login --node https://your-node.example.com</p>
-          <p>fh deploy ./dist --site 42</p>
+          <p>nh login --node https://your-node.example.com</p>
+          <p>nh deploy ./dist --site 42</p>
         </div>
         <p>
           Files are uploaded directly to object storage — the API server never
@@ -126,7 +126,7 @@ const STEPS: OnboardingStep[] = [
   },
 ];
 
-const LS_KEY = "fh_onboarding_dismissed";
+const LS_KEY = "nh_onboarding_dismissed";
 
 export function useOnboarding() {
   const dismissed = typeof window !== "undefined"
@@ -158,7 +158,7 @@ export function OnboardingBanner({ onOpen }: { onOpen: () => void }) {
             <Rocket className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-white font-semibold">Welcome to Federated Hosting</p>
+            <p className="text-white font-semibold">Welcome to Nexus Hosting</p>
             <p className="text-muted-foreground text-sm">
               Deploy your first site in 4 steps — sign in, register, upload, go live.
             </p>

@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /**
- * Federated Hosting — Load Test Suite
+ * Nexus Hosting — Load Test Suite
  *
  * Tests the critical paths under sustained load to find bottlenecks before
  * production traffic does. Uses autocannon (HTTP/1.1 pipelining benchmarks).
  *
  * Usage:
- *   FH_BASE_URL=https://your-node.example.com node load-tests/run.mjs
- *   FH_BASE_URL=http://localhost:8080 node load-tests/run.mjs --scenario health
- *   FH_BASE_URL=http://localhost:8080 node load-tests/run.mjs --scenario site-serve
+ *   NH_BASE_URL=https://your-node.example.com node load-tests/run.mjs
+ *   NH_BASE_URL=http://localhost:8080 node load-tests/run.mjs --scenario health
+ *   NH_BASE_URL=http://localhost:8080 node load-tests/run.mjs --scenario site-serve
  *
  * Prerequisites:
- *   - A running FedHost node at FH_BASE_URL
- *   - For authenticated tests: FH_TEST_TOKEN=fh_... (API token)
- *   - For site-serve: FH_TEST_DOMAIN=yoursite.example.com (a deployed site)
+ *   - A running NexusHosting node at NH_BASE_URL
+ *   - For authenticated tests: NH_TEST_TOKEN=fh_... (API token)
+ *   - For site-serve: NH_TEST_DOMAIN=yoursite.example.com (a deployed site)
  *
  * Scenarios:
  *   health       — Health check endpoint (should sustain 10K+ req/s)
@@ -31,9 +31,9 @@
 import autocannon from "autocannon";
 import { setTimeout as sleep } from "timers/promises";
 
-const BASE = (process.env.FH_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
-const TOKEN = process.env.FH_TEST_TOKEN ?? "";
-const TEST_DOMAIN = process.env.FH_TEST_DOMAIN ?? "";
+const BASE = (process.env.NH_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
+const TOKEN = process.env.NH_TEST_TOKEN ?? "";
+const TEST_DOMAIN = process.env.NH_TEST_DOMAIN ?? "";
 const SCENARIO = process.argv.find((a) => a.startsWith("--scenario="))?.split("=")[1]
   ?? process.argv[process.argv.indexOf("--scenario") + 1]
   ?? "all";
@@ -177,7 +177,7 @@ async function scenarioApiRead() {
 // ── Scenario: Site serving (the HOT path) ─────────────────────────────────────
 async function scenarioSiteServe() {
   if (!TEST_DOMAIN) {
-    console.log("\n⚠️  Skipping site-serve: set FH_TEST_DOMAIN=yoursite.example.com");
+    console.log("\n⚠️  Skipping site-serve: set NH_TEST_DOMAIN=yoursite.example.com");
     results["site-serve"] = null;
     return;
   }
@@ -215,7 +215,7 @@ async function scenarioSiteServe() {
 // ── Scenario: Deploy flow (authenticated) ─────────────────────────────────────
 async function scenarioDeployFlow() {
   if (!TOKEN) {
-    console.log("\n⚠️  Skipping deploy-flow: set FH_TEST_TOKEN=fh_...");
+    console.log("\n⚠️  Skipping deploy-flow: set NH_TEST_TOKEN=fh_...");
     results["deploy-flow"] = null;
     return;
   }
@@ -277,7 +277,7 @@ async function scenarioSoak() {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 console.log("╔════════════════════════════════════════════════════════╗");
-console.log("║         FedHost Load Test Suite                        ║");
+console.log("║         NexusHosting Load Test Suite                        ║");
 console.log("╚════════════════════════════════════════════════════════╝");
 console.log(`\nTarget:    ${BASE}`);
 console.log(`Scenario:  ${SCENARIO}`);

@@ -491,7 +491,7 @@ export default function Federation() {
               <Radio className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
               <p className="text-white font-medium mb-1">No peers connected</p>
               <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                Use the handshake form above to connect to another Federated Hosting node.
+                Use the handshake form above to connect to another Nexus Hosting node.
               </p>
             </div>
           ) : (

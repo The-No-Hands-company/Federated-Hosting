@@ -42,7 +42,7 @@ async function resolveSiteId(siteIdOrDomain: string): Promise<number> {
 export const domainsCommand = new Command("domains")
   .description("Manage custom domains for a site");
 
-// ── fh domains list <site-id> ─────────────────────────────────────────────────
+// ── nh domains list <site-id> ─────────────────────────────────────────────────
 
 domainsCommand
   .command("list <site>")
@@ -56,7 +56,7 @@ domainsCommand
 
       if (domains.length === 0) {
         console.log(chalk.dim("  No custom domains added yet."));
-        console.log(chalk.dim(`  Add one with: fh domains add ${siteId} <domain>`));
+        console.log(chalk.dim(`  Add one with: nh domains add ${siteId} <domain>`));
         return;
       }
 
@@ -80,7 +80,7 @@ domainsCommand
     }
   });
 
-// ── fh domains add <site-id> <domain> ────────────────────────────────────────
+// ── nh domains add <site-id> <domain> ────────────────────────────────────────
 
 domainsCommand
   .command("add <site> <domain>")
@@ -104,7 +104,7 @@ domainsCommand
       console.log(`  ${chalk.dim("Name:")}  ${chalk.cyan(`_fh-verify.${result.domain}`)}`);
       console.log(`  ${chalk.dim("Value:")} ${chalk.yellow(result.verificationToken)}`);
       console.log();
-      console.log(`  Then run: ${chalk.cyan(`fh domains verify ${siteId} ${result.id}`)}`);
+      console.log(`  Then run: ${chalk.cyan(`nh domains verify ${siteId} ${result.id}`)}`);
       console.log();
     } catch (err: any) {
       spinner.fail(chalk.red(err.message));
@@ -112,7 +112,7 @@ domainsCommand
     }
   });
 
-// ── fh domains verify <site-id> <domain-id> ──────────────────────────────────
+// ── nh domains verify <site-id> <domain-id> ──────────────────────────────────
 
 domainsCommand
   .command("verify <site> <domain-id>")
@@ -121,7 +121,7 @@ domainsCommand
   .action(async (site: string, domainId: string, opts: { watch?: boolean }) => {
     const dId = parseInt(domainId, 10);
     if (isNaN(dId)) {
-      console.error(chalk.red("domain-id must be a number. Get it from: fh domains list <site>"));
+      console.error(chalk.red("domain-id must be a number. Get it from: nh domains list <site>"));
       process.exit(1);
     }
 
@@ -157,7 +157,7 @@ domainsCommand
     }
   });
 
-// ── fh domains delete <domain-id> ────────────────────────────────────────────
+// ── nh domains delete <domain-id> ────────────────────────────────────────────
 
 domainsCommand
   .command("delete <domain-id>")
@@ -167,7 +167,7 @@ domainsCommand
   .action(async (domainId: string, opts: { yes?: boolean }) => {
     const dId = parseInt(domainId, 10);
     if (isNaN(dId)) {
-      console.error(chalk.red("domain-id must be a number. Get it from: fh domains list <site>"));
+      console.error(chalk.red("domain-id must be a number. Get it from: nh domains list <site>"));
       process.exit(1);
     }
 
@@ -194,7 +194,7 @@ domainsCommand
     }
   });
 
-// ── fh domains status <domain-id> ────────────────────────────────────────────
+// ── nh domains status <domain-id> ────────────────────────────────────────────
 
 domainsCommand
   .command("tls-status <domain-id>")

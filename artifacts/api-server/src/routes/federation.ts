@@ -12,7 +12,7 @@ import { isBlocked } from "./federationBlocks";
 import { federationSyncsTotal, federationPeersTotal } from "../lib/metrics";
 
 const router: IRouter = Router();
-const PROTOCOL_VERSION = "fedhost/1.0";
+const PROTOCOL_VERSION = "nexushosting/1.0";
 
 router.get("/federation/meta", asyncHandler(async (_req, res) => {
   const [localNode] = await db.select().from(nodesTable).where(eq(nodesTable.isLocalNode, 1));
@@ -21,7 +21,7 @@ router.get("/federation/meta", asyncHandler(async (_req, res) => {
 
   res.json({
     protocol: PROTOCOL_VERSION,
-    name: localNode?.name ?? "Federated Hosting Node",
+    name: localNode?.name ?? "Nexus Hosting Node",
     domain: localNode?.domain ?? "unknown",
     region: localNode?.region ?? "unknown",
     publicKey: localNode?.publicKey ? stripPemHeaders(localNode.publicKey) : null,
@@ -33,7 +33,7 @@ router.get("/federation/meta", asyncHandler(async (_req, res) => {
       "node-federation",
       "key-verification",
       "site-replication",
-      ...(process.env.FEDERATED_STATIC_ONLY === "true" ? [] : ["dynamic-hosting", "nlpl"]),
+      ...(process.env.NEXUS_STATIC_ONLY === "true" ? [] : ["dynamic-hosting", "nlpl"]),
     ],
   });
 }));

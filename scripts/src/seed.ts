@@ -30,7 +30,7 @@ async function seed() {
       },
       {
         name: "Atlas Node",
-        domain: "atlas.fedhost.io",
+        domain: "atlas.nexushosting.io",
         description: "Community-run node in North America. Supports both static and dynamic sites with PostgreSQL backends.",
         status: "active",
         region: "NA-East",
@@ -150,7 +150,7 @@ async function seed() {
       },
       {
         name: "Node Status Monitor",
-        domain: "status.fedhost.io",
+        domain: "status.nexushosting.io",
         description: "Real-time status monitoring dashboard for federation nodes.",
         status: "active",
         siteType: "dynamic",

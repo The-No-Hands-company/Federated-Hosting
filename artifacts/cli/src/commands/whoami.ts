@@ -22,7 +22,7 @@ export const whoamiCommand = new Command("whoami")
       if (opts.json) {
         console.log(JSON.stringify({ authenticated: false }));
       } else {
-        console.log(chalk.yellow("  Not logged in.") + chalk.dim("  Run: fh login --node <url>"));
+        console.log(chalk.yellow("  Not logged in.") + chalk.dim("  Run: nh login --node <url>"));
       }
       process.exit(1);
     }
@@ -35,7 +35,7 @@ export const whoamiCommand = new Command("whoami")
 
       if (!user) {
         spinner?.fail(chalk.red("  Token is invalid or expired."));
-        console.log(chalk.dim("  Run: fh logout && fh login --node " + cfg.nodeUrl));
+        console.log(chalk.dim("  Run: nh logout && nh login --node " + cfg.nodeUrl));
         process.exit(1);
       }
 

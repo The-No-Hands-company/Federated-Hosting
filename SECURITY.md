@@ -116,4 +116,4 @@ We follow **coordinated disclosure**:
 ## Contact
 
 - **Security email**: security@the-no-hands-company.com
-- **GitHub**: https://github.com/The-No-Hands-company/Federated-Hosting
+- **GitHub**: https://github.com/The-No-Hands-company/Nexus-Hosting

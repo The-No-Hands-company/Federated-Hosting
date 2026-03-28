@@ -46,12 +46,12 @@ export async function sendVerificationEmail(userId: string, email: string, publi
 
   await sendMail({
     to: email,
-    subject: "Verify your FedHost email address",
+    subject: "Verify your NexusHosting email address",
     html: `
       <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#12121a;color:#e4e4f0;padding:2rem;border-radius:16px;border:1px solid rgba(255,255,255,0.08)">
         <h1 style="color:#fff;font-size:1.5rem;margin-bottom:1rem">Verify your email</h1>
         <p style="color:#9ca3af;margin-bottom:1.5rem">
-          Click the button below to verify your email address and unlock all FedHost features.
+          Click the button below to verify your email address and unlock all NexusHosting features.
           This link expires in 24 hours.
         </p>
         <a href="${verifyUrl}"
@@ -60,14 +60,14 @@ export async function sendVerificationEmail(userId: string, email: string, publi
           Verify email address
         </a>
         <p style="color:#6b7280;font-size:0.8125rem;margin-top:1.5rem">
-          If you did not create a FedHost account, you can safely ignore this email.
+          If you did not create a NexusHosting account, you can safely ignore this email.
         </p>
         <p style="color:#6b7280;font-size:0.75rem;margin-top:0.5rem;word-break:break-all">
           ${verifyUrl}
         </p>
       </div>
     `,
-    text: `Verify your FedHost email: ${verifyUrl}\n\nThis link expires in 24 hours.`,
+    text: `Verify your NexusHosting email: ${verifyUrl}\n\nThis link expires in 24 hours.`,
   });
 }
 

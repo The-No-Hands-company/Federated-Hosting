@@ -25,7 +25,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 function getInitialLanguage(): string {
   // 1. Stored preference
   try {
-    const stored = localStorage.getItem("fh_language");
+    const stored = localStorage.getItem("nh_language");
     if (stored === "id" || stored === "en") return stored;
   } catch { /* SSR / storage disabled */ }
 
@@ -73,7 +73,7 @@ i18n
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
-      lookupLocalStorage: "fh_language",
+      lookupLocalStorage: "nh_language",
     },
     // Show fallback text while translations load — never blank UI
     react: {

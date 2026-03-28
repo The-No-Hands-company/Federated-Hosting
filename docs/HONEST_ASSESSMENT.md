@@ -73,9 +73,9 @@ Every item from the original critical/high list has been addressed:
 
 ### 1. Revenue / Donations
 
-**Not a gap — FedHost is intentionally free.**
+**Not a gap — NexusHosting is intentionally free.**
 
-FedHost is free for everyone, always. There are no tiers, no paid plans, no Stripe integration. If operators want to sustain their node, they can accept voluntary donations. This is a deliberate design decision, not a missing feature.
+NexusHosting is free for everyone, always. There are no tiers, no paid plans, no Stripe integration. If operators want to sustain their node, they can accept voluntary donations. This is a deliberate design decision, not a missing feature.
 
 ### 2. Malware Scanning on Upload
 
@@ -91,7 +91,7 @@ Files are uploaded to S3 without any content scanning. A user can deploy a phish
 
 The bootstrap endpoint (`GET /api/federation/bootstrap`) only returns nodes already in your local database. A brand-new node has nobody to federate with.
 
-**What's needed:** A well-known URL (e.g. `https://bootstrap.fedhost.example/nodes`) that any new node can query to get an initial peer list. This requires running at least one always-on public bootstrap node.
+**What's needed:** A well-known URL (e.g. `https://bootstrap.nexushosting.example/nodes`) that any new node can query to get an initial peer list. This requires running at least one always-on public bootstrap node.
 
 ### 4. Dynamic Site Federation Undefined
 

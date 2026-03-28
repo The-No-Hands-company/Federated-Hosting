@@ -1,12 +1,12 @@
 # Architecture
 
-This document describes the system design, data flow, and technical decisions behind Federated Hosting.
+This document describes the system design, data flow, and technical decisions behind Nexus Hosting.
 
 ---
 
 ## Overview
 
-Federated Hosting is a **decentralised website hosting network**. It is designed so that:
+Nexus Hosting is a **decentralised website hosting network**. It is designed so that:
 
 - Any operator can run an independent **node**
 - Nodes peer with each other via a cryptographically verified **federation protocol**
@@ -86,7 +86,7 @@ The project is a **pnpm workspace monorepo** with TypeScript project references.
 | Package | Path | Role |
 |---------|------|------|
 | `@workspace/api-server` | `artifacts/api-server` | Express API + federation node |
-| `@workspace/federated-hosting` | `artifacts/federated-hosting` | React + Vite user interface |
+| `@workspace/nexus-hosting` | `artifacts/nexus-hosting` | React + Vite user interface |
 | `@workspace/db` | `lib/db` | Drizzle ORM schema + DB connection |
 | `@workspace/api-spec` | `lib/api-spec` | OpenAPI 3.1 spec (source of truth) |
 | `@workspace/api-zod` | `lib/api-zod` | Auto-generated Zod validators (Orval) |

@@ -39,7 +39,7 @@ function memberName(m: Member): string {
 export const teamsCommand = new Command("teams")
   .description("Manage site collaborators and invitations");
 
-// ── fh teams list <site-id> ────────────────────────────────────────────────────
+// ── nh teams list <site-id> ────────────────────────────────────────────────────
 
 teamsCommand
   .command("list <site>")
@@ -83,7 +83,7 @@ teamsCommand
 
       if (members.length === 0 && invitations.length === 0) {
         console.log(chalk.dim("  No collaborators yet."));
-        console.log(chalk.dim(`  Invite someone: fh teams invite ${siteId} their@email.com`));
+        console.log(chalk.dim(`  Invite someone: nh teams invite ${siteId} their@email.com`));
         console.log();
       }
     } catch (err: any) {
@@ -92,7 +92,7 @@ teamsCommand
     }
   });
 
-// ── fh teams invite <site-id> <email> [--role viewer|editor|admin] ────────────
+// ── nh teams invite <site-id> <email> [--role viewer|editor|admin] ────────────
 
 teamsCommand
   .command("invite <site> <email>")
@@ -122,7 +122,7 @@ teamsCommand
     }
   });
 
-// ── fh teams role <site-id> <member-id> <role> ────────────────────────────────
+// ── nh teams role <site-id> <member-id> <role> ────────────────────────────────
 
 teamsCommand
   .command("role <site> <member-id> <role>")
@@ -135,7 +135,7 @@ teamsCommand
     }
 
     if (!["editor", "viewer"].includes(role)) {
-      console.error(chalk.red("Role must be 'editor' or 'viewer' (use 'fh teams remove' to remove admins)"));
+      console.error(chalk.red("Role must be 'editor' or 'viewer' (use 'nh teams remove' to remove admins)"));
       process.exit(1);
     }
 
@@ -152,7 +152,7 @@ teamsCommand
     }
   });
 
-// ── fh teams remove <site-id> <member-id> ─────────────────────────────────────
+// ── nh teams remove <site-id> <member-id> ─────────────────────────────────────
 
 teamsCommand
   .command("remove <site> <member-id>")
@@ -186,7 +186,7 @@ teamsCommand
     }
   });
 
-// ── fh teams revoke <site-id> <invite-id> ─────────────────────────────────────
+// ── nh teams revoke <site-id> <invite-id> ─────────────────────────────────────
 
 teamsCommand
   .command("revoke <site> <invite-id>")

@@ -1,11 +1,11 @@
-# Caddyfile for FedHost
+# Caddyfile for NexusHosting
 # Replace {$PUBLIC_DOMAIN} with your actual domain, or set the PUBLIC_DOMAIN env var.
 #
 # Architecture:
 #   {$PUBLIC_DOMAIN}/api/*    → TypeScript API server  (port 8080)
 #   {$PUBLIC_DOMAIN}/*        → Rust static proxy      (port 8090)
 #
-# The Rust proxy (fedhost-proxy) handles all site serving.
+# The Rust proxy (nexus-proxy) handles all site serving.
 # The TypeScript server handles auth, deploys, federation, admin.
 #
 # To run without the Rust proxy (TypeScript-only mode), comment out the

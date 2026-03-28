@@ -8,8 +8,8 @@ import { getRedisClient } from "./redis";
 
 // ISSUER_URL must be set to your OIDC provider's issuer URL.
 // Examples:
-//   Authentik:  https://auth.yourdomain.com/application/o/fedhost/
-//   Keycloak:   https://auth.yourdomain.com/realms/fedhost
+//   Authentik:  https://auth.yourdomain.com/application/o/nexushosting/
+//   Keycloak:   https://auth.yourdomain.com/realms/nexushosting
 //   Auth0:      https://your-tenant.us.auth0.com/
 //   Dex:        https://dex.yourdomain.com
 if (!process.env.ISSUER_URL) {

@@ -16,7 +16,7 @@ COPY lib/api-zod/package.json               ./lib/api-zod/
 COPY lib/replit-auth-web/package.json       ./lib/replit-auth-web/
 COPY lib/object-storage-web/package.json    ./lib/object-storage-web/
 COPY artifacts/api-server/package.json      ./artifacts/api-server/
-COPY artifacts/federated-hosting/package.json ./artifacts/federated-hosting/
+COPY artifacts/nexus-hosting/package.json ./artifacts/nexus-hosting/
 
 RUN pnpm install --frozen-lockfile
 
@@ -35,7 +35,7 @@ RUN pnpm --filter @workspace/api-zod     run build 2>/dev/null || true
 RUN pnpm --filter @workspace/api-server  run build
 
 # Build frontend
-RUN pnpm --filter @workspace/federated-hosting run build
+RUN pnpm --filter @workspace/nexus-hosting run build
 
 # ─── Stage 3: production image ────────────────────────────────────────────────
 FROM node:24-alpine AS runner
@@ -46,7 +46,7 @@ ENV NODE_ENV=production
 
 # Only copy the bundled artefacts — no source, no dev deps
 COPY --from=builder /app/artifacts/api-server/dist         ./dist
-COPY --from=builder /app/artifacts/federated-hosting/dist  ./public
+COPY --from=builder /app/artifacts/nexus-hosting/dist  ./public
 
 # A minimal package.json so Node can resolve the bundle
 COPY --from=builder /app/artifacts/api-server/package.json ./package.json

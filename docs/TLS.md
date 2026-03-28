@@ -1,6 +1,6 @@
 # TLS / Certificate Setup
 
-Federated Hosting supports three paths to HTTPS for custom domains:
+Nexus Hosting supports three paths to HTTPS for custom domains:
 
 ---
 

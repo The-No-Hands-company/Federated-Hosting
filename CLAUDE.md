@@ -1,8 +1,8 @@
-# CLAUDE.md — Federated Hosting Development Charter
+# CLAUDE.md — Nexus Hosting Development Charter
 
 ## What this project is
 
-**Federated Hosting is a production-grade, decentralised static site hosting network.**
+**Nexus Hosting is a production-grade, decentralised static site hosting network.**
 
 This is not a toy. This is not a proof of concept. This is infrastructure intended to serve **over 1.5 billion people** — with a specific focus on the Global South, Southeast Asia, and markets currently underserved by centralised cloud providers. Every line of code written here is load-bearing.
 
@@ -57,7 +57,7 @@ The network only works if nodes can trust each other and reliably replicate cont
 Browser / CLI
     │
     ▼
-artifacts/federated-hosting    ← React + Vite frontend (port 25231 in dev)
+artifacts/nexus-hosting    ← React + Vite frontend (port 25231 in dev)
     │ fetch()
     ▼
 artifacts/api-server           ← Express 5 API (port 8080 in dev)
@@ -80,7 +80,7 @@ lib/
 
 artifacts/
   api-server/            ← Express API server
-  federated-hosting/     ← React + Vite frontend
+  nexus-hosting/     ← React + Vite frontend
   cli/                   ← fh CLI tool (deploy, sites, tokens)
 
 docs/
@@ -159,7 +159,7 @@ At 1.5B+ users, the following matter from day one:
 - **Presigned URLs** — clients upload/download directly from object storage; the API server never proxies file bytes (except for serving via `hostRouter`)
 
 ### CDN / edge (future)
-- The `X-Served-By: federated-hosting` and `Cache-Control: public, max-age=3600` headers are already set on all served files
+- The `X-Served-By: nexus-hosting` and `Cache-Control: public, max-age=3600` headers are already set on all served files
 - The architecture is designed for a CDN layer to sit in front of nodes
 
 ---

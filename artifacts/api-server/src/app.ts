@@ -150,8 +150,8 @@ app.get("/.well-known/federation", async (_req: Request, res: Response, next: Ne
       .where(eq(siteDeploymentsTable.status, "active"));
 
     res.json({
-      protocol: "fedhost/1.0",
-      name: localNode?.name ?? "Federated Hosting Node",
+      protocol: "nexushosting/1.0",
+      name: localNode?.name ?? "Nexus Hosting Node",
       domain: localNode?.domain ?? process.env.PUBLIC_DOMAIN ?? "unknown",
       region: localNode?.region ?? "unknown",
       publicKey: localNode?.publicKey ? stripPemHeaders(localNode.publicKey) : null,

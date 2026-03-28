@@ -533,7 +533,7 @@ export default function DeploySite() {
               </Link>
               <div className="bg-muted/20 rounded-xl p-3 mt-1">
                 <p className="text-xs text-muted-foreground mb-1.5">CLI deploy:</p>
-                <code className="font-mono text-xs text-primary break-all">fh deploy ./dist --site {siteId}</code>
+                <code className="font-mono text-xs text-primary break-all">nh deploy ./dist --site {siteId}</code>
               </div>
             </CardContent>
           </Card>

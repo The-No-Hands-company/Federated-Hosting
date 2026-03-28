@@ -281,7 +281,7 @@ export default function WebhooksPage() {
       <Card className="border-white/5">
         <CardHeader>
           <CardTitle className="text-white text-base flex items-center gap-2"><Plus className="w-4 h-4" />Add webhook</CardTitle>
-          <CardDescription>FedHost will POST a signed JSON payload to this URL on the selected events.</CardDescription>
+          <CardDescription>NexusHosting will POST a signed JSON payload to this URL on the selected events.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Input placeholder="https://your-server.com/webhook" value={url} onChange={e => setUrl(e.target.value)}

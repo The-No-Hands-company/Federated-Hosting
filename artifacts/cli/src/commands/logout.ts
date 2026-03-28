@@ -12,5 +12,5 @@ export const logoutCommand = new Command("logout")
     }
     clearConfig();
     console.log(chalk.green("  Logged out.") + chalk.dim(` Credentials for ${cfg.nodeUrl ?? "unknown node"} removed.`));
-    console.log(chalk.dim(`  Run ${chalk.white("fh login")} to authenticate again.`));
+    console.log(chalk.dim(`  Run ${chalk.white("nh login")} to authenticate again.`));
   });

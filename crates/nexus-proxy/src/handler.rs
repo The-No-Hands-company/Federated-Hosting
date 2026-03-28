@@ -199,7 +199,7 @@ pub async fn serve_site(
         .status(StatusCode::OK)
         .header("Content-Type",  content_type)
         .header("Cache-Control", cache_control)
-        .header("X-Served-By",   "fedhost-proxy/rust")
+        .header("X-Served-By",   "nexus-proxy/rust")
         .header("X-Site-Domain", domain);
 
     // Set Content-Length for buffered responses (helps clients progress-bar)

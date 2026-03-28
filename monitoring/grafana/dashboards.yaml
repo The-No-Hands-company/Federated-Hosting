@@ -1,12 +1,12 @@
 # Grafana dashboard provisioning
-# Place this file at /etc/grafana/provisioning/dashboards/fedhost.yaml
+# Place this file at /etc/grafana/provisioning/dashboards/nexushosting.yaml
 
 apiVersion: 1
 
 providers:
-  - name: FedHost
+  - name: NexusHosting
     orgId: 1
-    folder: FedHost
+    folder: NexusHosting
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30

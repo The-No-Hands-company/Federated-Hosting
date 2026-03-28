@@ -55,9 +55,9 @@ async function attemptDelivery(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-FedHost-Event": payload.event,
-        "X-FedHost-Signature": signature,
-        "X-FedHost-Timestamp": payload.timestamp,
+        "X-NexusHosting-Event": payload.event,
+        "X-NexusHosting-Signature": signature,
+        "X-NexusHosting-Timestamp": payload.timestamp,
         ...(secret ? { "X-Webhook-Secret": secret } : {}),
       },
       body,
