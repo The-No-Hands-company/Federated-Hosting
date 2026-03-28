@@ -122,18 +122,26 @@ The initiating node:
 ```
 POST /api/federation/ping
 Content-Type: application/json
-X-Federation-Signature: <base64>
+X-Federation-Signature: <base64url>
 
 {
-  "fromDomain": "initiator.example.com",
-  "publicKey": "<base64 SPKI key>",
-  "timestamp": "2026-01-01T00:00:00Z",
-  "nonce": "<random uuid>"
+  "nodeDomain": "initiator.example.com",
+  "challenge":  "c2FtcGxlY2hhbGxlbmdlc3RyaW5n",
+  "signature":  "base64url-encoded-ed25519-signature",
+  "timestamp":  "1735689600000"
 }
 ```
 
+**Signature construction** (exact bytes signed):
+
+```
+message = "{nodeDomain}:{challenge}:{timestamp}"
+         = "initiator.example.com:c2FtcGxlY2hhbGxlbmdlc3RyaW5n:1735689600000"
+signature = Ed25519.sign(privateKey, UTF8(message))
+```
+
 The receiving node:
-1. Verifies the signature using `publicKey` from the payload (or cached peer registry).
+1. Verifies the signature using the sender's public key (fetched from `/.well-known/federation`).
 2. Checks `timestamp` is within ±5 minutes (replay protection).
 3. Registers the sender as a verified peer, recording `verifiedAt`.
 4. Returns `200 OK` with its own identity.
@@ -145,9 +153,37 @@ The receiving node:
   "ok": true,
   "name": "Receiving Node",
   "domain": "peer.example.com",
-  "publicKey": "<base64 SPKI key>"
+  "region": "ap-southeast-3",
+  "publicKey": "MCowBQYDK2VdAyEA..."
 }
 ```
+
+### Discovery endpoint wire format
+
+```
+GET https://peer.example.com/.well-known/federation
+```
+
+```json
+{
+  "protocol":      "fedhost/1.0",
+  "name":          "My Node",
+  "domain":        "peer.example.com",
+  "region":        "ap-southeast-3",
+  "publicKey":     "MCowBQYDK2VdAyEAaBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcdef==",
+  "joinedAt":      "2026-01-01T00:00:00.000Z",
+  "capabilities":  ["site-hosting", "node-federation", "key-verification", "site-replication", "dynamic-hosting", "nlpl"],
+  "storageUsedMb": 1240,
+  "capacityGb":    50,
+  "activeSites":   12,
+  "softwareVersion": "1.0.0",
+  "operatorEmail": "ops@peer.example.com"
+}
+```
+
+`capabilities` is an array of feature strings. Conforming implementations must:
+- Treat unknown capability strings as a no-op (forward compatibility)
+- Only omit `"dynamic-hosting"` / `"nlpl"` when `FEDERATED_STATIC_ONLY=true`
 
 ---
 
@@ -168,25 +204,65 @@ Returns a paginated list of known peers with their last-verified timestamp and s
 When a site is deployed (files uploaded and activated), the deploying node notifies all active peers.
 
 ```
-POST /api/federation/notify-sync
+POST /api/federation/sync
 Content-Type: application/json
-X-Federation-Signature: <base64>
+X-Federation-Signature: <base64url>
+X-Federation-From: source-node.example.com
 
 {
-  "eventType": "site_sync",
-  "siteDomain": "mysite.example.com",
-  "version": 3,
-  "fileCount": 12,
-  "totalSizeMb": 1.4,
-  "fromDomain": "source-node.example.com",
-  "timestamp": "2026-01-01T00:00:00Z"
+  "siteDomain":   "mysite.example.com",
+  "deploymentId": 47,
+  "timestamp":    "1735689600000"
 }
 ```
 
+**Signature construction:**
+```
+message   = "{siteDomain}:{deploymentId}:{timestamp}"
+          = "mysite.example.com:47:1735689600000"
+signature = Ed25519.sign(privateKey, UTF8(message))
+header    = base64url(signature)
+```
+
+Receiving nodes **MUST**:
+1. Check the sender domain is not on the local blocklist.
+2. Verify the signature using the sender's public key.
+3. Log the event in `federation_events`.
+
 Receiving nodes **SHOULD**:
-1. Verify the signature.
-2. Log the event in their local `federation_events` table.
-3. Optionally mirror the deployment if they are a designated replica.
+4. Optionally mirror the deployment if configured as a replica node.
+
+**Sync response (200 OK):**
+```json
+{ "received": true, "domain": "mysite.example.com", "deploymentId": 47 }
+```
+
+### Gossip push wire format
+
+```
+POST /api/federation/gossip/push
+Content-Type: application/json
+X-Federation-Signature: <base64url>
+
+{
+  "fromDomain": "source-node.example.com",
+  "peers": [
+    {
+      "domain":    "other-node.example.com",
+      "publicKey": "MCowBQYDK2VdAyEA..."
+    },
+    {
+      "domain":    "third-node.example.com",
+      "publicKey": "MCowBQYDK2VdAyEA..."
+    }
+  ],
+  "timestamp": 1735689600000
+}
+```
+
+Signature covers: `JSON.stringify({ fromDomain, peers, timestamp })`.
+
+Blocked nodes are excluded from the `peers` array — they are not propagated to other nodes.
 
 ---
 
@@ -207,6 +283,22 @@ GET /api/federation/events?page=1&limit=50
 | `site_sync` | A site deployment notification was received |
 | `offline` | A peer failed health checks |
 | `key_rotation` | A node rotated its Ed25519 key pair |
+
+### Event wire format
+
+```json
+{
+  "id":             123,
+  "eventType":      "site_sync",
+  "fromNodeDomain": "source-node.example.com",
+  "toNodeDomain":   "this-node.example.com",
+  "payload":        { "siteDomain": "mysite.example.com", "deploymentId": 47 },
+  "verified":       1,
+  "createdAt":      "2026-01-01T00:00:00.000Z"
+}
+```
+
+`verified: 1` means the Ed25519 signature on the event was valid. Implementations **MUST** store events regardless of verification result, marking unverified events for operator review.
 
 ---
 

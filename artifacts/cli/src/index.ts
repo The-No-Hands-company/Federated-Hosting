@@ -16,6 +16,7 @@ import { formsCommand }     from "./commands/forms.js";
 import { completionCommand } from "./commands/completion.js";
 import { envCommand }        from "./commands/env.js";
 import { watchCommand }      from "./commands/watch.js";
+import { domainsCommand }    from "./commands/domains.js";
 import { createCommand }     from "./commands/create.js";
 
 const program = new Command();
@@ -41,6 +42,7 @@ program.addCommand(rollbackCommand);
 program.addCommand(analyticsCommand);
 program.addCommand(envCommand);
 program.addCommand(watchCommand);
+program.addCommand(domainsCommand);
 program.addCommand(completionCommand);
 
 program.parse(process.argv);

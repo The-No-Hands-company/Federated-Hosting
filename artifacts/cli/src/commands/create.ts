@@ -193,19 +193,89 @@ export default { kit: { adapter: adapter({ fallback: "404.html" }) } };`,
   },
 };
 
+
+// ── Dynamic site scaffolds (--type nlpl|node|python) ─────────────────────────
+const DYNAMIC_SCAFFOLDS: Record<string, { label: string; desc: string; entryFile: string; files: Record<string, string> }> = {
+  nlpl: {
+    label: "NLPL Application", entryFile: "server.nlpl",
+    desc:  "NLPL HTTP server — requires NLPL interpreter on the node.",
+    files: {
+      "server.nlpl": `import network\nimport io\n\n// FedHost passes PORT via environment\n\nfunction handle_request with request returns String\n  set path to network.get_path from request\n  if path equals "/"\n    return "HTTP/1.1 200 OK\\r\\nContent-Type: text/html\\r\\n\\r\\n<!DOCTYPE html><html><body><h1>Hello from NLPL!</h1></body></html>"\n  end\n  return "HTTP/1.1 404 Not Found\\r\\nContent-Type: text/plain\\r\\n\\r\\nNot found"\nend\n\ncall network.serve_http with handle_request, PORT\n`,
+      "README.md": "# NLPL App\n\nDeploy: `fh deploy . --site <id>`\nThen start the process from the FedHost dashboard.",
+    },
+  },
+  node: {
+    label: "Node.js Server", entryFile: "server.js",
+    desc:  "Node.js HTTP server — listens on PORT env var.",
+    files: {
+      "server.js": `const http = require("http");\nconst PORT = parseInt(process.env.PORT ?? "3000", 10);\nhttp.createServer((req, res) => {\n  res.writeHead(200, { "Content-Type": "text/html" });\n  res.end("<h1>Hello from Node.js!</h1>");\n}).listen(PORT, "0.0.0.0", () => console.log(\`Listening on \${PORT}\`));\n`,
+      "package.json": `{\n  "name": "my-fedhost-app",\n  "version": "0.1.0",\n  "engines": { "node": ">=18" }\n}\n`,
+      "README.md": "# Node.js App\n\nDeploy: `fh deploy . --site <id>`\nThen start the process from the FedHost dashboard.",
+    },
+  },
+  python: {
+    label: "Python HTTP Server", entryFile: "server.py",
+    desc:  "Python 3 HTTP server — listens on PORT env var.",
+    files: {
+      "server.py": `import os, http.server, urllib.parse\nPORT = int(os.environ.get("PORT", "3000"))\nclass H(http.server.BaseHTTPRequestHandler):\n  def do_GET(self):\n    self.send_response(200); self.send_header("Content-Type","text/html"); self.end_headers()\n    self.wfile.write(b"<h1>Hello from Python!</h1>")\nhttp.server.HTTPServer(("0.0.0.0", PORT), H).serve_forever()\n`,
+      "README.md": "# Python App\n\nDeploy: `fh deploy . --site <id>`\nThen start the process from the FedHost dashboard.",
+    },
+  },
+};
+
 export const createCommand = new Command("create")
-  .description("Scaffold a new static site project from a template")
+  .description("Scaffold a new site project from a template")
   .argument("[dir]", "Directory to create the project in")
   .option("--template <name>", `Template to use: ${Object.keys(TEMPLATES).join(", ")}`)
   .option("--no-install", "Skip npm install")
+  .option("--type <type>", "Dynamic site type: nlpl, node, python")
   .addHelpText("after", `
 Templates:
 ${Object.entries(TEMPLATES).map(([k, v]) => `  ${k.padEnd(10)} ${v.label.padEnd(22)} ${v.desc}`).join("\n")}
 `)
-  .action(async (dir: string | undefined, opts: { template?: string; install: boolean }) => {
+  .action(async (dir: string | undefined, opts: { template?: string; type?: string; install: boolean }) => {
     console.log();
     console.log(chalk.bold("  ⚡ FedHost — Create new site\n"));
 
+    // ── Dynamic site type (--type nlpl|node|python) ──────────────────────────
+    if (opts.type && opts.type !== "static") {
+      const scaffold = DYNAMIC_SCAFFOLDS[opts.type];
+      if (!scaffold) {
+        console.error(chalk.red(`  Unknown type: ${opts.type}`));
+        console.error(chalk.dim("  Available: nlpl, node, python"));
+        process.exit(1);
+      }
+      const projectDir = path.resolve(dir ?? `my-${opts.type}-app`);
+      const dirName    = path.basename(projectDir);
+      if (fs.existsSync(projectDir) && fs.readdirSync(projectDir).length > 0) {
+        console.error(chalk.red(`  Directory already exists and is not empty: ${projectDir}`));
+        process.exit(1);
+      }
+      console.log(`  Creating ${chalk.bold(dirName)} — ${chalk.cyan(scaffold.label)}\n`);
+      for (const [relPath, fileContent] of Object.entries(scaffold.files)) {
+        const absPath = path.join(projectDir, relPath);
+        fs.mkdirSync(path.dirname(absPath), { recursive: true });
+        fs.writeFileSync(absPath, fileContent);
+        console.log(`  ${chalk.dim("+")} ${relPath}`);
+      }
+      console.log();
+      console.log(chalk.green("  ✓ Project created!\n"));
+      console.log(`  ${chalk.dim("Directory:")} ${chalk.cyan(projectDir)}`);
+      console.log(`  ${chalk.dim("Type:")}      ${scaffold.label}`);
+      console.log(`  ${chalk.dim("Entry:")}     ${scaffold.entryFile}`);
+      console.log();
+      console.log(chalk.bold("  Next steps:\n"));
+      console.log(`  ${chalk.dim("1.")} Create an ${opts.type} site on FedHost:`);
+      console.log(`     ${chalk.cyan(`fh sites create --name "${dirName}" --type ${opts.type}`)}`);
+      console.log(`  ${chalk.dim("2.")} Deploy your files:`);
+      console.log(`     ${chalk.cyan(`fh deploy . --site <id>`)}`);
+      console.log(`  ${chalk.dim("3.")} Start the process from the FedHost dashboard`);
+      console.log(`     ${chalk.dim("(Deploy page → Runtime Server panel → Start)")}`);
+      console.log();
+      return;
+    }
+
+    // ── Static site template ──────────────────────────────────────────────────
     // Pick template
     let templateName = opts.template;
     if (!templateName) {

@@ -21,7 +21,11 @@
  *   api-read     — Read-only API endpoints (sites, nodes lists)
  *   site-serve   — Static site serving via host-header routing (the hot path)
  *   deploy-flow  — Full deploy API flow (authenticated)
+ *   blocklist    — Blocklist check endpoint (O(1) in-memory Set, 2K+ req/s target)
+ *   gossip       — Gossip peer list read
+ *   nlpl-status  — NLPL/dynamic process status lookup (set TEST_SITE_ID env var)
  *   all          — Run all scenarios in sequence (default)
+ *   soak         — Long-running mixed load (set DURATION_SECONDS=300)
  */
 
 import autocannon from "autocannon";
@@ -44,6 +48,9 @@ const THRESHOLDS = {
   "api-read":     { p99Ms: 200,  minRps: 200  },
   "site-serve":   { p99Ms: 150,  minRps: 1000 },
   "deploy-flow":  { p99Ms: 2000, minRps: 20   },
+  "blocklist":    { p99Ms: 30,   minRps: 2000 },  // O(1) in-memory Set — should be very fast
+  "gossip":       { p99Ms: 150,  minRps: 200  },
+  "nlpl-status":  { p99Ms: 50,   minRps: 1000 },
 };
 
 function formatResult(result) {
@@ -277,6 +284,52 @@ console.log(`Scenario:  ${SCENARIO}`);
 console.log(`Duration:  ${DURATION_SECONDS}s per scenario`);
 console.log(`Connections: ${CONNECTIONS}`);
 if (TOKEN) console.log("Auth:      API token provided");
+// ── Blocklist check — O(1) in-memory Set, should handle massive throughput ────
+async function scenarioBlocklistCheck() {
+  console.log("\n── Scenario: blocklist-check ────────────────────────────────");
+  console.log("  GET /api/federation/blocks/check?domain=test.example.com");
+  const result = await run({
+    url: `${BASE_URL}/api/federation/blocks/check?domain=test.example.com`,
+    connections: 50,
+    duration: DURATION_SECONDS,
+  });
+  const { rps, p99, errors, timeouts } = formatResult(result);
+  console.log(`  rps=${Math.round(rps)} p99=${p99}ms errors=${errors} timeouts=${timeouts}`);
+  results["blocklist"] = checkThresholds("blocklist", result);
+}
+
+// ── Gossip endpoint — peer list read ─────────────────────────────────────────
+async function scenarioGossip() {
+  console.log("\n── Scenario: gossip ─────────────────────────────────────────");
+  console.log("  GET /api/federation/gossip  (public peer list)");
+  const result = await run({
+    url: `${BASE_URL}/api/federation/gossip`,
+    connections: 20,
+    duration: DURATION_SECONDS,
+  });
+  const { rps, p99, errors, timeouts } = formatResult(result);
+  console.log(`  rps=${Math.round(rps)} p99=${p99}ms errors=${errors} timeouts=${timeouts}`);
+  results["gossip"] = checkThresholds("gossip", result);
+}
+
+// ── NLPL status — per-process status lookup ───────────────────────────────────
+// Uses site ID 1 — will return 200 with status=stopped if no process is running.
+// Tests the DB lookup + cache path for dynamic site management.
+async function scenarioNlplStatus() {
+  const siteId = process.env.TEST_SITE_ID ?? "1";
+  console.log("\n── Scenario: nlpl-status ────────────────────────────────────");
+  console.log(`  GET /api/sites/${siteId}/nlpl/status`);
+  const result = await run({
+    url: `${BASE_URL}/api/sites/${siteId}/nlpl/status`,
+    connections: 30,
+    duration: DURATION_SECONDS,
+    headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
+  });
+  const { rps, p99, errors, timeouts } = formatResult(result);
+  console.log(`  rps=${Math.round(rps)} p99=${p99}ms errors=${errors} timeouts=${timeouts}`);
+  results["nlpl-status"] = checkThresholds("nlpl-status", result);
+}
+
 if (TEST_DOMAIN) console.log(`Site:      ${TEST_DOMAIN}`);
 
 const start = Date.now();
@@ -300,6 +353,18 @@ try {
   }
   if (SCENARIO === "deploy-flow" || SCENARIO === "all") {
     await scenarioDeployFlow();
+    await sleep(2000);
+  }
+  if (SCENARIO === "blocklist" || SCENARIO === "all") {
+    await scenarioBlocklistCheck();
+    await sleep(2000);
+  }
+  if (SCENARIO === "gossip" || SCENARIO === "all") {
+    await scenarioGossip();
+    await sleep(2000);
+  }
+  if (SCENARIO === "nlpl-status" || SCENARIO === "all") {
+    await scenarioNlplStatus();
     await sleep(2000);
   }
   if (SCENARIO === "soak") {

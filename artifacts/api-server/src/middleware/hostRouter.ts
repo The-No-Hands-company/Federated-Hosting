@@ -70,6 +70,8 @@ function buildETag(objectPath: string, sizeBytes: number): string {
   for (let i = 0; i < raw.length; i++) { h = Math.imul(31, h) + raw.charCodeAt(i) | 0; }
   return `W/"${Math.abs(h).toString(16)}"`;
 }
+
+function isKnownInfraHost(host: string): boolean {
   if (!host) return true;
   if (host.startsWith("localhost")) return true;
   if (PUBLIC_DOMAIN && host.includes(PUBLIC_DOMAIN)) return true;

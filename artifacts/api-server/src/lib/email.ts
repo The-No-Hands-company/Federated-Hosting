@@ -298,6 +298,8 @@ export async function emailFormSubmission(opts: {
     Object.entries(opts.data).filter(([k]) => !k.startsWith("_")).map(([k,v]) => `${k}: ${v}`).join("\n");
   return sendMail({ to: opts.to, subject, html, text });
 }
+
+export async function emailSiteDeleted(opts: {
   to: string;
   siteName: string;
   domain: string;

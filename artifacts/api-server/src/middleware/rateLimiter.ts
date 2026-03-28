@@ -141,6 +141,8 @@ export const deployLimiter = rateLimit({
   },
   handler: makeHandler("Deploy limit reached (20 per hour). Please wait before deploying again.", "DEPLOY_RATE_LIMITED"),
 });
+
+export const speedLimiter = slowDown({
   windowMs: 60_000,
   delayAfter: isProd ? 100 : 5_000,
   delayMs: (used, req) => {

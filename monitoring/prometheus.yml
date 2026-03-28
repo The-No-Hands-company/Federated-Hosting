@@ -1,0 +1,82 @@
+# Prometheus scrape configuration for FedHost
+#
+# Usage:
+#   Place at /etc/prometheus/prometheus.yml and restart Prometheus.
+#   Or reference from the monitoring/docker-compose addition in monitoring/README.md.
+#
+# Multi-node setup:
+#   Add one job_name entry per node. Use static_configs targets or
+#   service discovery (consul_sd_configs, dns_sd_configs) for dynamic fleets.
+
+global:
+  scrape_interval:     15s   # How often to scrape targets
+  evaluation_interval: 15s   # How often to evaluate alerting rules
+  scrape_timeout:      10s
+
+  external_labels:
+    # Used to identify this Prometheus instance in federation/remote_write
+    monitor: fedhost
+
+# Alerting (optional — configure Alertmanager)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ["alertmanager:9093"]
+
+# Load alerting rules (optional)
+# rule_files:
+#   - "alerts/fedhost.yml"
+
+scrape_configs:
+
+  # ── Main FedHost API server ────────────────────────────────────────────────
+  #
+  # The /metrics endpoint is exposed by prom-client on the same port as the API.
+  # Set METRICS_TOKEN env var on the node to require bearer auth.
+  - job_name: fedhost-node
+    static_configs:
+      - targets:
+          - app:8080   # Docker Compose service name; use hostname:port for bare-metal
+        labels:
+          node: local
+          region: ap-southeast-3  # change to your node's region
+
+    metrics_path: /metrics
+    scheme: http
+
+    # Uncomment and set if METRICS_TOKEN is configured on the node:
+    # authorization:
+    #   credentials: your-metrics-token-here
+
+    # Relabeling: add instance label from the target address
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # ── Federated nodes (remote nodes exposing /metrics) ──────────────────────
+  #
+  # If you operate multiple nodes, add one entry per node.
+  # Example for a second node:
+  #
+  # - job_name: fedhost-node-sg
+  #   static_configs:
+  #     - targets:
+  #         - sg-node.fedhost.example.com:443
+  #       labels:
+  #         node: sg-1
+  #         region: ap-southeast-1
+  #   scheme: https
+  #   metrics_path: /metrics
+  #   authorization:
+  #     credentials: <node-metrics-token>
+
+  # ── Prometheus self-monitoring ─────────────────────────────────────────────
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ── Grafana self-monitoring (optional) ────────────────────────────────────
+  # - job_name: grafana
+  #   static_configs:
+  #     - targets: ["grafana:3000"]
+  #   metrics_path: /metrics
