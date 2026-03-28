@@ -28,6 +28,8 @@ export const sitesTable = pgTable("sites", {
   passwordHash:  text("password_hash"),
   unlockMessage:      text("unlock_message"),
   maintenanceMessage: text("maintenance_message"),
+  /** SPA routing: serve index.html for any unknown path (true = SPA, false = strict 404) */
+  spaRouting: integer("spa_routing").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => [

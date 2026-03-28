@@ -68,8 +68,32 @@ pub async fn serve_site(
     }
 
     // ── Geo routing ────────────────────────────────────────────────────────
-    // TODO: implement geo routing redirect using select_closest_node
-    // if let Some(redirect_url) = select_closest_node(&domain, req.headers()).await { ... }
+    // If ENABLE_GEO_ROUTING is set, redirect to the closest node for this client.
+    // Only redirect if we know the client's region AND a closer peer exists.
+    if state.config.geo_routing_enabled {
+        if let Some(client_region) = geo::infer_client_region(req.headers()) {
+            let local_region = &state.config.node_region;
+            let peers = state.db.list_active_peers().await.unwrap_or_default();
+            let geo_peers: Vec<geo::PeerInfo> = peers.into_iter()
+                .map(|(d, r, s)| geo::PeerInfo { domain: d, region: r, status: s })
+                .collect();
+
+            if let Some(target) = geo::select_closest_node(local_region, &client_region, &geo_peers).await {
+                let redirect_url = format!(
+                    "https://{}{}",
+                    target,
+                    req.uri().path_and_query().map(|p| p.as_str()).unwrap_or("/")
+                );
+                metrics::record_geo_redirect(local_region, &client_region);
+                return Response::builder()
+                    .status(StatusCode::FOUND)
+                    .header("Location", redirect_url)
+                    .header("X-Geo-Redirect", "true")
+                    .body(Body::empty())
+                    .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response());
+            }
+        }
+    }
 
     // ── Domain → site resolution ───────────────────────────────────────────
     let site = match resolve_site(&state, &domain).await {
@@ -102,8 +126,10 @@ pub async fn serve_site(
     let file = match resolve_file(&state, site.site_id, &file_path).await {
         Some(f) => f,
         None => {
-            // Try index.html fallback for SPA routing
-            if file_path != "index.html" {
+            // SPA fallback: serve index.html for unknown paths only when
+            // the site has spa_routing enabled (default: true).
+            // Strict MPA/static sites (spa_routing=false) get a real 404.
+            if file_path != "index.html" && site.spa_routing {
                 if let Some(f) = resolve_file(&state, site.site_id, "index.html").await {
                     f
                 } else {

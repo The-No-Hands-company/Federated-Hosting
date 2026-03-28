@@ -65,7 +65,7 @@ impl Db {
         let row = conn
             .query_opt(
                 r#"
-                SELECT id, domain, visibility, password_hash, site_type
+                SELECT id, domain, visibility, password_hash, site_type, spa_routing
                 FROM sites
                 WHERE domain = $1
                   AND status = 'active'
@@ -81,6 +81,7 @@ impl Db {
                 visibility:    SiteVisibility::from(r.get::<_, &str>("visibility")),
                 password_hash: r.get::<_, Option<String>>("password_hash"),
                 site_type:     r.get::<_, String>("site_type"),
+                spa_routing:   r.get::<_, i32>("spa_routing") != 0,
                 cached_at:     std::time::Instant::now(),
             }));
         }
@@ -89,7 +90,7 @@ impl Db {
         let row = conn
             .query_opt(
                 r#"
-                SELECT s.id, s.domain, s.visibility, s.password_hash, s.site_type
+                SELECT s.id, s.domain, s.visibility, s.password_hash, s.site_type, s.spa_routing
                 FROM custom_domains cd
                 JOIN sites s ON s.id = cd.site_id
                 WHERE cd.domain = $1
@@ -106,6 +107,7 @@ impl Db {
             visibility:    SiteVisibility::from(r.get::<_, &str>("visibility")),
             password_hash: r.get::<_, Option<String>>("password_hash"),
             site_type:     r.get::<_, String>("site_type"),
+            spa_routing:   r.get::<_, i32>("spa_routing") != 0,
             cached_at:     std::time::Instant::now(),
         }))
     }
@@ -135,6 +137,24 @@ impl Db {
             size_bytes:   r.get::<_, i64>("size_bytes"),
             cached_at:    std::time::Instant::now(),
         }))
+    }
+
+    /// List active federation peers for geo routing.
+    /// Returns (domain, region, status) tuples.
+    pub async fn list_active_peers(&self) -> Result<Vec<(String, String, String)>> {
+        let conn = self.pool.get().await?;
+        let rows = conn
+            .query(
+                "SELECT domain, region, status FROM nodes WHERE status = 'active' AND is_local_node = 0 LIMIT 50",
+                &[],
+            )
+            .await?;
+
+        Ok(rows.into_iter().map(|r| (
+            r.get::<_, String>("domain"),
+            r.get::<_, String>("region"),
+            r.get::<_, String>("status"),
+        )).collect())
     }
 
     /// Record an analytics hit asynchronously.

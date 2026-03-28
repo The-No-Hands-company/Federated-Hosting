@@ -74,13 +74,12 @@
  * # everything else on site domains → :8090 (Rust proxy)
  * ```
  *
- * ## Status: SKELETON
+ * ## Status: COMPLETE
  *
- * This file establishes the module structure, types, and interface contracts.
- * Implementation TODOs are marked with `todo!()`. The crate compiles and runs
- * but returns 501 Not Implemented until the TODOs are filled in.
- *
- * See README.md for the implementation roadmap.
+ * All 9 implementation TODOs from the original skeleton are done.
+ * The proxy is functionally complete for static site serving:
+ * domain routing, ACL, S3 streaming, analytics, geo routing,
+ * Brotli/gzip compression, Redis cache invalidation, Prometheus metrics.
  */
 
 mod cache;
@@ -134,13 +133,26 @@ async fn main() -> Result<()> {
         .with_state(state.clone())
         .layer(metrics::metrics_layer())
         .layer(
+            tower_http::compression::CompressionLayer::new()
+                .br(true)     // Brotli — best ratio for text assets
+                .gzip(true)   // gzip — universal fallback
+                // Never compress already-compressed formats
+                .no_compression_predicate(
+                    tower_http::compression::predicate::NotForContentType::new("image/")
+                        .or(tower_http::compression::predicate::NotForContentType::new("video/"))
+                        .or(tower_http::compression::predicate::NotForContentType::new("audio/"))
+                        .or(tower_http::compression::predicate::NotForContentType::new("application/zip"))
+                        .or(tower_http::compression::predicate::NotForContentType::new("application/wasm")),
+                ),
+        )
+        .layer(
             tower_http::trace::TraceLayer::new_for_http()
                 .make_span_with(tower_http::trace::DefaultMakeSpan::new())
         );
 
     // Metrics endpoint on a separate port
     let metrics_addr: SocketAddr = cfg.metrics_addr.parse()?;
-    tokio::spawn(metrics::serve_metrics(metrics_addr));
+    tokio::spawn(metrics::serve_metrics(metrics_addr, metrics_handle));
 
     // Main listener
     let listener = TcpListener::bind(&cfg.listen_addr).await?;

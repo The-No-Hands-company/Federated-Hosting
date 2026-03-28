@@ -54,6 +54,14 @@ pub struct Config {
     #[arg(env = "LOW_RESOURCE", default_value = "false")]
     pub low_resource: bool,
 
+    /// Enable geographic routing redirects
+    #[arg(env = "ENABLE_GEO_ROUTING", default_value = "false")]
+    pub geo_routing_enabled: bool,
+
+    /// This node's AWS-style region (used for geo routing origin)
+    #[arg(env = "NODE_REGION", default_value = "us-east-1")]
+    pub node_region: String,
+
     /// Domain LRU cache capacity
     #[arg(env = "DOMAIN_CACHE_MAX", default_value_t = 10_000)]
     pub domain_cache_max: usize,

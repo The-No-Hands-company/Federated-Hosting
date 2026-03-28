@@ -505,3 +505,7 @@ CREATE TABLE IF NOT EXISTS "federation_blocks" (
 );
 
 CREATE INDEX IF NOT EXISTS "federation_blocks_domain_idx" ON "federation_blocks"("node_domain");
+
+-- ─── spa_routing column on sites ────────────────────────────────────────────
+-- 1 = serve index.html for unknown paths (SPA), 0 = strict 404 (MPA/static)
+ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "spa_routing" INTEGER NOT NULL DEFAULT 1;

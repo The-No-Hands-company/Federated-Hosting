@@ -31,6 +31,8 @@ pub struct CachedSite {
     pub visibility:    SiteVisibility,
     pub password_hash: Option<String>,
     pub site_type:     String,
+    /// Serve index.html for unknown paths (SPA). Default: true.
+    pub spa_routing:   bool,
     pub cached_at:     Instant,
 }
 

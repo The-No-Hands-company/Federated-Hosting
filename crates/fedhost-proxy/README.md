@@ -78,9 +78,12 @@ Both the Rust proxy and TypeScript server talk to the **same** PostgreSQL and S3
   - `health_check()`: startup bucket verification
   - `presigned_url()`: time-limited S3 GET URLs
 
-### 🔨 TODO — in implementation order (8 remaining)
+### ✅ All TODOs complete — crate is functionally complete
 
-1. **`handler.rs` → use `stream_object_body()` for large files**
+All 9 original implementation TODOs are done:
+
+1. **`storage.rs` → `ObjectStorage::new()`** ✅ — AWS SDK, custom endpoint, health_check, presigned_url
+2. **`handler.rs` → `stream_object_body()` for large files** ✅
    For files > ~1 MB, pipe `ByteStream` directly into axum `Body` to avoid
    buffering the entire object in memory.
 
