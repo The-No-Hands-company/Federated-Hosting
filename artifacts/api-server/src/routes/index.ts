@@ -31,6 +31,7 @@ import nlplRouter from "./nlpl";
 import { router as abuseRouter } from "./abuse";
 import emailVerifyRouter from "./emailVerify";
 import localAuthRouter from "./localAuth";
+import setupRouter from "./setup";
 
 const router: IRouter = Router();
 
@@ -66,5 +67,6 @@ router.use(nlplRouter);
 router.use("/abuse", abuseRouter);
 router.use(emailVerifyRouter);
 router.use(localAuthRouter);
+router.use(setupRouter);
 
 export default router;

@@ -5,8 +5,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout/Layout";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { LoadingState } from "@/components/shared";
+import { FirstRunWizard } from "@/components/FirstRunWizard";
+const GuidedDeployPage    = lazy(() => import("@/pages/GuidedDeploy"));
 
 // Lazy-load all pages so each route is a separate chunk.
 // Initial bundle only ships the shell (Layout, QueryClient, Router).
@@ -74,10 +76,27 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
+  const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/setup/status", { credentials: "include" })
+      .then(r => r.json())
+      .then((d: { needsSetup: boolean }) => setNeedsSetup(d.needsSetup))
+      .catch(() => setNeedsSetup(false));
+  }, []);
+
+  // Show wizard for unconfigured nodes (full-screen, no layout)
+  if (needsSetup === true) return <FirstRunWizard />;
+  // Still checking — show nothing briefly
+  if (needsSetup === null) return <LoadingState />;
+
   return (
     <Switch>
-      {/* Full-screen auth flows — no sidebar/nav */}
+      {/* Full-screen routes — no sidebar/nav */}
       <Route path="/2fa-challenge" component={TwoFactorChallenge} />
+      <Route path="/login" component={LocalAuthPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/setup" component={() => <FirstRunWizard />} />
 
       {/* All other pages inside the shell layout */}
       <Route>
@@ -107,8 +126,7 @@ function Router() {
             <Route path="/sites/:id/forms" component={FormInbox} />
             <Route path="/sites/:id/builds" component={BuildHistory} />
             <Route path="/sites/:id/webhooks" component={WebhooksPage} />
-            <Route path="/login" component={LocalAuthPage} />
-            <Route path="/reset-password" component={ResetPasswordPage} />
+            <Route path="/onboarding/deploy" component={GuidedDeployPage} />
             <Route component={NotFound} />
             </Switch>
           </Suspense>

@@ -209,7 +209,7 @@ export function OnboardingModal({
   function handleDone() {
     localStorage.setItem(LS_KEY, "1");
     onClose();
-    navigate("/my-sites");
+    navigate("/onboarding/deploy");
   }
 
   function handlePrimaryAction() {
