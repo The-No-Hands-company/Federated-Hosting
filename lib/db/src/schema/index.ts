@@ -18,3 +18,4 @@ export * from "./webhookDeliveries";
 export * from "./envVars";
 export * from "./webhooks";
 export * from "./moderation";
+export * from "./localAuth";

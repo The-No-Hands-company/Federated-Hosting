@@ -30,6 +30,7 @@ import cloneRouter from "./clone";
 import nlplRouter from "./nlpl";
 import { router as abuseRouter } from "./abuse";
 import emailVerifyRouter from "./emailVerify";
+import localAuthRouter from "./localAuth";
 
 const router: IRouter = Router();
 
@@ -64,5 +65,6 @@ router.use(cloneRouter);
 router.use(nlplRouter);
 router.use("/abuse", abuseRouter);
 router.use(emailVerifyRouter);
+router.use(localAuthRouter);
 
 export default router;

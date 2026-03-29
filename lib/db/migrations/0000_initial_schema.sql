@@ -616,3 +616,31 @@ CREATE TABLE IF NOT EXISTS "node_trust" (
 );
 CREATE INDEX IF NOT EXISTS "node_trust_domain_idx" ON "node_trust"("node_domain");
 CREATE INDEX IF NOT EXISTS "node_trust_level_idx"  ON "node_trust"("trust_level");
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Local auth (email + password, Step 4)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- Local auth credentials (separate from OIDC sessions)
+-- Allows email+password login without requiring an external OIDC provider.
+-- password_hash is bcrypt (cost 12). token_hash is SHA-256 of reset token.
+CREATE TABLE IF NOT EXISTS "local_auth" (
+  "id"            SERIAL PRIMARY KEY,
+  "user_id"       VARCHAR NOT NULL UNIQUE REFERENCES "users"("id") ON DELETE CASCADE,
+  "email"         VARCHAR NOT NULL UNIQUE,
+  "password_hash" TEXT NOT NULL,
+  "created_at"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  "updated_at"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS "local_auth_email_idx" ON "local_auth"("email");
+
+-- Password reset tokens (single-use, 1h TTL)
+CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
+  "id"         SERIAL PRIMARY KEY,
+  "user_id"    VARCHAR NOT NULL,
+  "token_hash" VARCHAR(64) NOT NULL UNIQUE,
+  "expires_at" TIMESTAMP WITH TIME ZONE NOT NULL,
+  "used_at"    TIMESTAMP WITH TIME ZONE,
+  "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS "pwd_reset_token_idx" ON "password_reset_tokens"("token_hash");
