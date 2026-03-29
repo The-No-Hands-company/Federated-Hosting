@@ -43,7 +43,19 @@ export function useAuth(): AuthState {
 
   const login = useCallback(() => {
     const base = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
+    // Check if local auth is enabled — if so, go to /login instead of OIDC
+    fetch("/api/auth/local/available", { credentials: "include" })
+      .then(r => r.json() as Promise<{ enabled?: boolean }>)
+      .then(d => {
+        if (d.enabled) {
+          window.location.href = "/login";
+        } else {
+          window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
+        }
+      })
+      .catch(() => {
+        window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
+      });
   }, []);
 
   const logout = useCallback(() => {

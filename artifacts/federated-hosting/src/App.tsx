@@ -33,11 +33,23 @@ const AccountSettings     = lazy(() => import("@/pages/AccountSettings"));
 const FormInbox           = lazy(() => import("@/pages/FormInbox"));
 const BuildHistory        = lazy(() => import("@/pages/BuildHistory"));
 const WebhooksPage        = lazy(() => import("@/pages/WebhooksPage"));
+const LocalAuthPage       = lazy(() => import("@/pages/LocalAuth"));
+const ResetPasswordPage   = lazy(() => import("@/pages/ResetPassword"));
+
+// On 401, go to local login if local auth is enabled, else OIDC
+async function getLoginUrl(): Promise<string> {
+  try {
+    const r = await fetch("/api/auth/local/available");
+    const d = await r.json() as { enabled?: boolean };
+    if (d.enabled) return "/login";
+  } catch { /* ignore */ }
+  return "/api/login";
+}
 
 function onQueryError(error: unknown) {
   const err = error as { status?: number; message?: string };
   if (err?.status === 401) {
-    window.location.href = "/api/login";
+    getLoginUrl().then(url => { window.location.href = url; });
   }
 }
 
@@ -95,6 +107,8 @@ function Router() {
             <Route path="/sites/:id/forms" component={FormInbox} />
             <Route path="/sites/:id/builds" component={BuildHistory} />
             <Route path="/sites/:id/webhooks" component={WebhooksPage} />
+            <Route path="/login" component={LocalAuthPage} />
+            <Route path="/reset-password" component={ResetPasswordPage} />
             <Route component={NotFound} />
             </Switch>
           </Suspense>
