@@ -1,0 +1,256 @@
+#!/usr/bin/env bash
+# setup.sh — Interactive setup script for a new Nexus Hosting node
+#
+# Usage:
+#   chmod +x setup.sh
+#   ./setup.sh
+#
+# What it does:
+#   1. Checks prerequisites (Docker, Docker Compose, openssl)
+#   2. Asks 6 questions (domain, OIDC provider, email)
+#   3. Writes a .env file
+#   4. Starts the stack
+#   5. Runs migrations
+#   6. Verifies the node is healthy
+#
+# Non-destructive — safe to run on an existing install (won't overwrite .env if it exists)
+
+set -euo pipefail
+
+# ── Colours ───────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
+
+info()    { echo -e "${CYAN}  →${RESET} $*"; }
+success() { echo -e "${GREEN}  ✓${RESET} $*"; }
+warn()    { echo -e "${YELLOW}  ⚠${RESET} $*"; }
+error()   { echo -e "${RED}  ✗${RESET} $*" >&2; }
+header()  { echo -e "\n${BOLD}$*${RESET}\n"; }
+
+# ── Prerequisites ─────────────────────────────────────────────────────────────
+header "Nexus Hosting — Node Setup"
+echo "This script will guide you through setting up your node."
+echo "It takes about 5 minutes."
+echo ""
+
+check_cmd() {
+  if ! command -v "$1" &>/dev/null; then
+    error "$1 is required but not installed."
+    echo "  Install: $2"
+    exit 1
+  fi
+  success "$1 found"
+}
+
+header "Checking prerequisites..."
+check_cmd docker   "https://docs.docker.com/get-docker/"
+check_cmd openssl  "sudo apt install openssl  or  brew install openssl"
+
+# Check docker compose (v2 plugin)
+if docker compose version &>/dev/null 2>&1; then
+  success "docker compose found"
+else
+  error "Docker Compose v2 is required."
+  echo "  Update Docker Desktop or run: sudo apt install docker-compose-plugin"
+  exit 1
+fi
+
+# ── Existing .env check ───────────────────────────────────────────────────────
+if [ -f .env ]; then
+  warn ".env already exists. Skipping configuration — using existing file."
+  warn "Delete .env and re-run this script to reconfigure."
+  SKIP_CONFIG=true
+else
+  SKIP_CONFIG=false
+fi
+
+# ── Gather configuration ──────────────────────────────────────────────────────
+if [ "$SKIP_CONFIG" = false ]; then
+  header "Node configuration"
+  echo "Answer these questions to configure your node."
+  echo "Press Enter to accept defaults shown in [brackets]."
+  echo ""
+
+  read -rp "  Your node's public domain (e.g. nexus.yourdomain.com): " PUBLIC_DOMAIN
+  if [ -z "$PUBLIC_DOMAIN" ]; then
+    error "PUBLIC_DOMAIN is required."
+    exit 1
+  fi
+
+  read -rp "  Node name [My Nexus Node]: " NODE_NAME
+  NODE_NAME=${NODE_NAME:-"My Nexus Node"}
+
+  read -rp "  Node region (e.g. eu-west-1, ap-southeast-3) [us-east-1]: " NODE_REGION
+  NODE_REGION=${NODE_REGION:-"us-east-1"}
+
+  read -rp "  Operator email (for Let's Encrypt + alerts): " OPERATOR_EMAIL
+  read -rp "  Operator name [Nexus Node Operator]: " OPERATOR_NAME
+  OPERATOR_NAME=${OPERATOR_NAME:-"Nexus Node Operator"}
+
+  echo ""
+  echo "  OIDC auth provider (required for login)."
+  echo "  Options: authentik | keycloak | auth0 | other"
+  echo "  If you don't have one yet, type 'skip' — you can add it later."
+  read -rp "  OIDC provider [authentik]: " OIDC_PROVIDER
+  OIDC_PROVIDER=${OIDC_PROVIDER:-"authentik"}
+
+  ISSUER_URL=""
+  OIDC_CLIENT_ID=""
+
+  if [ "$OIDC_PROVIDER" != "skip" ]; then
+    echo ""
+    case "$OIDC_PROVIDER" in
+      authentik)
+        echo "  Authentik setup: https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/docs/SELF_HOSTING.md#option-1--authentik"
+        read -rp "  Authentik issuer URL (e.g. https://auth.yourdomain.com/application/o/nexushosting/): " ISSUER_URL
+        read -rp "  Client ID: " OIDC_CLIENT_ID
+        ;;
+      keycloak)
+        echo "  Keycloak setup: https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/docs/SELF_HOSTING.md#option-2--keycloak"
+        read -rp "  Keycloak issuer URL (e.g. https://auth.yourdomain.com/realms/nexushosting): " ISSUER_URL
+        read -rp "  Client ID: " OIDC_CLIENT_ID
+        ;;
+      auth0)
+        read -rp "  Auth0 issuer URL (e.g. https://your-tenant.auth0.com/): " ISSUER_URL
+        read -rp "  Client ID: " OIDC_CLIENT_ID
+        ;;
+      *)
+        read -rp "  Issuer URL: " ISSUER_URL
+        read -rp "  Client ID: " OIDC_CLIENT_ID
+        ;;
+    esac
+  else
+    warn "Skipping OIDC — you'll need to set ISSUER_URL and OIDC_CLIENT_ID in .env before users can log in."
+  fi
+
+  read -rp "  Storage capacity in GB [100]: " STORAGE_GB
+  STORAGE_GB=${STORAGE_GB:-100}
+
+  read -rp "  Bootstrap URLs (comma-separated, leave blank to skip): " BOOTSTRAP_URLS
+
+  # Generate secrets
+  COOKIE_SECRET=$(openssl rand -hex 32)
+  POSTGRES_PASSWORD=$(openssl rand -hex 24)
+  MINIO_PASSWORD=$(openssl rand -hex 24)
+
+  # ── Write .env ──────────────────────────────────────────────────────────────
+  header "Writing .env..."
+
+  cat > .env << ENVEOF
+# Generated by setup.sh on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# Edit this file to update your configuration.
+
+# ── Node identity ─────────────────────────────────────────────────────────────
+NODE_NAME=${NODE_NAME}
+NODE_REGION=${NODE_REGION}
+OPERATOR_NAME=${OPERATOR_NAME}
+OPERATOR_EMAIL=${OPERATOR_EMAIL:-""}
+PUBLIC_DOMAIN=${PUBLIC_DOMAIN}
+STORAGE_CAPACITY_GB=${STORAGE_GB}
+BANDWIDTH_CAPACITY_GB=1000
+
+# ── Database ──────────────────────────────────────────────────────────────────
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+DATABASE_URL=postgresql://nexus:${POSTGRES_PASSWORD}@db:5432/nexus
+
+# ── Object storage (MinIO — local) ───────────────────────────────────────────
+MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+OBJECT_STORAGE_ENDPOINT=http://minio:9000
+OBJECT_STORAGE_ACCESS_KEY=nexus
+OBJECT_STORAGE_SECRET_KEY=${MINIO_PASSWORD}
+DEFAULT_OBJECT_STORAGE_BUCKET_ID=nexus-sites
+OBJECT_STORAGE_REGION=us-east-1
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+ISSUER_URL=${ISSUER_URL}
+OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
+COOKIE_SECRET=${COOKIE_SECRET}
+
+# ── Redis ─────────────────────────────────────────────────────────────────────
+REDIS_URL=redis://redis:6379
+
+# ── Federation ────────────────────────────────────────────────────────────────
+BOOTSTRAP_URLS=${BOOTSTRAP_URLS:-""}
+
+# ── Features ──────────────────────────────────────────────────────────────────
+NODE_ENV=production
+# Uncomment for Raspberry Pi / small VMs:
+# LOW_RESOURCE=true
+
+# ── Email (optional — fill in to enable email notifications) ─────────────────
+# SMTP_HOST=
+# SMTP_PORT=587
+# SMTP_USER=
+# SMTP_PASS=
+# EMAIL_FROM=noreply@${PUBLIC_DOMAIN}
+ENVEOF
+
+  success ".env written with generated secrets"
+  echo ""
+  warn "IMPORTANT: Back up these generated passwords from .env — they cannot be recovered!"
+  echo "  POSTGRES_PASSWORD  = ${POSTGRES_PASSWORD:0:8}..."
+  echo "  MINIO_PASSWORD     = ${MINIO_PASSWORD:0:8}..."
+  echo "  COOKIE_SECRET      = ${COOKIE_SECRET:0:8}..."
+fi
+
+# ── Start the stack ───────────────────────────────────────────────────────────
+header "Starting Nexus Hosting..."
+
+info "Pulling images (this may take a minute on first run)..."
+docker compose pull --quiet 2>/dev/null || true
+
+info "Starting services..."
+docker compose up -d
+
+# Wait for DB to be ready
+info "Waiting for database..."
+for i in $(seq 1 30); do
+  if docker compose exec -T db pg_isready -U nexus -d nexus &>/dev/null 2>&1; then
+    break
+  fi
+  sleep 2
+done
+
+# ── Run migrations ────────────────────────────────────────────────────────────
+info "Running database migrations..."
+docker compose run --rm migrate 2>/dev/null || \
+  docker compose exec app node -e "
+    const { migrate } = require('./lib/db/migrate');
+    migrate().catch(console.error);
+  " 2>/dev/null || true
+
+# ── Health check ─────────────────────────────────────────────────────────────
+header "Verifying health..."
+sleep 5
+
+HEALTH=$(curl -sf "http://localhost:8080/api/health/live" 2>/dev/null || echo "failed")
+if echo "$HEALTH" | grep -q '"status"'; then
+  success "API is healthy"
+else
+  warn "API health check failed — it may still be starting. Check: docker compose logs app"
+fi
+
+# ── Done ─────────────────────────────────────────────────────────────────────
+header "Setup complete!"
+echo ""
+echo -e "  ${BOLD}Your node:${RESET}       http://localhost:8080"
+echo -e "  ${BOLD}Dashboard:${RESET}       http://localhost:25231  (in dev mode)"
+echo -e "  ${BOLD}MinIO console:${RESET}   http://localhost:9001   (user: nexus)"
+echo ""
+echo "  Next steps:"
+echo "  1. Point DNS for ${PUBLIC_DOMAIN:-your-domain} to this server's IP"
+echo "  2. Add a reverse proxy (Caddy recommended) — see docs/SELF_HOSTING.md"
+if [ -n "${ISSUER_URL:-}" ]; then
+  echo "  3. Test login at https://${PUBLIC_DOMAIN:-localhost}/api/login"
+else
+  echo "  3. Configure OIDC auth in .env (ISSUER_URL + OIDC_CLIENT_ID)"
+  echo "     See docs/SELF_HOSTING.md#auth for provider setup guides"
+fi
+echo ""
+echo "  Useful commands:"
+echo "    docker compose logs -f app      — follow API logs"
+echo "    docker compose ps               — service status"
+echo "    docker compose down             — stop everything"
+echo ""
+echo -e "  ${BOLD}Docs:${RESET} https://github.com/The-No-Hands-company/Nexus-Hosting/blob/main/docs/SELF_HOSTING.md"
+echo ""

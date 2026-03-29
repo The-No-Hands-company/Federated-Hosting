@@ -1,0 +1,106 @@
+# docker-compose.production.yml
+#
+# Production hardening overlay for Nexus Hosting.
+# Use with:
+#   docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+#
+# Or add to your .env:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.production.yml
+
+version: "3.9"
+
+services:
+  app:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    environment:
+      NODE_ENV: production
+
+  proxy:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  db:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    # Tune PostgreSQL for production
+    command: >
+      postgres
+        -c max_connections=100
+        -c shared_buffers=128MB
+        -c effective_cache_size=384MB
+        -c maintenance_work_mem=64MB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=16MB
+        -c default_statistics_target=100
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+        -c work_mem=2621kB
+        -c min_wal_size=1GB
+        -c max_wal_size=4GB
+        -c log_min_duration_statement=200
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  redis:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    # Enable persistence so rate limit / session data survives restarts
+    command: >
+      redis-server
+        --appendonly yes
+        --appendfsync everysec
+        --maxmemory 100mb
+        --maxmemory-policy allkeys-lru
+        --save 900 1
+        --save 300 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  minio:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"

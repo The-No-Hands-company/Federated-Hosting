@@ -36,6 +36,7 @@ import { startRetentionJob, stopRetentionJob } from "./lib/retentionCleanup";
 import { startEmailQueue, stopEmailQueue } from "./lib/email";
 import { startOrphanCleanup, stopOrphanCleanup } from "./lib/orphanCleanup";
 import { runBootstrapSeed } from "./lib/bootstrapSeed";
+import { ensureBucketExists } from "./lib/storageInit";
 import { db, sessionsTable } from "@workspace/db";
 import { lt } from "drizzle-orm";
 import { seedBundledSites } from "./lib/seedBundledSites";
@@ -132,6 +133,9 @@ ensureLocalNode()
     startHealthMonitor();
     await loadBlocklist();
     startAnalyticsFlusher();
+
+    // Ensure S3 bucket exists (creates it if missing — makes docker compose up work without manual MinIO setup)
+    await ensureBucketExists();
     startGossipPusher();
     startSyncRetryQueue();
     startAcmeRenewalScheduler();
