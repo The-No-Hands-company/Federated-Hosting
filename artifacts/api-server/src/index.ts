@@ -37,6 +37,7 @@ import { startEmailQueue, stopEmailQueue } from "./lib/email";
 import { startOrphanCleanup, stopOrphanCleanup } from "./lib/orphanCleanup";
 import { runBootstrapSeed } from "./lib/bootstrapSeed";
 import { ensureBucketExists } from "./lib/storageInit";
+import { registerToolWithCloud, sendToolHeartbeat } from "./lib/nexusCloudClient";
 import { db, sessionsTable } from "@workspace/db";
 import { lt } from "drizzle-orm";
 import { seedBundledSites } from "./lib/seedBundledSites";
@@ -171,6 +172,32 @@ ensureLocalNode()
     setInterval(cleanupSessions, 6 * 60 * 60 * 1000); // then every 6 hours
 
     seedBundledSites();
+
+    // Register with Nexus Cloud if configured (non-blocking, best-effort)
+    const nexusCloudUrl = process.env["NEXUS_CLOUD_URL"];
+    const nexusCloudApiKey = process.env["NEXUS_CLOUD_API_KEY"] ?? "";
+    const publicUrl = process.env["PUBLIC_URL"] ?? `http://localhost:${port}`;
+    if (nexusCloudUrl) {
+      registerToolWithCloud(
+        nexusCloudUrl,
+        {
+          id: "nexus-hosting",
+          name: "Nexus Hosting",
+          description: "Decentralised static site hosting network",
+          upstreamUrl: publicUrl,
+          mode: "standalone",
+          exposed: true,
+          health: "healthy",
+          capabilities: ["hosting", "static-sites", "federation", "ssl", "custom-domains"],
+        },
+        nexusCloudApiKey,
+      ).catch(err =>
+        logger.warn({ err: err.message }, "[cloud] Registration with Nexus Cloud failed — continuing")
+      );
+      setInterval(() => {
+        sendToolHeartbeat(nexusCloudUrl, "nexus-hosting", nexusCloudApiKey, publicUrl).catch(() => {});
+      }, 30_000);
+    }
 
     process.on("SIGTERM", () => gracefulShutdown(server, "SIGTERM"));
     process.on("SIGINT", () => gracefulShutdown(server, "SIGINT"));

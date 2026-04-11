@@ -50,6 +50,76 @@ export type NexusCloudClientContract = {
   headers: readonly string[];
 };
 
+// ─── Systems API v1 registration (current Cloud protocol) ────────────────────
+// POST /api/v1/tools — registers this Hosting node as a tool with Nexus Cloud,
+// enabling subdomain issuance, TLS, and reverse-proxy routing.
+
+export type NexusCloudToolRegistrationRequest = {
+  /** Tool ID — stable identifier, used in heartbeats and routing table */
+  id: string;
+  name: string;
+  description: string;
+  /** The public URL of this Hosting node — used by Cloud's reverse proxy */
+  upstreamUrl?: string;
+  mode?: "standalone" | "orchestrated";
+  exposed?: boolean;
+  health?: "healthy" | "degraded" | "offline";
+  capabilities?: readonly string[];
+};
+
+/**
+ * Register (or upsert) this Hosting node as a tool in Nexus Cloud.
+ * Uses the current Systems API v1 protocol: POST /api/v1/tools
+ * API key is passed as X-Api-Key header.
+ */
+export async function registerToolWithCloud(
+  cloudBaseUrl: string,
+  payload: NexusCloudToolRegistrationRequest,
+  apiKey: string,
+): Promise<void> {
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/api/v1/tools`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud tool registration failed: ${res.status}`);
+  }
+}
+
+/**
+ * Send a liveness heartbeat to Nexus Cloud.
+ * POST /api/v1/tools/:toolId/heartbeat
+ */
+export async function sendToolHeartbeat(
+  cloudBaseUrl: string,
+  toolId: string,
+  apiKey: string,
+  upstreamUrl?: string,
+): Promise<void> {
+  const res = await fetch(
+    `${cloudBaseUrl.replace(/\/$/, "")}/api/v1/tools/${encodeURIComponent(toolId)}/heartbeat`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+      },
+      body: JSON.stringify({ health: "healthy", ...(upstreamUrl ? { upstreamUrl } : {}) }),
+    },
+  );
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud heartbeat failed: ${res.status}`);
+  }
+}
+
+// ─── Legacy helpers (kept for backwards compat with existing tests) ───────────
+
 export async function fetchNexusCloudDiscovery(baseUrl: string): Promise<NexusCloudDiscoveryResponse> {
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/.well-known/nexus-cloud`, {
     headers: { Accept: "application/json" },
