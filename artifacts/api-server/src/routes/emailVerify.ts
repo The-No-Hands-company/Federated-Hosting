@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { asyncHandler } from "../lib/asyncHandler.js";
+import { asyncHandler } from "../lib/errors.js";
 import { AppError } from "../lib/errors.js";
 import { sendVerificationEmail, verifyEmailToken } from "../lib/emailVerification.js";
 import { rateLimiter } from "../middleware/rateLimiter.js";

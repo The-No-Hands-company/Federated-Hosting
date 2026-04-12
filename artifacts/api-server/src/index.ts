@@ -124,14 +124,14 @@ process.on("uncaughtException", (err) => {
 });
 
 ensureLocalNode()
-  .then(() => {
+  .then(async () => {
     const server = http.createServer(app);
 
     server.listen(port, () => {
       logger.info({ port, env: process.env.NODE_ENV ?? "development" }, "Server listening");
     });
 
-    startHealthMonitor();
+    startSiteHealthMonitor();
     await loadBlocklist();
     startAnalyticsFlusher();
 

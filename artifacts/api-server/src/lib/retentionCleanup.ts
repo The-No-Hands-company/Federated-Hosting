@@ -83,12 +83,16 @@ export async function runRetentionCleanup(): Promise<void> {
 
   // ── Build job logs older than 7 days — strip log column to save space ─────
   // Keep the job metadata (status, timing) but free the potentially large log text
+  // PostgreSQL does not support LIMIT in UPDATE; use a subquery to cap batch size.
   const logPurgeResult = await db.execute(
     sql.raw(`UPDATE build_jobs SET log = '[log purged after 7 days]'
-             WHERE finished_at < '${daysAgo(7).toISOString()}'
-               AND log IS NOT NULL
-               AND log != '[log purged after 7 days]'
-             LIMIT ${BATCH}`)
+             WHERE id IN (
+               SELECT id FROM build_jobs
+               WHERE finished_at < '${daysAgo(7).toISOString()}'
+                 AND log IS NOT NULL
+                 AND log != '[log purged after 7 days]'
+               LIMIT ${BATCH}
+             )`)
   );
   const logsPurged = (logPurgeResult as any).rowCount ?? 0;
   if (logsPurged > 0) logger.info({ count: logsPurged }, "[retention] Purged old build logs");

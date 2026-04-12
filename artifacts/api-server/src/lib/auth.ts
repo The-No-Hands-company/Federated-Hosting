@@ -125,6 +125,35 @@ export async function destroySession(sid: string): Promise<void> {
   await db.delete(sessionsTable).where(eq(sessionsTable.sid, sid));
 }
 
+export function getSessionId(req: Request): string | null {
+  return req.cookies?.[SESSION_COOKIE] ?? null;
+}
+
+export async function updateSession(sid: string, data: SessionData): Promise<void> {
+  const expire = new Date(Date.now() + SESSION_TTL);
+  const serialised = JSON.stringify(data);
+
+  const redis = getRedisClient();
+  if (redis) {
+    try {
+      await redis.set(sessionKey(sid), serialised, "EX", SESSION_TTL_SECONDS);
+    } catch { /* non-fatal */ }
+  }
+
+  await db
+    .update(sessionsTable)
+    .set({ sess: data as unknown as Record<string, unknown>, expire })
+    .where(eq(sessionsTable.sid, sid));
+}
+
+export async function clearSession(res: Response, sid: string): Promise<void> {
+  await destroySession(sid);
+  res.clearCookie(SESSION_COOKIE);
+}
+
+/** Alias for destroySession — deletes the session from storage without touching the response. */
+export const deleteSession = destroySession;
+
 export function getUserFromRequest(req: Request): AuthUser | null {
   return (req as any).user ?? null;
 }

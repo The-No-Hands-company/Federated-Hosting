@@ -215,3 +215,6 @@ export const notifySiteDown = (opts: { siteId: number; siteDomain: string }) =>
 
 export const notifySiteRecovered = (opts: { siteId: number; siteDomain: string }) =>
   deliverWebhook({ event: "site_recovered", timestamp: new Date().toISOString(), ...opts }).catch(() => {});
+
+export const notifyNewPeer = (opts: { nodeDomain: string }) =>
+  deliverWebhook({ event: "new_peer", timestamp: new Date().toISOString(), ...opts }).catch(() => {});

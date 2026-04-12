@@ -17,7 +17,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const MIGRATIONS_DIR = path.join(__dirname, "..", "..", "migrations");
+const MIGRATIONS_DIR = path.join(__dirname, "..", "migrations");
 
 const { Pool } = pg;
 

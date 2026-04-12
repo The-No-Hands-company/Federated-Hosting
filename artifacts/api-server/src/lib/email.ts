@@ -110,7 +110,7 @@ export function stopEmailQueue(): void {
 }
 
 // sendMail is now just enqueue
-async function sendMail(opts: { to: string; subject: string; html: string; text: string }): Promise<boolean> {
+export async function sendMail(opts: { to: string; subject: string; html: string; text: string }): Promise<boolean> {
   await enqueue(opts);
   return true;
 }

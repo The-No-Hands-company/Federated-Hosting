@@ -6,7 +6,7 @@ import { signMessage } from "../lib/federation";
 import { asyncHandler, AppError } from "../lib/errors";
 import { uploadLimiter, writeLimiter, deployLimiter } from "../middleware/rateLimiter";
 import { requireScope } from "../middleware/tokenAuth";
-import { webhookDeploy, webhookDeployFailed } from "../lib/webhooks";
+import { notifyDeploy, notifyDeployFailed } from "../lib/webhooks";
 import { invalidateSiteCache } from "../lib/domainCache";
 import { enqueueSyncRetry } from "../lib/syncRetryQueue";
 import { emailDeploySuccess, emailDeployFailed } from "../lib/email";

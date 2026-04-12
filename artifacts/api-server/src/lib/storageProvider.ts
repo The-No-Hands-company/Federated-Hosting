@@ -13,6 +13,8 @@
 
 import { Readable } from "stream";
 import { randomUUID } from "crypto";
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import logger from "./logger";
 
 // ── Provider interface ─────────────────────────────────────────────────────────
@@ -57,12 +59,6 @@ export class S3StorageProvider implements StorageProvider {
   private readonly prefix: string;
 
   constructor() {
-    // Lazy import to avoid breaking builds that don't have the AWS SDK
-    // The SDK is added to package.json in this same commit
-    const {
-      S3Client,
-    } = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
-
     this.bucket = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID ??
       process.env.OBJECT_STORAGE_BUCKET ?? "";
     this.prefix = process.env.PRIVATE_OBJECT_DIR ?? "private";
@@ -92,9 +88,6 @@ export class S3StorageProvider implements StorageProvider {
   }
 
   async getUploadUrl(opts: { contentType: string; ttlSec: number }): Promise<{ uploadUrl: string; objectPath: string }> {
-    const { getSignedUrl } = require("@aws-sdk/s3-request-presigner") as typeof import("@aws-sdk/s3-request-presigner");
-    const { PutObjectCommand } = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
-
     const objectPath = this.newObjectPath();
     const key = this.objectKey(objectPath);
 
@@ -109,9 +102,6 @@ export class S3StorageProvider implements StorageProvider {
   }
 
   async getDownloadUrl(objectPath: string, ttlSec = 3600): Promise<string> {
-    const { getSignedUrl } = require("@aws-sdk/s3-request-presigner") as typeof import("@aws-sdk/s3-request-presigner");
-    const { GetObjectCommand } = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
-
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: this.objectKey(objectPath),
@@ -121,8 +111,6 @@ export class S3StorageProvider implements StorageProvider {
   }
 
   async streamToResponse(objectPath: string, res: import("express").Response): Promise<void> {
-    const { GetObjectCommand } = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
-
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: this.objectKey(objectPath),
@@ -145,7 +133,6 @@ export class S3StorageProvider implements StorageProvider {
   }
 
   async stat(objectPath: string): Promise<{ contentType: string; size: number } | null> {
-    const { HeadObjectCommand, NotFound } = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
     try {
       const response = await this.client.send(new HeadObjectCommand({
         Bucket: this.bucket,
@@ -162,7 +149,6 @@ export class S3StorageProvider implements StorageProvider {
   }
 
   async delete(objectPath: string): Promise<void> {
-    const { DeleteObjectCommand } = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
     await this.client.send(new DeleteObjectCommand({
       Bucket: this.bucket,
       Key: this.objectKey(objectPath),

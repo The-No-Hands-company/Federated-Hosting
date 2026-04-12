@@ -21,10 +21,10 @@ function makeStore() {
     return undefined; // express-rate-limit falls back to in-memory
   }
 
-  // rate-limit-redis v4 uses sendCommand interface
-  return {
-    sendCommand: (...args: string[]) => redis.call(...args),
-  } as import("rate-limit-redis").RedisStore;
+  // The Redis client is available, but express-rate-limit requires a proper
+  // store implementation. The current minimal wrapper is not compatible.
+  // Use in-memory rate limiting for now to get the server running.
+  return undefined;
 }
 
 const store = makeStore();
@@ -44,6 +44,16 @@ export const globalLimiter = rateLimit({
   store,
   handler: makeHandler("Too many requests. Please slow down.", "RATE_LIMITED"),
   skip: (req) => req.path === "/api/health",
+});
+
+// General per-IP limiter for miscellaneous public endpoints.
+export const rateLimiter = rateLimit({
+  windowMs: 60_000,
+  max: isProd ? 60 : 1_000,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  store,
+  handler: makeHandler("Too many requests. Please slow down.", "RATE_LIMITED"),
 });
 
 // Auth endpoints — 20 attempts / 15 minutes per IP

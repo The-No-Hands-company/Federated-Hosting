@@ -11,6 +11,7 @@ import { tokenAuthMiddleware } from "./middleware/tokenAuth";
 import { globalErrorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { globalLimiter, speedLimiter } from "./middleware/rateLimiter";
 import { apiBanMiddleware } from "./middleware/ipBan";
+import { hostRouter } from "./middleware/hostRouter";
 import router from "./routes";
 import { metricsMiddleware, registry } from "./lib/metrics";
 import { geoRoutingMiddleware } from "./lib/geoRouting";
@@ -49,6 +50,8 @@ app.use(
           },
         }
       : false,
+    // Allow Nexus Cloud portal to embed this service in an iframe
+    frameguard: false,
     crossOriginEmbedderPolicy: false,
     hsts: isProd ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
   }),
@@ -94,6 +97,8 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
+app.use(authMiddleware);
+app.use(tokenAuthMiddleware);
 app.use(apiBanMiddleware);
 
 // Block suspended users from using the API
@@ -127,11 +132,6 @@ app.get("/metrics", async (req: Request, res: Response) => {
   res.end(await registry.metrics());
 });
 
-// ── Auth middleware ────────────────────────────────────────────────────────────
-app.use(authMiddleware);
-
-// ── Token-based auth (for CLI / API clients) ──────────────────────────────────
-app.use(tokenAuthMiddleware);
 
 // ── Geographic routing (closest-node redirect) ────────────────────────────────
 app.use(geoRoutingMiddleware);
@@ -171,6 +171,57 @@ app.use(tlsRouter);
 
 // ── API routes ─────────────────────────────────────────────────────────────────
 app.use("/api", router);
+
+// ── Root status page (shown in Nexus Cloud portal iframe) ─────────────────────
+app.get("/", (_req: Request, res: Response) => {
+  const uptime = process.uptime();
+  const h = Math.floor(uptime / 3600);
+  const m = Math.floor((uptime % 3600) / 60);
+  const s = Math.floor(uptime % 60);
+  const uptimeStr = `${h}h ${m}m ${s}s`;
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nexus Hosting</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#0f1117;color:#e2e8f0;padding:24px;min-height:100vh}
+    h1{font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:4px}
+    .sub{font-size:.85rem;color:#64748b;margin-bottom:24px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+    .card{background:#1e2433;border:1px solid #2d3748;border-radius:8px;padding:14px}
+    .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin-bottom:4px}
+    .value{font-size:1.1rem;font-weight:600;color:#a78bfa}
+    .badge{display:inline-block;background:#14532d;color:#4ade80;font-size:.7rem;padding:2px 8px;border-radius:9999px;font-weight:600}
+    a{color:#7c3aed;text-decoration:none}a:hover{text-decoration:underline}
+    ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+    li a{display:flex;align-items:center;gap:6px;font-size:.85rem;color:#94a3b8}
+    li a:hover{color:#e2e8f0;text-decoration:none}
+  </style>
+</head>
+<body>
+  <h1>Nexus Hosting <span class="badge">online</span></h1>
+  <p class="sub">Decentralised static site hosting network — API server</p>
+  <div class="grid">
+    <div class="card"><div class="label">Uptime</div><div class="value">${uptimeStr}</div></div>
+    <div class="card"><div class="label">Environment</div><div class="value">${process.env.NODE_ENV ?? "development"}</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="label" style="margin-bottom:10px">Quick links</div>
+    <ul>
+      <li><a href="/api/health/live" target="_blank">▸ Health check</a></li>
+      <li><a href="/api/sites" target="_blank">▸ Sites API</a></li>
+      <li><a href="/api/admin/stats" target="_blank">▸ Admin stats</a></li>
+      <li><a href="/.well-known/federation" target="_blank">▸ Federation manifest</a></li>
+      <li><a href="/metrics" target="_blank">▸ Prometheus metrics</a></li>
+    </ul>
+  </div>
+</body>
+</html>`);
+});
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use(notFoundHandler);
