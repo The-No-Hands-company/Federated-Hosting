@@ -50,6 +50,56 @@ export type NexusCloudClientContract = {
   headers: readonly string[];
 };
 
+export type NexusCloudRoute = {
+  domain: string;
+  upstream: string;
+  toolId: string;
+  kind: "website" | "exposure" | "custom-domain" | "server";
+  status: "active";
+};
+
+export type NexusCloudExposureTarget = {
+  toolId: string;
+  publicUrl: string;
+  domain: string | null;
+  verificationToken: string | null;
+  status: string;
+  target: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+};
+
+export type NexusCloudExposureResource = {
+  target: NexusCloudExposureTarget;
+};
+
+export type NexusCloudPeer = {
+  domain: string;
+  did?: string;
+  trustState: "pending" | "verified" | "trusted" | "quarantined" | "revoked" | "expired";
+  trustUpdatedAt?: string;
+  trustExpiresAt?: string;
+  status: "unknown" | "healthy" | "degraded" | "blocked";
+  lastSeenAt?: string;
+  version?: string;
+};
+
+export type NexusCloudTrustStateSummary = {
+  total: number;
+  pending: number;
+  verified: number;
+  trusted: number;
+  quarantined: number;
+  revoked: number;
+  expired: number;
+};
+
+export type NexusCloudTrustSummary = {
+  nodes: NexusCloudTrustStateSummary;
+  peers: NexusCloudTrustStateSummary;
+  updatedAt: string;
+};
+
 // ─── Systems API v1 registration (current Cloud protocol) ────────────────────
 // POST /api/v1/tools — registers this Hosting node as a tool with Nexus Cloud,
 // enabling subdomain issuance, TLS, and reverse-proxy routing.
@@ -116,6 +166,138 @@ export async function sendToolHeartbeat(
   if (!res.ok) {
     throw new Error(`Nexus Cloud heartbeat failed: ${res.status}`);
   }
+}
+
+/**
+ * Fetch the live Cloud route table used for reverse-proxy configuration.
+ * GET /api/v1/routes
+ */
+export async function fetchCloudRouteTable(
+  cloudBaseUrl: string,
+  apiKey: string,
+): Promise<readonly NexusCloudRoute[]> {
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/api/v1/routes`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud route table fetch failed: ${res.status}`);
+  }
+
+  const payload = (await res.json()) as { routes?: readonly NexusCloudRoute[] };
+  return payload.routes ?? [];
+}
+
+export async function fetchCloudExposureTable(
+  cloudBaseUrl: string,
+  apiKey: string,
+): Promise<readonly NexusCloudExposureResource[]> {
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/api/v1/exposures`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud exposures fetch failed: ${res.status}`);
+  }
+
+  const payload = (await res.json()) as { exposures?: readonly NexusCloudExposureResource[] };
+  return payload.exposures ?? [];
+}
+
+export async function fetchCloudDomainTable(
+  cloudBaseUrl: string,
+  apiKey: string,
+): Promise<readonly NexusCloudExposureResource[]> {
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/api/v1/domains`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud domains fetch failed: ${res.status}`);
+  }
+
+  const payload = (await res.json()) as { domains?: readonly NexusCloudExposureResource[] };
+  return payload.domains ?? [];
+}
+
+export async function fetchCloudPeerTrustTable(
+  cloudBaseUrl: string,
+  apiKey: string,
+): Promise<readonly NexusCloudPeer[]> {
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/v1/federation/peers`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud peers fetch failed: ${res.status}`);
+  }
+
+  const payload = (await res.json()) as { peers?: readonly NexusCloudPeer[] };
+  return payload.peers ?? [];
+}
+
+async function fetchCompactTrustStatus(
+  cloudBaseUrl: string,
+  apiKey: string,
+): Promise<NexusCloudTrustSummary | null> {
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/api/v1/status?compact=trust`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+  });
+
+  if (!res.ok) return null;
+  const payload = (await res.json()) as { scope?: string; trust?: NexusCloudTrustSummary };
+  if (payload.scope !== "trust-lifecycle" || !payload.trust) return null;
+  return payload.trust;
+}
+
+/**
+ * Prefer compact trust polling via /api/v1/status?compact=trust.
+ * Falls back to /api/v1/trust/summary when compact mode is unavailable.
+ */
+export async function fetchCloudTrustSummary(
+  cloudBaseUrl: string,
+  apiKey: string,
+): Promise<NexusCloudTrustSummary> {
+  const compact = await fetchCompactTrustStatus(cloudBaseUrl, apiKey);
+  if (compact) return compact;
+
+  const res = await fetch(`${cloudBaseUrl.replace(/\/$/, "")}/api/v1/trust/summary`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nexus Cloud trust summary fetch failed: ${res.status}`);
+  }
+
+  const payload = (await res.json()) as { trust?: NexusCloudTrustSummary };
+  if (!payload.trust) {
+    throw new Error("Nexus Cloud trust summary payload missing trust field");
+  }
+  return payload.trust;
 }
 
 // ─── Legacy helpers (kept for backwards compat with existing tests) ───────────

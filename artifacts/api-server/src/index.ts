@@ -1,6 +1,6 @@
 import app from "./app";
-import { db, nodesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, nodesTable, sessionsTable } from "@workspace/db";
+import { eq, lt } from "drizzle-orm";
 import { generateKeyPair } from "./lib/federation";
 // ── Resource configuration — MUST be imported before anything that reads env vars ──
 import {
@@ -38,8 +38,7 @@ import { startOrphanCleanup, stopOrphanCleanup } from "./lib/orphanCleanup";
 import { runBootstrapSeed } from "./lib/bootstrapSeed";
 import { ensureBucketExists } from "./lib/storageInit";
 import { registerToolWithCloud, sendToolHeartbeat } from "./lib/nexusCloudClient";
-import { db, sessionsTable } from "@workspace/db";
-import { lt } from "drizzle-orm";
+import { startCloudRouteSync } from "./lib/cloudRouteSync";
 import { seedBundledSites } from "./lib/seedBundledSites";
 import logger from "./lib/logger";
 import http from "http";
@@ -126,6 +125,7 @@ process.on("uncaughtException", (err) => {
 ensureLocalNode()
   .then(async () => {
     const server = http.createServer(app);
+    let stopCloudRouteSync: (() => void) | null = null;
 
     server.listen(port, () => {
       logger.info({ port, env: process.env.NODE_ENV ?? "development" }, "Server listening");
@@ -197,10 +197,23 @@ ensureLocalNode()
       setInterval(() => {
         sendToolHeartbeat(nexusCloudUrl, "nexus-hosting", nexusCloudApiKey, publicUrl).catch(() => {});
       }, 30_000);
+
+      stopCloudRouteSync = startCloudRouteSync({
+        cloudBaseUrl: nexusCloudUrl,
+        apiKey: nexusCloudApiKey,
+        outputPath: process.env["NEXUS_CLOUD_ROUTE_TABLE_PATH"] ?? "./data/cloud-route-table.json",
+        intervalMs: Number(process.env["NEXUS_CLOUD_ROUTE_SYNC_INTERVAL_MS"] ?? "30000"),
+      });
     }
 
-    process.on("SIGTERM", () => gracefulShutdown(server, "SIGTERM"));
-    process.on("SIGINT", () => gracefulShutdown(server, "SIGINT"));
+    process.on("SIGTERM", () => {
+      stopCloudRouteSync?.();
+      gracefulShutdown(server, "SIGTERM");
+    });
+    process.on("SIGINT", () => {
+      stopCloudRouteSync?.();
+      gracefulShutdown(server, "SIGINT");
+    });
   })
   .catch((err) => {
     logger.error({ err }, "Failed to initialize — starting without local node");

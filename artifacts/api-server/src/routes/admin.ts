@@ -11,6 +11,7 @@ import { getSiteHealthSummary } from "../lib/siteHealthMonitor";
 import { auditLog } from "../lib/auditLog";
 import { z } from "zod/v4";
 import os from "os";
+import { readFile } from "node:fs/promises";
 
 const router: IRouter = Router();
 
@@ -222,6 +223,28 @@ router.get("/admin/audit-log", requireAdmin, asyncHandler(async (req: Request, r
 router.get("/admin/site-health", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized();
   res.json(getSiteHealthSummary());
+}));
+
+/** GET /api/admin/cloud-routes — latest synced Nexus Cloud route table snapshot */
+router.get("/admin/cloud-routes", requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) throw AppError.unauthorized();
+
+  const snapshotPath = process.env.NEXUS_CLOUD_ROUTE_TABLE_PATH ?? "./data/cloud-route-table.json";
+  try {
+    const raw = await readFile(snapshotPath, "utf8");
+    const parsed = JSON.parse(raw) as { syncedAt?: string; routes?: unknown[] };
+    const routes = Array.isArray(parsed.routes) ? parsed.routes : [];
+    res.json({
+      path: snapshotPath,
+      syncedAt: parsed.syncedAt ?? null,
+      routeCount: routes.length,
+      routes,
+    });
+  } catch (error) {
+    const errorCode = (error as NodeJS.ErrnoException).code;
+    if (errorCode === "ENOENT") throw AppError.notFound("Cloud route snapshot not found");
+    throw AppError.internal("Failed to read cloud route snapshot");
+  }
 }));
 
 /** GET /api/admin/node-trust — federation node trust scores */
