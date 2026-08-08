@@ -56,3 +56,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local debugging scratch (migration bisection scripts, schema variants)
+lib/db/_scratch/
