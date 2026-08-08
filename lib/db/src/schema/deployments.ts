@@ -29,6 +29,9 @@ export const siteDeploymentsTable = pgTable("site_deployments", {
   status: deploymentStatusEnum("status").notNull().default("pending"),
   fileCount: integer("file_count").notNull().default(0),
   totalSizeMb: real("total_size_mb").notNull().default(0),
+  // Docker-specific fields
+  image: text("image"), // Docker image name
+  tag: text("tag"),     // Docker image tag
   deployedAt: timestamp("deployed_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [

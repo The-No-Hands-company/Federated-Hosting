@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const siteStatusEnum = pgEnum("site_status", ["active", "suspended", "migrating", "maintenance"]);
-export const siteTypeEnum = pgEnum("site_type", ["static", "dynamic", "blog", "portfolio", "other", "nlpl"]);
+export const siteTypeEnum = pgEnum("site_type", ["static", "dynamic", "blog", "portfolio", "other", "nlpl", "docker"]);
 export const siteVisibilityEnum = pgEnum("site_visibility", ["public", "private", "password"]);
 
 export const sitesTable = pgTable("sites", {
@@ -13,6 +13,9 @@ export const sitesTable = pgTable("sites", {
   description: text("description"),
   status: siteStatusEnum("status").notNull().default("active"),
   siteType: siteTypeEnum("site_type").notNull().default("static"),
+  // Docker-specific fields
+  image: text("image"), // Docker image name
+  tag: text("tag"),     // Docker image tag (optional)
   ownerName: text("owner_name").notNull(),
   ownerEmail: text("owner_email").notNull(),
   ownerId: text("owner_id"),

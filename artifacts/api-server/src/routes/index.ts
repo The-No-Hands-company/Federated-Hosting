@@ -31,6 +31,7 @@ import nlplRouter from "./nlpl";
 import { router as abuseRouter } from "./abuse";
 import emailVerifyRouter from "./emailVerify";
 import cloudRouter from "./cloud";
+import dockerDeployRouter from "./dockerDeploy";
 
 const router: IRouter = Router();
 
@@ -38,6 +39,7 @@ router.use(healthRouter);
 router.use(authRouter);
 router.use(storageRouter);
 router.use(deployRouter);
+router.use(dockerDeployRouter);
 router.use(federationRouter);
 router.use(gossipRouter);
 router.use(capacityRouter);

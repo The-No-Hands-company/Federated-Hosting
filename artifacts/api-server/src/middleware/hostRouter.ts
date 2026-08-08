@@ -8,6 +8,7 @@ import crypto from "crypto";
 import http from "http";
 import { getCachedSite, setCachedSite, getCachedFile, setCachedFile } from "../lib/domainCache";
 import { getSiteProxyTarget } from "../lib/processManager";
+import { getDockerContainer } from "../lib/dockerManager";
 import logger from "../lib/logger";
 import fs from "fs";
 import path from "path";

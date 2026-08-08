@@ -24,6 +24,8 @@ const SITE_SELECT = {
   description: sitesTable.description,
   status: sitesTable.status,
   siteType: sitesTable.siteType,
+  image: sitesTable.image,
+  tag: sitesTable.tag,
   ownerName: sitesTable.ownerName,
   ownerEmail: sitesTable.ownerEmail,
   ownerId: sitesTable.ownerId,
@@ -78,7 +80,7 @@ router.post("/sites", writeLimiter, asyncHandler(async (req, res) => {
   // No per-user site count limits — NexusHosting is free for everyone, always.
 
   // Enforce NEXUS_STATIC_ONLY — only allow static/blog/portfolio site types
-  const dynamicTypes = ["nlpl", "dynamic", "node", "python"];
+  const dynamicTypes = ["nlpl", "dynamic", "node", "python", "docker"];
   if (process.env.NEXUS_STATIC_ONLY === "true" && dynamicTypes.includes(parsed.data.siteType ?? "")) {
     throw AppError.badRequest(
       `This node operates in static-only mode (NEXUS_STATIC_ONLY=true). ` +
@@ -86,6 +88,11 @@ router.post("/sites", writeLimiter, asyncHandler(async (req, res) => {
       `Create a static site or use a node that supports dynamic hosting.`,
       "STATIC_ONLY_NODE",
     );
+  }
+
+  // Additional validation: if siteType is docker, image is required
+  if (parsed.data.siteType === "docker" && !parsed.data.image) {
+    throw AppError.badRequest("Docker image is required for docker site type", "DOCKER_IMAGE_REQUIRED");
   }
 
   const [existing] = await db.select().from(sitesTable).where(eq(sitesTable.domain, parsed.data.domain));
@@ -132,6 +139,26 @@ router.patch("/sites/:id", writeLimiter, requireScope("write"), asyncHandler(asy
 
   if (!existing) throw AppError.notFound(`Site ${params.data.id} not found`);
   if (existing.ownerId !== req.user.id) throw AppError.forbidden("Only the site owner can update this site");
+
+  // Enforce NEXUS_STATIC_ONLY — only allow static/blog/portfolio site types
+  const dynamicTypes = ["nlpl", "dynamic", "node", "python", "docker"];
+  if (process.env.NEXUS_STATIC_ONLY === "true" && parsed.data.siteType !== undefined && dynamicTypes.includes(parsed.data.siteType)) {
+    throw AppError.badRequest(
+      `This node operates in static-only mode (NEXUS_STATIC_ONLY=true). ` +
+      `Dynamic site types (${dynamicTypes.join(", ")}) are not permitted. ` +
+      `Create a static site or use a node that supports dynamic hosting.`,
+      "STATIC_ONLY_NODE",
+    );
+  }
+
+  // Additional validation: if siteType is docker, image is required (if provided)
+  if (parsed.data.siteType === "docker" && parsed.data.image === undefined) {
+    // If the update does not include image, we need to check the current value
+    const [currentSite] = await db.select({ image: sitesTable.image }).from(sitesTable).where(eq(sitesTable.id, params.data.id));
+    if (!currentSite || currentSite.image === null) {
+      throw AppError.badRequest("Docker image is required for docker site type", "DOCKER_IMAGE_REQUIRED");
+    }
+  }
 
   const [updated] = await db
     .update(sitesTable)

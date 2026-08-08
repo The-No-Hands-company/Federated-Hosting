@@ -88,6 +88,8 @@ async function run() {
       } catch (err) {
         await client.query("ROLLBACK");
         console.error(`[migrate]   ✗ ${filename}: ${(err as Error).message}`);
+        // Let's also log the SQL that failed for debugging
+        console.error(`[migrate]   SQL that failed: ${sql.substring(0, 200)}...`);
         throw err;
       }
     }
