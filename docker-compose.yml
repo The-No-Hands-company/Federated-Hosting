@@ -235,5 +235,10 @@ volumes:
   redis_data:
 
 networks:
-  nexushosting:
+  # Named "nexus" because that is what every service references, here and in
+  # docker-compose.override.yml. The rename in aaaa088 changed this key alone,
+  # which left all six services pointing at an undefined network and made the
+  # file fail `docker compose config` outright — the stack could not start at
+  # all. "nexushosting" appears elsewhere in the project only as a domain name.
+  nexus:
     driver: bridge
