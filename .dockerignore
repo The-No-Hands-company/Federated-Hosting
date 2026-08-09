@@ -1,0 +1,42 @@
+# Without this the whole tree goes to the daemon on every build — measured at
+# 1.35 GB and over five minutes just to transfer, before a single layer runs.
+# The Dockerfiles install dependencies themselves and copy only what they name,
+# so none of this is needed in the context.
+
+# Rust build output. 836 MB on its own once the proxy has been built natively.
+target/
+crates/*/target/
+
+# Installed by pnpm inside the image from the lockfile.
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# History is never read by a build.
+.git/
+.github/
+
+# Local state and secrets — a .env in the context can end up in an image layer.
+.env
+.env.*
+!.env.example
+data/
+*.log
+
+# Editor and OS noise.
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Test and coverage output.
+coverage/
+.nyc_output/
+e2e/test-results/
+e2e/playwright-report/
+
+# Build artefacts that are regenerated inside the image.
+dist/
+**/dist/
+.turbo/
+.cache/
