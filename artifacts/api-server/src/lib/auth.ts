@@ -35,10 +35,14 @@ let oidcConfig: client.Configuration | null = null;
 
 export async function getOidcConfig(): Promise<client.Configuration> {
   if (!oidcConfig) {
-    oidcConfig = await client.discovery(
-      new URL(ISSUER_URL),
-      process.env.OIDC_CLIENT_ID!,
-    );
+    // The third argument is the client secret. Passed only when one is
+    // configured, so a self-hosted node can still register this as a public
+    // client and rely on PKCE alone — but where a secret exists, a server-side
+    // app should use it rather than authenticate with PKCE only.
+    const clientSecret = process.env.OIDC_CLIENT_SECRET;  // pragma: allowlist secret
+    oidcConfig = clientSecret
+      ? await client.discovery(new URL(ISSUER_URL), process.env.OIDC_CLIENT_ID!, clientSecret)
+      : await client.discovery(new URL(ISSUER_URL), process.env.OIDC_CLIENT_ID!);
   }
   return oidcConfig;
 }

@@ -121,6 +121,7 @@ services:
       # ISSUER_URL: Your OIDC provider issuer URL (Authentik, Keycloak, Auth0, Dex, etc.)
       ISSUER_URL:  ${ISSUER_URL}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
 
       # ── Node identity ─────────────────────────────────────────────────────
       NODE_NAME:            ${NODE_NAME:-My NexusHosting Node}
