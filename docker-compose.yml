@@ -110,6 +110,9 @@ services:
       # ── Object storage (MinIO — swap for S3/R2 as needed) ─────────────────
       # When using MinIO locally, set these.  For external providers see docs.
       OBJECT_STORAGE_ENDPOINT:    http://minio:9000
+      # The address a browser or CLI can reach, used only for signing. Without
+      # it, presigned URLs name minio:9000 and no external client can upload.
+      OBJECT_STORAGE_PUBLIC_ENDPOINT: ${OBJECT_STORAGE_PUBLIC_ENDPOINT:-}
       OBJECT_STORAGE_ACCESS_KEY:  ${MINIO_ROOT_USER:-nexus}
       OBJECT_STORAGE_SECRET_KEY:  ${MINIO_ROOT_PASSWORD}
       OBJECT_STORAGE_BUCKET:      ${OBJECT_STORAGE_BUCKET:-nexus-sites}

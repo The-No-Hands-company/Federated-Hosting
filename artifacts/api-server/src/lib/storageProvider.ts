@@ -55,6 +55,8 @@ export class ObjectNotFoundError extends Error {
 
 export class S3StorageProvider implements StorageProvider {
   private readonly client: import("@aws-sdk/client-s3").S3Client;
+  /** Signs URLs handed to external clients; see the constructor. */
+  private readonly presignClient: import("@aws-sdk/client-s3").S3Client;
   private readonly bucket: string;
   private readonly prefix: string;
 
@@ -68,14 +70,43 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     const endpoint = process.env.OBJECT_STORAGE_ENDPOINT;
+    const credentials = process.env.OBJECT_STORAGE_ACCESS_KEY ? {
+      accessKeyId: process.env.OBJECT_STORAGE_ACCESS_KEY,
+      secretAccessKey: process.env.OBJECT_STORAGE_SECRET_KEY ?? "",
+    } : undefined;
+    const region = process.env.OBJECT_STORAGE_REGION ?? "auto";
+
     this.client = new S3Client({
-      region: process.env.OBJECT_STORAGE_REGION ?? "auto",
+      region,
       ...(endpoint ? { endpoint, forcePathStyle: true } : {}),
-      credentials: process.env.OBJECT_STORAGE_ACCESS_KEY ? {
-        accessKeyId: process.env.OBJECT_STORAGE_ACCESS_KEY,
-        secretAccessKey: process.env.OBJECT_STORAGE_SECRET_KEY ?? "",
-      } : undefined,
+      ...(credentials ? { credentials } : {}),
     });
+
+    /*
+     * Presigned URLs are handed to a browser or a CLI, so they must name an
+     * address that client can reach. OBJECT_STORAGE_ENDPOINT is the address this
+     * server uses, which in the Docker deployment is http://minio:9000 — a
+     * compose-internal hostname. Signing with it produced upload URLs nothing
+     * outside the compose network could use, so deploying a site was impossible
+     * for any real client.
+     *
+     * The signature covers the Host header, so this cannot be rewritten after
+     * signing: the URL has to be signed against the public endpoint from the
+     * start. Hence a second client that differs only in its endpoint.
+     *
+     * Left unset, presigning falls back to the single client, which is correct
+     * when OBJECT_STORAGE_ENDPOINT is already public — a node using S3 or R2
+     * directly needs no second endpoint.
+     */
+    const publicEndpoint = process.env.OBJECT_STORAGE_PUBLIC_ENDPOINT;
+    this.presignClient = publicEndpoint
+      ? new S3Client({
+          region,
+          endpoint: publicEndpoint,
+          forcePathStyle: true,
+          ...(credentials ? { credentials } : {}),
+        })
+      : this.client;
   }
 
   private objectKey(objectPath: string): string {
@@ -97,7 +128,7 @@ export class S3StorageProvider implements StorageProvider {
       ContentType: opts.contentType,
     });
 
-    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn: opts.ttlSec });
+    const uploadUrl = await getSignedUrl(this.presignClient, command, { expiresIn: opts.ttlSec });
     return { uploadUrl, objectPath };
   }
 
@@ -107,7 +138,7 @@ export class S3StorageProvider implements StorageProvider {
       Key: this.objectKey(objectPath),
     });
 
-    return getSignedUrl(this.client, command, { expiresIn: ttlSec });
+    return getSignedUrl(this.presignClient, command, { expiresIn: ttlSec });
   }
 
   async streamToResponse(objectPath: string, res: import("express").Response): Promise<void> {
