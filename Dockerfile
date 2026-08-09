@@ -4,7 +4,12 @@ FROM node:24-alpine AS deps
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Pinned, not @latest. pnpm-lock.yaml is lockfileVersion 9 and the workspace
+# still declares its overrides under "pnpm" in package.json, which pnpm 10 no
+# longer reads — so @latest silently dropped them and every build failed
+# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against its own committed lockfile. An
+# unpinned package manager also means the image changes meaning over time.
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Copy workspace manifests first for layer caching
 COPY pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
@@ -13,10 +18,10 @@ COPY lib/db/package.json                    ./lib/db/
 COPY lib/api-spec/package.json              ./lib/api-spec/
 COPY lib/api-client-react/package.json      ./lib/api-client-react/
 COPY lib/api-zod/package.json               ./lib/api-zod/
-COPY lib/replit-auth-web/package.json       ./lib/replit-auth-web/
+COPY lib/auth-web/package.json       ./lib/auth-web/
 COPY lib/object-storage-web/package.json    ./lib/object-storage-web/
 COPY artifacts/api-server/package.json      ./artifacts/api-server/
-COPY artifacts/nexus-hosting/package.json ./artifacts/nexus-hosting/
+COPY artifacts/federated-hosting/package.json ./artifacts/federated-hosting/
 
 RUN pnpm install --frozen-lockfile
 
@@ -46,7 +51,7 @@ ENV NODE_ENV=production
 
 # Only copy the bundled artefacts — no source, no dev deps
 COPY --from=builder /app/artifacts/api-server/dist         ./dist
-COPY --from=builder /app/artifacts/nexus-hosting/dist  ./public
+COPY --from=builder /app/artifacts/federated-hosting/dist  ./public
 
 # A minimal package.json so Node can resolve the bundle
 COPY --from=builder /app/artifacts/api-server/package.json ./package.json

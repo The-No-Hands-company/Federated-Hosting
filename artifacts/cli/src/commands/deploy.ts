@@ -100,13 +100,17 @@ export const deployCommand = new Command("deploy")
     let uploaded     = 0;
     let failed       = 0;
     let deduplicated = 0;
-    let totalBytes   = 0;
+    // Renamed from totalBytes: line 86 already binds that name to the total size
+    // of the files on disk, and redeclaring it in the same scope made this file
+    // unparseable. This one counts only what was actually uploaded — line 148
+    // skips deduplicated files — so the two were never the same number.
+    let uploadedBytes = 0;
 
     function progressLine() {
       const pct   = total > 0 ? Math.round((uploaded + failed) / total * 100) : 0;
       const bar   = "█".repeat(Math.floor(pct / 5)) + "░".repeat(20 - Math.floor(pct / 5));
       const dedup = deduplicated > 0 ? chalk.dim(` (${deduplicated} deduped)`) : "";
-      const mb    = totalBytes > 0 ? chalk.dim(` ${(totalBytes / 1024 / 1024).toFixed(1)} MB`) : "";
+      const mb    = uploadedBytes > 0 ? chalk.dim(` ${(uploadedBytes / 1024 / 1024).toFixed(1)} MB`) : "";
       return `  [${chalk.cyan(bar)}] ${pct}% — ${uploaded + failed}/${total} files${mb}${dedup}`;
     }
 
@@ -145,7 +149,7 @@ export const deployCommand = new Command("deploy")
             method: "POST",
             body: JSON.stringify({ filePath: f.rel, objectPath, contentType, sizeBytes: size, contentHash }),
           });
-          if (reg.deduplicated) deduplicated++; else totalBytes += size;
+          if (reg.deduplicated) deduplicated++; else uploadedBytes += size;
           return; // success
         } catch (err) {
           lastError = err as Error;
@@ -177,7 +181,7 @@ export const deployCommand = new Command("deploy")
       console.log(chalk.yellow(`  ⚠ Uploaded ${uploaded}/${total} files (${failed} failed)`));
     } else {
       const dd   = deduplicated > 0 ? chalk.dim(` · ${deduplicated} deduplicated`) : "";
-      const mbStr = totalBytes > 0 ? chalk.dim(` · ${(totalBytes / 1024 / 1024).toFixed(1)} MB`) : "";
+      const mbStr = uploadedBytes > 0 ? chalk.dim(` · ${(uploadedBytes / 1024 / 1024).toFixed(1)} MB`) : "";
       console.log(chalk.green(`  ✓ Uploaded ${chalk.bold(String(uploaded))} files${mbStr}${dd}`));
     }
 

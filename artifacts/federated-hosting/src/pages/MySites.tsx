@@ -12,7 +12,7 @@ import { SiteForm } from "@/components/forms/SiteForm";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import type { Site } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
 

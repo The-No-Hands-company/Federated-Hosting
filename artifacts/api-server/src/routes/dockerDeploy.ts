@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
 import { requireScope } from "../middleware/tokenAuth";
 import { startDockerContainer } from "../lib/dockerManager";
-import logger from "../logger";
+import logger from "../lib/logger";
 
 const router: IRouter = Router();
 

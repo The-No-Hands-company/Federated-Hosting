@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -44,6 +44,12 @@ const RUNTIME_META: Record<string, { label: string; entryDefault: string; descri
   node:    { label: "Node.js", entryDefault: "server.js",   description: "Node.js HTTP server",          icon: "🟢" },
   python:  { label: "Python",  entryDefault: "server.py",   description: "Python HTTP server",           icon: "🐍" },
 };
+
+// The `interface NlplPanelProps {` header was lost — the RUNTIME_META block
+// above was pasted over it, leaving these three fields orphaned at top level
+// and the file unparseable. Restored from the component signature on line 88,
+// which destructures exactly these props.
+interface NlplPanelProps {
   siteId: number;
   siteDomain: string;
   siteType: string;
@@ -235,7 +241,6 @@ export function NlplPanel({ siteId, siteDomain, siteType }: NlplPanelProps) {
               </code>
             </div>
           </motion.div>
-        )}
         )}
 
         {/* Process details when running */}

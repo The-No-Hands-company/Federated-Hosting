@@ -13,7 +13,7 @@ import { useStatsHourly, useNodes } from "@/lib/apiHooks";
 import { useState } from "react";
 import { OnboardingBanner, OnboardingModal, useOnboarding } from "@/components/Onboarding";
 import { useTranslation } from "react-i18next";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -227,9 +227,14 @@ export default function Dashboard() {
       {/* Onboarding banner for guests */}
       {!isAuthenticated && shouldShow && (
         <OnboardingBanner onOpen={() => setOnboardingOpen(true)} />
-        {user && !(user as any).emailVerified && (user as any).email && (
-          <EmailVerificationBanner email={(user as any).email} />
-        )}
+      )}
+      {/* Sibling, not nested. This was placed inside the block above, which is
+          a syntax error — two elements in one expression with no fragment, and a
+          {...} container directly inside another — and unreachable regardless,
+          since it needs `user` while the outer condition requires
+          !isAuthenticated. */}
+      {user && !(user as any).emailVerified && (user as any).email && (
+        <EmailVerificationBanner email={(user as any).email} />
       )}
       {!isAuthenticated && !shouldShow && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>

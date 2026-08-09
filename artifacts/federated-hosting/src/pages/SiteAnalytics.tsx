@@ -63,10 +63,15 @@ function formatHour(iso: string, period: Period): string {
   }
 }
 
-const PERIOD_OPTIONS: { label: string; value: Period }[] = [
-  { label: "t("analytics.periods.24h")", value: "24h" },
-  { label: "t("analytics.periods.7d")",   value: "7d"  },
-  { label: "t("analytics.periods.30d")",  value: "30d" },
+// Translation keys, not labels. An i18n pass wrapped these in t(...) while
+// leaving them inside the string quotes — `"t("analytics.periods.24h")"` — which
+// is a syntax error and stopped the whole frontend bundle building. It cannot
+// simply be unquoted either: this is module scope, where the t() from
+// useTranslation does not exist. The key is stored and resolved at render.
+const PERIOD_OPTIONS: { labelKey: string; value: Period }[] = [
+  { labelKey: "analytics.periods.24h", value: "24h" },
+  { labelKey: "analytics.periods.7d",  value: "7d"  },
+  { labelKey: "analytics.periods.30d", value: "30d" },
 ];
 
 const CHART_COLOR = "#00e5ff";
@@ -157,28 +162,28 @@ export default function SiteAnalytics() {
 
   const statCards = [
     {
-      title: "{t("analytics.stats.totalHits")}",
+      title: t("analytics.stats.totalHits"),
       value: totals.hits.toLocaleString(),
       icon: Eye,
       color: "text-primary",
       bg: "bg-primary/10 border-primary/20",
     },
     {
-      title: "{t("analytics.stats.uniqueVisitors")}",
+      title: t("analytics.stats.uniqueVisitors"),
       value: totals.uniqueIps.toLocaleString(),
       icon: Globe,
       color: "text-secondary",
       bg: "bg-secondary/10 border-secondary/20",
     },
     {
-      title: "{t("analytics.stats.bandwidth")}",
+      title: t("analytics.stats.bandwidth"),
       value: formatBytes(totals.bytesServed),
       icon: HardDrive,
       color: "text-amber-400",
       bg: "bg-amber-400/10 border-amber-400/20",
     },
     {
-      title: "{t("analytics.stats.allTimeHits")}",
+      title: t("analytics.stats.allTimeHits"),
       value: (site?.hitCount ?? 0).toLocaleString(),
       icon: TrendingUp,
       color: "text-status-active",
@@ -239,7 +244,7 @@ export default function SiteAnalytics() {
                   : "text-muted-foreground hover:text-white"
               }`}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>

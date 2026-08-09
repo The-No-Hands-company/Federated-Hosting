@@ -546,4 +546,6 @@ export default function DeploySite() {
         siteDomain={site.domain}
         siteId={siteId}
       />
+    </div>
+  );
 }

@@ -12,7 +12,7 @@ import { LoadingState } from "@/components/shared";
 import { Key, Plus, Trash2, Copy, Check, LogIn, AlertTriangle, Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -93,7 +93,9 @@ export default function TokensPage() {
     mutationFn: (id: number) => apiFetch<void>(`/tokens/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tokens"] });
-      toast({ title: "t("tokens.revoked")", description: "The token is no longer valid." });
+      // Same botched i18n pass as SiteAnalytics: t(...) was inserted inside the
+      // string quotes. Here t() is in scope (line 66), so it just unquotes.
+      toast({ title: t("tokens.revoked"), description: "The token is no longer valid." });
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -151,7 +153,7 @@ export default function TokensPage() {
           <DialogContent className="bg-card border-white/10">
             <DialogHeader>
               <DialogTitle className="text-white">
-                {createdToken ? {t("tokens.created.title")} : {t("tokens.create.title")}}
+                {createdToken ? t("tokens.created.title") : t("tokens.create.title")}
               </DialogTitle>
               <DialogDescription>
                 {createdToken
@@ -315,7 +317,7 @@ export default function TokensPage() {
                       className="text-muted-foreground hover:text-red-400 hover:bg-red-400/10 shrink-0"
                       onClick={() => revokeMutation.mutate(token.id)}
                       disabled={revokeMutation.isPending}
-                      title="{t("tokens.revoke")}"
+                      title={t("tokens.revoke")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
