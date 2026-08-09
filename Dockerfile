@@ -39,6 +39,13 @@ RUN pnpm --filter @workspace/api-zod     run build 2>/dev/null || true
 # Build API server
 RUN pnpm --filter @workspace/api-server  run build
 
+# Production node_modules for the runner. The bundle is not self-contained:
+# build.ts bundles only a 7-package allowlist and marks the other 33 dependencies
+# external, so the runtime needs them on disk. Bundling @aws-sdk and the Express
+# middleware instead would be far more fragile. `pnpm deploy` resolves a
+# workspace package into a standalone tree with prod dependencies only.
+RUN pnpm --filter @workspace/api-server deploy --prod /app/prod-deps
+
 # Build frontend
 RUN pnpm --filter @workspace/nexus-hosting run build
 
@@ -55,6 +62,7 @@ COPY --from=builder /app/artifacts/federated-hosting/dist  ./public
 
 # A minimal package.json so Node can resolve the bundle
 COPY --from=builder /app/artifacts/api-server/package.json ./package.json
+COPY --from=builder /app/prod-deps/node_modules ./node_modules
 
 # Non-root user for security
 RUN addgroup -S fhnode && adduser -S fhnode -G fhnode
@@ -65,4 +73,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:8080/api/health/live || exit 1
 
-CMD ["node", "dist/index.js"]
+# index.cjs, not index.js — build.ts sets outfile to dist/index.cjs, so the
+# container started and immediately died with MODULE_NOT_FOUND.
+CMD ["node", "dist/index.cjs"]

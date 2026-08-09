@@ -71,9 +71,18 @@ services:
   migrate:
     build:
       context: .
-      target: deps          # only needs deps stage — no full build required
+      # Was `deps`, commented "only needs deps stage — no full build required".
+      # It does: `drizzle-kit push` reads lib/db/drizzle.config.ts and the schema
+      # it points at, and the deps stage copies package.json files only, so the
+      # container died with "drizzle.config.ts file does not exist" every time.
+      # builder is deps plus `COPY . .` and the db package build.
+      target: builder
+    # `run migrate`, not `run push`. CLAUDE.md is explicit — "Changes go through
+    # Drizzle migrations ... never `db push` in production" — and push infers the
+    # schema from the ORM rather than applying the reviewed SQL in
+    # lib/db/migrations/, which is the file set actually committed.
     command: >
-      sh -c "pnpm --filter @workspace/db run push"
+      sh -c "pnpm --filter @workspace/db run migrate"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nexus}
     depends_on:
