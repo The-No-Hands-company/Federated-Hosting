@@ -94,9 +94,12 @@ pub fn record_blocked_request() {
 ///
 /// The handle is produced by `install_recorder()` — pass it in here.
 pub async fn serve_metrics(addr: SocketAddr, handle: PrometheusHandle) {
+    // `async move` is required: axum's Handler is implemented for closures
+    // returning a Future, and this returned the tuple directly, so it satisfied
+    // no Handler impl at all.
     let render = move || {
         let output = handle.render();
-        (StatusCode::OK, [("Content-Type", "text/plain; version=0.0.4")], output)
+        async move { (StatusCode::OK, [("Content-Type", "text/plain; version=0.0.4")], output) }
     };
 
     let app = Router::new().route("/metrics", get(render));

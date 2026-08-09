@@ -59,3 +59,8 @@ Thumbs.db
 
 # Local debugging scratch (migration bisection scripts, schema variants)
 lib/db/_scratch/
+
+# Rust build output. crates/** is whitelisted above, which otherwise pulls the
+# entire target/ tree — thousands of fingerprint files and a 14 MB binary — into
+# `git add crates/`.
+crates/*/target/

@@ -4,7 +4,10 @@
 # Stage 2: Minimal runtime image (~20 MB)
 
 # ── Builder ───────────────────────────────────────────────────────────────────
-FROM rust:1.78-slim-bookworm AS builder
+# Bumped from 1.78 (May 2024): this crate's aws-sdk and wasi transitive deps
+# require rustc 1.87 at the lowest, so 1.78 could not build the tree at all even
+# with MSRV-aware resolution pinning every crate as far back as it will go.
+FROM rust:1.90-slim-bookworm AS builder
 
 # Install system deps needed for SSL and PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \

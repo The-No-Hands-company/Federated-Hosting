@@ -1,86 +1,92 @@
-/*!
- * nexus-proxy — High-performance static site serving for Nexus Hosting.
- *
- * This binary is the Rust extraction of the TypeScript host router hot path.
- * It handles every HTTP request to a hosted site domain, replacing the Node.js
- * `hostRouter` middleware for static site serving only.
- *
- * ## Architecture
- *
- * ```
- * Internet → Caddy/nginx (TLS) → nexus-proxy (this binary) → S3/MinIO
- *                                       ↕
- *                              TypeScript API server
- *                         (auth, deploy, admin, federation)
- * ```
- *
- * The proxy operates independently of the TypeScript API server at runtime.
- * It reads the same PostgreSQL database and object storage. The TypeScript
- * server handles writes; the proxy handles reads.
- *
- * ## What this proxy does
- *
- * 1. **Domain routing** — resolves incoming Host header to a siteId via
- *    PostgreSQL, with a Redis-shared LRU cache for sub-millisecond lookups.
- *
- * 2. **Access control** — enforces site visibility (public / private / password)
- *    using the same HMAC cookie verification as the TypeScript server.
- *
- * 3. **File serving** — fetches the file's `objectPath` from PostgreSQL (cached),
- *    proxies the GET from S3/MinIO with streaming, sets correct Content-Type
- *    and Cache-Control headers.
- *
- * 4. **Analytics** — inserts into `analytics_buffer` asynchronously via a
- *    background queue; never blocks the response.
- *
- * 5. **Geo routing** — reads region headers (Fly-Region, CF-IPCountry) and
- *    optionally 302-redirects to a closer peer node.
- *
- * ## What this proxy does NOT do
- *
- * - Deploy, upload, auth, federation, admin — those stay in TypeScript.
- * - NLPL / Node.js / Python process management — TypeScript only.
- * - ACME certificate provisioning — TypeScript only.
- *
- * ## Configuration (environment variables)
- *
- * ```
- * DATABASE_URL                   PostgreSQL connection string
- * OBJECT_STORAGE_ENDPOINT        S3-compatible endpoint (or AWS default)
- * OBJECT_STORAGE_ACCESS_KEY      S3 access key
- * OBJECT_STORAGE_SECRET_KEY      S3 secret key
- * OBJECT_STORAGE_BUCKET          Bucket name
- * OBJECT_STORAGE_REGION          Region (default: auto)
- * REDIS_URL                      Optional — enables shared cache
- * COOKIE_SECRET                  HMAC secret for unlock cookies (same as TS node)
- * PROXY_LISTEN_ADDR              Bind address (default: 0.0.0.0:8090)
- * PROXY_API_URL                  TypeScript API URL for health checks
- * LOW_RESOURCE                   "true" for Raspberry Pi / small VMs
- * METRICS_LISTEN_ADDR            Prometheus scrape endpoint (default: 0.0.0.0:9091)
- * ```
- *
- * ## Running alongside the TypeScript server
- *
- * ```
- * # Start TypeScript API on :8080 as usual
- * node artifacts/api-server/dist/index.js
- *
- * # Start Rust proxy on :8090 for site serving
- * ./nexus-proxy
- *
- * # Caddy routes:
- * # /api/* → :8080 (TypeScript)
- * # /.well-known/* → :8080 (TypeScript)
- * # everything else on site domains → :8090 (Rust proxy)
- * ```
- *
- * ## Status: COMPLETE
- *
- * All 9 implementation TODOs from the original skeleton are done.
- * The proxy is functionally complete for static site serving:
- * domain routing, ACL, S3 streaming, analytics, geo routing,
- * Brotli/gzip compression, Redis cache invalidation, Prometheus metrics.
- */
+//! nexus-proxy module documentation.
+//!
+//! Converted from a /*! */ block: Rust block comments nest, and the route
+//! patterns below contain "/*" (as in /api/* and /.well-known/*), each of
+//! which opened a nested comment the single closing */ never balanced. The
+//! file did not parse at all. Line doc-comments cannot nest, so the patterns
+//! can be written literally.
+//!
+//! nexus-proxy — High-performance static site serving for Nexus Hosting.
+//!
+//! This binary is the Rust extraction of the TypeScript host router hot path.
+//! It handles every HTTP request to a hosted site domain, replacing the Node.js
+//! `hostRouter` middleware for static site serving only.
+//!
+//! ## Architecture
+//!
+//! ```
+//! Internet → Caddy/nginx (TLS) → nexus-proxy (this binary) → S3/MinIO
+//!                                       ↕
+//!                              TypeScript API server
+//!                         (auth, deploy, admin, federation)
+//! ```
+//!
+//! The proxy operates independently of the TypeScript API server at runtime.
+//! It reads the same PostgreSQL database and object storage. The TypeScript
+//! server handles writes; the proxy handles reads.
+//!
+//! ## What this proxy does
+//!
+//! 1. **Domain routing** — resolves incoming Host header to a siteId via
+//!    PostgreSQL, with a Redis-shared LRU cache for sub-millisecond lookups.
+//!
+//! 2. **Access control** — enforces site visibility (public / private / password)
+//!    using the same HMAC cookie verification as the TypeScript server.
+//!
+//! 3. **File serving** — fetches the file's `objectPath` from PostgreSQL (cached),
+//!    proxies the GET from S3/MinIO with streaming, sets correct Content-Type
+//!    and Cache-Control headers.
+//!
+//! 4. **Analytics** — inserts into `analytics_buffer` asynchronously via a
+//!    background queue; never blocks the response.
+//!
+//! 5. **Geo routing** — reads region headers (Fly-Region, CF-IPCountry) and
+//!    optionally 302-redirects to a closer peer node.
+//!
+//! ## What this proxy does NOT do
+//!
+//! - Deploy, upload, auth, federation, admin — those stay in TypeScript.
+//! - NLPL / Node.js / Python process management — TypeScript only.
+//! - ACME certificate provisioning — TypeScript only.
+//!
+//! ## Configuration (environment variables)
+//!
+//! ```
+//! DATABASE_URL                   PostgreSQL connection string
+//! OBJECT_STORAGE_ENDPOINT        S3-compatible endpoint (or AWS default)
+//! OBJECT_STORAGE_ACCESS_KEY      S3 access key
+//! OBJECT_STORAGE_SECRET_KEY      S3 secret key
+//! OBJECT_STORAGE_BUCKET          Bucket name
+//! OBJECT_STORAGE_REGION          Region (default: auto)
+//! REDIS_URL                      Optional — enables shared cache
+//! COOKIE_SECRET                  HMAC secret for unlock cookies (same as TS node)
+//! PROXY_LISTEN_ADDR              Bind address (default: 0.0.0.0:8090)
+//! PROXY_API_URL                  TypeScript API URL for health checks
+//! LOW_RESOURCE                   "true" for Raspberry Pi / small VMs
+//! METRICS_LISTEN_ADDR            Prometheus scrape endpoint (default: 0.0.0.0:9091)
+//! ```
+//!
+//! ## Running alongside the TypeScript server
+//!
+//! ```
+//! # Start TypeScript API on :8080 as usual
+//! node artifacts/api-server/dist/index.js
+//!
+//! # Start Rust proxy on :8090 for site serving
+//! ./nexus-proxy
+//!
+//! # Caddy routes:
+//! # /api/* → :8080 (TypeScript)
+//! # /.well-known/* → :8080 (TypeScript)
+//! # everything else on site domains → :8090 (Rust proxy)
+//! ```
+//!
+//! ## Status: COMPLETE
+//!
+//! All 9 implementation TODOs from the original skeleton are done.
+//! The proxy is functionally complete for static site serving:
+//! domain routing, ACL, S3 streaming, analytics, geo routing,
+//! Brotli/gzip compression, Redis cache invalidation, Prometheus metrics.
 
 mod cache;
 mod config;
@@ -136,14 +142,22 @@ async fn main() -> Result<()> {
             tower_http::compression::CompressionLayer::new()
                 .br(true)     // Brotli — best ratio for text assets
                 .gzip(true)   // gzip — universal fallback
-                // Never compress already-compressed formats
-                .no_compression_predicate(
+                // Never compress already-compressed formats.
+                // tower-http 0.5 spells this compress_when(); no_compression_predicate
+                // does not exist, and `.or()` below is a Predicate trait method, so the
+                // trait has to be in scope — imported at the call site to keep the
+                // change local. The combinator is and(), not or(): the predicate
+                // decides when to COMPRESS, so it must be "not an image AND not a
+                // video AND ...". Chained with or() it would be true for every
+                // type and compress the lot.
+                .compress_when({
+                    use tower_http::compression::Predicate as _;
                     tower_http::compression::predicate::NotForContentType::new("image/")
-                        .or(tower_http::compression::predicate::NotForContentType::new("video/"))
-                        .or(tower_http::compression::predicate::NotForContentType::new("audio/"))
-                        .or(tower_http::compression::predicate::NotForContentType::new("application/zip"))
-                        .or(tower_http::compression::predicate::NotForContentType::new("application/wasm")),
-                ),
+                        .and(tower_http::compression::predicate::NotForContentType::new("video/"))
+                        .and(tower_http::compression::predicate::NotForContentType::new("audio/"))
+                        .and(tower_http::compression::predicate::NotForContentType::new("application/zip"))
+                        .and(tower_http::compression::predicate::NotForContentType::new("application/wasm"))
+                }),
         )
         .layer(
             tower_http::trace::TraceLayer::new_for_http()

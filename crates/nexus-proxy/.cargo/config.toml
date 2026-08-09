@@ -1,0 +1,5 @@
+# Make cargo honour rust-version when resolving. Without this the resolver
+# ignores MSRV and picks the newest release of every crate — which is how a
+# fresh lockfile ended up requiring rustc 1.94 for a Dockerfile pinned to 1.78.
+[resolver]
+incompatible-rust-versions = "fallback"

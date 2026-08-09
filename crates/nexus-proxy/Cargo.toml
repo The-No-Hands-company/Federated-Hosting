@@ -2,6 +2,10 @@
 name = "nexus-proxy"
 version = "0.1.0"
 edition = "2021"
+# Matches the toolchain in this crate's Dockerfile. Cargo's
+# MSRV-aware resolver uses it to pick dependency versions that actually compile
+# there — without it, a fresh lockfile resolves to crates needing rustc 1.94.
+rust-version = "1.87"
 description = "High-performance reverse proxy for Nexus Hosting static site serving"
 license = "MIT"
 repository = "https://github.com/The-No-Hands-company/Nexus-Hosting"
@@ -64,7 +68,9 @@ hex = "0.4"
 
 [dev-dependencies]
 tokio-test = "0.4"
-axum-test = "0.15"
+axum-test = "16"          # 0.15.x never existed on crates.io, so this crate
+                          # could not resolve a lockfile at all; 16.x is the
+                          # series built against axum 0.7, which this uses.
 
 [profile.release]
 opt-level = 3
