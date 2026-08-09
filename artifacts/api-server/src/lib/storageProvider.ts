@@ -12,6 +12,7 @@
  */
 
 import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 import { randomUUID } from "crypto";
 import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -154,13 +155,29 @@ export class S3StorageProvider implements StorageProvider {
     if (response.ContentType) res.setHeader("Content-Type", response.ContentType);
     if (response.ContentLength) res.setHeader("Content-Length", String(response.ContentLength));
 
-    // S3 Body is a ReadableStream in Node.js — pipe it
-    const nodeStream = Readable.fromWeb(response.Body as ReadableStream);
-    await new Promise<void>((resolve, reject) => {
-      nodeStream.pipe(res);
-      nodeStream.on("error", reject);
-      res.on("finish", resolve);
-    });
+    /*
+     * Body is a union across runtimes and the arm you get is decided by the
+     * SDK's HTTP handler, not by the type. Under Node it is the IncomingMessage
+     * off the socket — already a Readable — and a web ReadableStream arrives
+     * only under the fetch handler used in browsers and edge runtimes.
+     * Readable.fromWeb() throws ERR_INVALID_ARG_TYPE on the former, so
+     * converting unconditionally broke every download this server serves,
+     * including every file of every deployed site. Both arms are handled
+     * because both are reachable; neither is a hypothetical.
+     */
+    const body = response.Body as unknown;
+    const nodeStream = body instanceof Readable
+      ? body
+      : Readable.fromWeb(body as ReadableStream);
+
+    /*
+     * pipeline rather than pipe: it propagates a mid-stream failure to the
+     * caller and tears the response down instead of leaving it open. The
+     * headers above are already sent by then, so a truncated transfer is the
+     * only honest signal left — resolving here would answer 200 with a
+     * Content-Length that the body does not satisfy.
+     */
+    await pipeline(nodeStream, res);
   }
 
   async stat(objectPath: string): Promise<{ contentType: string; size: number } | null> {

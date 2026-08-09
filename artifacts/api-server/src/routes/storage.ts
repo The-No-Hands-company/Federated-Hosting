@@ -6,8 +6,40 @@ import {
 } from "@workspace/api-zod";
 import { storage, ObjectNotFoundError } from "../lib/storageProvider";
 import { ObjectPermission } from "../lib/objectAcl";
+import logger from "../lib/logger";
 
 const router: IRouter = Router();
+
+/**
+ * End a failed object stream truthfully.
+ *
+ * streamToResponse sets Content-Type and Content-Length before the first byte
+ * moves, so by the time it can fail the status line may already be on the wire.
+ * Sending a 404 then throws ERR_HTTP_HEADERS_SENT, and ending cleanly is worse:
+ * it claims a success that did not happen. Destroying the socket is the only
+ * signal left that a client can tell apart from a complete response.
+ *
+ * Swallowing this is exactly what hid a total download outage — every request
+ * logged 200 with a Content-Length and an empty body, and the only symptom
+ * anywhere was an unattributable 520 from the edge.
+ */
+function failObjectStream(res: Response, objectPath: string, error: unknown): void {
+  const notFound = error instanceof ObjectNotFoundError;
+  if (!notFound) {
+    logger.error({ objectPath, err: error }, "Failed to stream object from storage");
+  }
+
+  if (res.headersSent) {
+    res.destroy(error instanceof Error ? error : new Error(String(error)));
+    return;
+  }
+
+  if (notFound) {
+    res.status(404).json({ error: "Object not found" });
+    return;
+  }
+  res.status(500).json({ error: "Failed to serve object" });
+}
 
 /**
  * POST /storage/uploads/request-url
@@ -56,12 +88,16 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
     const objectPath = `/objects/${filePath}`;
     try {
       await storage.streamToResponse(objectPath, res);
-    } catch {
-      res.status(404).json({ error: "File not found" });
+    } catch (error) {
+      failObjectStream(res, objectPath, error);
     }
     return;
   } catch (error) {
-    console.error("Error serving public object:", error);
+    logger.error({ err: error }, "Error serving public object");
+    if (res.headersSent) {
+      res.destroy(error instanceof Error ? error : new Error(String(error)));
+      return;
+    }
     res.status(500).json({ error: "Failed to serve public object" });
   }
 });
@@ -80,11 +116,15 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const objectPath = `/objects/${wildcardPath}`;
     try {
       await storage.streamToResponse(objectPath, res);
-    } catch {
-      res.end();
+    } catch (error) {
+      failObjectStream(res, objectPath, error);
     }
   } catch (error) {
-    console.error("Error serving object:", error);
+    logger.error({ err: error }, "Error serving object");
+    if (res.headersSent) {
+      res.destroy(error instanceof Error ? error : new Error(String(error)));
+      return;
+    }
     if (error instanceof ObjectNotFoundError) {
       res.status(404).json({ error: "Object not found" });
       return;
