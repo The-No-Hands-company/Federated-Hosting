@@ -65,7 +65,11 @@ impl Db {
         let row = conn
             .query_opt(
                 r#"
-                SELECT id, domain, visibility, password_hash, site_type, spa_routing
+                -- visibility and site_type are Postgres enums, not text. Read as
+                -- &str they fail with "error deserializing column", which panicked
+                -- the worker and dropped the connection — every request for a
+                -- deployed site returned an empty reply. Cast so the driver sees text.
+                SELECT id, domain, visibility::text, password_hash, site_type::text, spa_routing
                 FROM sites
                 WHERE domain = $1
                   AND status = 'active'
@@ -90,7 +94,8 @@ impl Db {
         let row = conn
             .query_opt(
                 r#"
-                SELECT s.id, s.domain, s.visibility, s.password_hash, s.site_type, s.spa_routing
+                -- Same enum cast as the primary-domain lookup above.
+                SELECT s.id, s.domain, s.visibility::text, s.password_hash, s.site_type::text, s.spa_routing
                 FROM custom_domains cd
                 JOIN sites s ON s.id = cd.site_id
                 WHERE cd.domain = $1
@@ -120,7 +125,10 @@ impl Db {
         let row = conn
             .query_opt(
                 r#"
-                SELECT f.object_path, f.content_type, f.size_bytes
+                -- size_bytes is int4; the struct field is i64, and reading an
+                -- int4 as i64 fails to deserialize. Cast rather than narrow the
+                -- field, since file sizes should not be capped at 2GB.
+                SELECT f.object_path, f.content_type, f.size_bytes::bigint
                 FROM site_files f
                 JOIN site_deployments d ON d.id = f.deployment_id
                 WHERE f.site_id    = $1
@@ -145,7 +153,8 @@ impl Db {
         let conn = self.pool.get().await?;
         let rows = conn
             .query(
-                "SELECT domain, region, status FROM nodes WHERE status = 'active' AND is_local_node = 0 LIMIT 50",
+                // nodes.status is an enum too, read as String below — same cast as sites.
+                "SELECT domain, region, status::text FROM nodes WHERE status = 'active' AND is_local_node = 0 LIMIT 50",
                 &[],
             )
             .await?;

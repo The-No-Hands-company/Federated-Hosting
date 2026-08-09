@@ -301,13 +301,16 @@ router.post("/sites/:id/deploy", deployLimiter, requireScope("deploy"), asyncHan
 
   deploymentsTotal.inc({ status: "active" });
 
-  // Fire deploy webhook (non-blocking)
-  webhookDeploy({
+  // Fire deploy webhook (non-blocking).
+  // notifyDeploy, which is what this file imports — webhookDeploy is not defined
+  // anywhere in the codebase, so every deployment threw ReferenceError here and
+  // returned 500 after the database work had already committed. fileCount is
+  // dropped because notifyDeploy's payload does not carry it.
+  notifyDeploy({
     siteId,
     siteDomain: site.domain,
     deploymentId: deployment.id,
     version: deployment.version,
-    fileCount: pendingFiles.length,
   });
 
   // Invalidate host router cache so new files are served immediately
