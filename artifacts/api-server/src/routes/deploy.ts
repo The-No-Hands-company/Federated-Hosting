@@ -256,6 +256,19 @@ router.post("/sites/:id/deploy", deployLimiter, requireScope("deploy"), asyncHan
 
   // Wrap entire deployment in a transaction for atomicity
   const deployment = await db.transaction(async (tx) => {
+    // Supersede the previous active deployment before creating the new one.
+    // Without this a site accumulates several deployments in 'active', and the
+    // proxy's file lookup — which joins site_files to the active deployment and
+    // expects at most one row — matches once per active deployment and fails.
+    // Content-hashed asset names hide it (each is unique to one deployment);
+    // stable names like index.html collide on the very first redeploy and take
+    // the whole site down with a 404. The rollback handler below has always
+    // done this; deploy did not.
+    await tx
+      .update(siteDeploymentsTable)
+      .set({ status: "rolled_back" })
+      .where(and(eq(siteDeploymentsTable.siteId, siteId), eq(siteDeploymentsTable.status, "active")));
+
     const [{ depCount }] = await tx
       .select({ depCount: count() })
       .from(siteDeploymentsTable)
