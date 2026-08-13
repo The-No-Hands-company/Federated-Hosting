@@ -51,11 +51,11 @@ pub struct Config {
     pub api_url: String,
 
     /// Low-resource mode (reduces cache sizes, concurrency)
-    #[arg(env = "LOW_RESOURCE", default_value = "false")]
+    #[arg(long, env = "LOW_RESOURCE", default_value = "false")]
     pub low_resource: bool,
 
     /// Enable geographic routing redirects
-    #[arg(env = "ENABLE_GEO_ROUTING", default_value = "false")]
+    #[arg(long, env = "ENABLE_GEO_ROUTING", default_value = "false")]
     pub geo_routing_enabled: bool,
 
     /// This node's AWS-style region (used for geo routing origin)
