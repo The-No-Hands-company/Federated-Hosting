@@ -58,9 +58,18 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     volumes:
       - minio_data:/data
-    # No host port publish: same reason as redis above — the ecosystem infra
-    # compose already owns 127.0.0.1:9000/9001. Internal traffic (proxy/app
-    # -> minio:9000) does not need a host publish.
+    # Published on 9010, NOT 9000. The ecosystem infra compose
+    # (../../docker-compose.yml) already owns 127.0.0.1:9000/9001, so the
+    # original 9000:9000 could never bind — but dropping the publish outright
+    # is not the fix either. `storage.tnhc.dev` is a Cloudflare Tunnel
+    # ingress pointing at this host port, and presigned upload URLs are
+    # *signed against that hostname*, so without it every site deploy fails
+    # at the PUT step and storage.tnhc.dev serves 502.
+    #
+    # Internal traffic (proxy/app -> minio:9000) does go over the Docker
+    # network and needs nothing published; the public storage endpoint does.
+    ports:
+      - "9010:9000"   # S3 API — reached by the storage.tnhc.dev tunnel ingress
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 10s
