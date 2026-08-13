@@ -69,6 +69,14 @@ pub struct Config {
     /// File path LRU cache capacity
     #[arg(env = "FILE_CACHE_MAX", default_value_t = 50_000)]
     pub file_cache_max: usize,
+
+    /// Content-Security-Policy `frame-ancestors` directive value, emitted on
+    /// every response that can be framed. Default `'self'` is safe for any
+    /// customer site — the site's own origin may frame itself, no one else
+    /// can. Override per-deployment (e.g. to allow an embedding shell origin)
+    /// via env var.
+    #[arg(env = "PROXY_FRAME_ANCESTORS", default_value = "'self'")]
+    pub frame_ancestors: String,
 }
 
 impl Config {
@@ -90,5 +98,24 @@ impl Config {
         }
 
         Ok(cfg)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn frame_ancestors_defaults_to_self_when_unset() {
+        // SAFETY: single-threaded test, no other test in this crate touches env vars.
+        std::env::remove_var("PROXY_FRAME_ANCESTORS");
+        std::env::set_var("DATABASE_URL", "postgres://test-only/db");
+
+        let cfg = Config::try_parse_from(["nexus-proxy"])
+            .expect("config should parse with only DATABASE_URL set");
+
+        assert_eq!(cfg.frame_ancestors, "'self'");
+
+        std::env::remove_var("DATABASE_URL");
     }
 }

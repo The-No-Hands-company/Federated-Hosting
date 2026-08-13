@@ -226,6 +226,10 @@ services:
       NODE_REGION:          ${NODE_REGION:-self-hosted}
       ENABLE_GEO_ROUTING:   ${ENABLE_GEO_ROUTING:-false}
 
+      # Clickjacking protection: only 'self' and the Nexus Systems shell may
+      # frame sites served by this node. See crates/nexus-proxy/src/config.rs.
+      PROXY_FRAME_ANCESTORS: "'self' https://app.tnhc.dev"
+
       # LOW_RESOURCE: "true"   # Uncomment for Raspberry Pi / small VMs
 
     depends_on:

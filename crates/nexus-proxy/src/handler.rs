@@ -97,17 +97,17 @@ pub async fn serve_site(
     // ── Domain → site resolution ───────────────────────────────────────────
     let site = match resolve_site(&state, &domain).await {
         Some(s) => s,
-        None => return not_found_response(&domain),
+        None => return not_found_response(&domain, &state.config.frame_ancestors),
     };
 
     // ── Visibility checks ──────────────────────────────────────────────────
     match site.visibility {
         SiteVisibility::Private => {
-            return private_response();
+            return private_response(&state.config.frame_ancestors);
         }
         SiteVisibility::Password => {
             if !verify_unlock_cookie(req.headers(), site.site_id, &state.config.cookie_secret) {
-                return password_gate_response(site.site_id, &domain);
+                return password_gate_response(site.site_id, &domain, &state.config.frame_ancestors);
             }
         }
         SiteVisibility::Public => {}
@@ -132,10 +132,10 @@ pub async fn serve_site(
                 if let Some(f) = resolve_file(&state, site.site_id, "index.html").await {
                     f
                 } else {
-                    return not_found_response(&domain);
+                    return not_found_response(&domain, &state.config.frame_ancestors);
                 }
             } else {
-                return not_found_response(&domain);
+                return not_found_response(&domain, &state.config.frame_ancestors);
             }
         }
     };
@@ -199,6 +199,7 @@ pub async fn serve_site(
         .status(StatusCode::OK)
         .header("Content-Type",  content_type)
         .header("Cache-Control", cache_control)
+        .header("Content-Security-Policy", format!("frame-ancestors {}", state.config.frame_ancestors))
         .header("X-Served-By",   "nexus-proxy/rust")
         .header("X-Site-Domain", domain);
 
@@ -343,7 +344,7 @@ fn verify_unlock_cookie(headers: &HeaderMap, site_id: i32, secret: &str) -> bool
     expected == hmac_b64
 }
 
-fn not_found_response(domain: &str) -> Response {
+fn not_found_response(domain: &str, frame_ancestors: &str) -> Response {
     let body = format!(
         r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Not Found</title>
 <style>*{{margin:0;padding:0}}body{{font-family:system-ui,sans-serif;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}}</style>
@@ -352,25 +353,28 @@ fn not_found_response(domain: &str) -> Response {
     Response::builder()
         .status(StatusCode::NOT_FOUND)
         .header("Content-Type", "text/html; charset=utf-8")
+        .header("Content-Security-Policy", format!("frame-ancestors {}", frame_ancestors))
         .body(Body::from(body))
         .unwrap()
 }
 
-fn private_response() -> Response {
+fn private_response(frame_ancestors: &str) -> Response {
     Response::builder()
         .status(StatusCode::FORBIDDEN)
         .header("Content-Type", "text/html; charset=utf-8")
+        .header("Content-Security-Policy", format!("frame-ancestors {}", frame_ancestors))
         .body(Body::from(
             r#"<!DOCTYPE html><html><body style="font-family:system-ui;background:#0a0a0f;color:#e4e4f0;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h1>403</h1><p>This site is private.</p></div></body></html>"#
         ))
         .unwrap()
 }
 
-fn password_gate_response(site_id: i32, domain: &str) -> Response {
+fn password_gate_response(site_id: i32, domain: &str, frame_ancestors: &str) -> Response {
     // Redirect to the TypeScript server's password gate
     Response::builder()
         .status(StatusCode::FOUND)
         .header("Location", format!("/api/sites/{}/unlock?domain={}", site_id, domain))
+        .header("Content-Security-Policy", format!("frame-ancestors {}", frame_ancestors))
         .body(Body::empty())
         .unwrap()
 }
