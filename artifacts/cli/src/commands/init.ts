@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import * as readline from "readline/promises";
+import * as readline from "node:readline/promises";
 import { saveConfig } from "../config.js";
 import { apiFetch } from "../api.js";
 import fs from "fs";

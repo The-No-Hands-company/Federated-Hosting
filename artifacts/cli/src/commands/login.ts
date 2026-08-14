@@ -1,9 +1,8 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import * as readline from "readline/promises";
+import * as readline from "node:readline/promises";
 import { saveConfig, clearConfig, getConfig } from "../config.js";
-import { apiFetch } from "../api.js";
 
 interface TokenCreateResponse {
   id: number;
@@ -36,11 +35,12 @@ export const loginCommand = new Command("login")
       // --- Verify node is reachable ---
       const probe = ora(`Connecting to ${chalk.bold(nodeUrl)}`).start();
       try {
-        const health = await apiFetch<{ status: string }>("/health", {
-          auth: false,
-          headers: { "x-node-url": nodeUrl } as Record<string, string>,
-        });
-        // Manually override because requireAuth isn't set yet
+        // Deliberately a bare fetch, not apiFetch: apiFetch resolves its base
+        // URL from the *stored* config, which on a first login is empty. That
+        // made it request the relative path "/api/health", which Node's fetch
+        // refuses to parse — so `nh login` crashed before it could ever store
+        // the node URL it was just given. The node is not in the config yet;
+        // it is only known from the flag or the prompt.
         const healthRes = await fetch(`${nodeUrl}/api/health`);
         if (!healthRes.ok) throw new Error(`Node returned ${healthRes.status}`);
         probe.succeed(chalk.green("Node reachable"));
@@ -76,7 +76,11 @@ export const loginCommand = new Command("login")
 
         token = await rl.question(chalk.cyan("Paste your API token: "));
         token = token.trim();
-        if (!token.startsWith("nh_")) {
+        // The platform mints `fh_` tokens (see api_tokens.token_prefix). This
+        // check demanded `nh_` while its own error message said `fh_`, so a
+        // user pasting a genuine token was rejected and told it should look
+        // exactly like the thing they had pasted.
+        if (!token.startsWith("fh_")) {
           console.error(chalk.red("Invalid token format (should start with fh_)"));
           process.exit(1);
         }

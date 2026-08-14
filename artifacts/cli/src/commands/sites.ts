@@ -62,7 +62,11 @@ sitesCommand
       console.log(chalk.dim("  " + "─".repeat(100)));
 
       for (const s of result.data) {
-        const vis = s.visibility !== "public" ? chalk.dim(` [${s.visibility}]`) : "";
+        // The list endpoint does not return `visibility`, so the old
+        // `!== "public"` test was true for every row and printed the literal
+        // text "[undefined]" beside each site. Absent means nothing to say.
+        const vis =
+          s.visibility && s.visibility !== "public" ? chalk.dim(` [${s.visibility}]`) : "";
         console.log(
           `  ${String(s.id).padEnd(6)} ` +
             `${s.name.slice(0, 27).padEnd(28)} ` +

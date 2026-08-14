@@ -119,7 +119,7 @@ export const rollbackCommand = new Command("rollback")
     }
 
     // Confirm
-    const { createInterface } = await import("readline/promises");
+    const { createInterface } = await import("node:readline/promises");
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     const answer = await rl.question(chalk.cyan("Confirm rollback? [y/N] "));
     rl.close();

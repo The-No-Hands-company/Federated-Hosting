@@ -5,6 +5,15 @@ packages:
   - lib/integrations/*
   - scripts
 
+allowBuilds:
+  # esbuild's install script fetches the platform-native binary; without it the
+  # package is inert. This was left as the literal placeholder text pnpm writes
+  # when it wants an answer, which made pnpm refuse to run ANY script in the
+  # workspace — `pnpm run build` and `pnpm run typecheck` both failed before
+  # reaching the command, which is why the CLI had no dist/ and could not be
+  # built at all.
+  esbuild: true
+
 autoInstallPeers: false
 
 catalog:
