@@ -33,6 +33,19 @@ const app: Express = express();
 app.set("trust proxy", 1);
 
 // ── Security headers ──────────────────────────────────────────────────────────
+
+// Origins permitted to frame this app — the ecosystem shell, which mounts it at
+// app.<domain>/hosting.
+//
+// `frameguard: false` below only drops the legacy X-Frame-Options header. It
+// does nothing about CSP, and helmet injects `frame-ancestors 'self'` into its
+// default directives unless the directive is set explicitly. So framing stayed
+// blocked by CSP while the comment claimed embedding was allowed, and the shell
+// showed "Firefox Can't Open This Page" for /hosting.
+const shellOrigins = process.env.SHELL_ORIGINS
+  ? process.env.SHELL_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : [`https://app.${process.env.PUBLIC_DOMAIN ?? "tnhc.dev"}`];
+
 app.use(
   helmet({
     contentSecurityPolicy: isProd
@@ -47,10 +60,13 @@ app.use(
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
+            // Named explicitly: anything not listed here falls back to helmet's
+            // default, which is 'self' alone.
+            frameAncestors: ["'self'", ...shellOrigins],
           },
         }
       : false,
-    // Allow Nexus Cloud portal to embed this service in an iframe
+    // Allow the ecosystem shell to embed this service in an iframe
     frameguard: false,
     crossOriginEmbedderPolicy: false,
     hsts: isProd ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
