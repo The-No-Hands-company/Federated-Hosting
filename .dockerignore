@@ -8,8 +8,15 @@ target/
 crates/*/target/
 
 # Installed by pnpm inside the image from the lockfile.
+#
+# `**/` and not just `*/`: the workspace packages live at artifacts/<name>/ and
+# lib/<name>/, so their node_modules are two levels down and `*/node_modules/`
+# never matched them. They were copied into the image by `COPY . .`, and pnpm
+# then found a modules directory built by a different install on a different
+# machine, decided it had to be purged, and aborted because a docker build has
+# no TTY to ask.
 node_modules/
-*/node_modules/
+**/node_modules/
 **/node_modules/
 
 # History is never read by a build.

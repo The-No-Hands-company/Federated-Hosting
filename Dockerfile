@@ -4,12 +4,33 @@ FROM node:24-alpine AS deps
 WORKDIR /app
 
 # Install pnpm
-# Pinned, not @latest. pnpm-lock.yaml is lockfileVersion 9 and the workspace
-# still declares its overrides under "pnpm" in package.json, which pnpm 10 no
-# longer reads — so @latest silently dropped them and every build failed
-# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH against its own committed lockfile. An
-# unpinned package manager also means the image changes meaning over time.
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+# Pinned, not @latest: an unpinned package manager means the image changes
+# meaning over time.
+#
+# This pin was 9.15.9, and that was right when it was written — the overrides
+# lived under "pnpm" in package.json, which pnpm 10 stopped reading, so @latest
+# silently dropped them and every build failed ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
+# against its own lockfile.
+#
+# What changed: the overrides have since moved to pnpm-workspace.yaml, where
+# pnpm 10+ expects them, and the lockfile was regenerated from there by a newer
+# pnpm on the host. That inverted the problem. pnpm 9 does not read overrides
+# from pnpm-workspace.yaml at all — nor onlyBuiltDependencies, minimumReleaseAge
+# or allowBuilds, all of which this workspace now uses — so it saw a lockfile
+# declaring overrides nothing explained and refused, with the same error the old
+# pin existed to prevent. The image had been unbuildable ever since.
+#
+# So: forward, not back. Kept in step with the packageManager field in
+# package.json, which is where corepack looks and is what stops these two
+# drifting apart again.
+RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+
+# pnpm 10+ re-syncs node_modules before running a workspace script, and asks
+# before purging a modules directory it did not create. A docker build has no
+# TTY to ask, so it aborts: ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY. pnpm's
+# own message names the fix — this is a CI environment, and saying so is more
+# honest than disabling the safety check.
+ENV CI=true
 
 # Copy workspace manifests first for layer caching
 COPY pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
@@ -39,15 +60,30 @@ RUN pnpm --filter @workspace/api-zod     run build 2>/dev/null || true
 # Build API server
 RUN pnpm --filter @workspace/api-server  run build
 
+
+# Build frontend
+RUN pnpm --filter @workspace/nexus-hosting run build
+
+# Ordered after every build, not before. `deploy --prod` resolves a
+# production-only tree, and running it first left the workspace in a state
+# pnpm 10+ re-syncs before the next script — which dropped the dev
+# dependencies the frontend build needs and failed with `vite: not found`.
+# Producing the runtime tree last is the natural order regardless: build
+# everything, then take what production needs.
 # Production node_modules for the runner. The bundle is not self-contained:
 # build.ts bundles only a 7-package allowlist and marks the other 33 dependencies
 # external, so the runtime needs them on disk. Bundling @aws-sdk and the Express
 # middleware instead would be far more fragile. `pnpm deploy` resolves a
 # workspace package into a standalone tree with prod dependencies only.
-RUN pnpm --filter @workspace/api-server deploy --prod /app/prod-deps
-
-# Build frontend
-RUN pnpm --filter @workspace/nexus-hosting run build
+# --legacy: from pnpm 10, `deploy` refuses a workspace that is not "injected"
+# (ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE) and wants inject-workspace-packages=true.
+# Setting that would change how every workspace dependency is linked — copied
+# rather than symlinked — for local development as well as this image, which is
+# a much larger change than restoring a build. --legacy runs the previous
+# implementation, which is what this Dockerfile was written against and what the
+# running image was built with. Moving to injected workspaces is worth doing
+# deliberately, on its own, with the whole workspace tested.
+RUN pnpm --filter @workspace/api-server deploy --legacy --prod /app/prod-deps
 
 # ─── Stage 3: production image ────────────────────────────────────────────────
 FROM node:24-alpine AS runner
