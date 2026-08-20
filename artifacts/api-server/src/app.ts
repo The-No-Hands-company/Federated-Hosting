@@ -1,4 +1,6 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import { existsSync } from "fs";
+import path from "path";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -189,7 +191,11 @@ app.use(tlsRouter);
 app.use("/api", router);
 
 // ── Root status page (shown in Nexus Cloud portal iframe) ─────────────────────
-app.get("/", (_req: Request, res: Response) => {
+// The operator's status page. It used to answer "/", which meant the front
+// door of a hosting product was a page of API links — and the actual dashboard,
+// built and copied into the image as ./public, was never served at all. Every
+// one of its routes (/my-sites, /deploy/:id, /sites) answered with a JSON 404.
+app.get("/status", (_req: Request, res: Response) => {
   const uptime = process.uptime();
   const h = Math.floor(uptime / 3600);
   const m = Math.floor((uptime % 3600) / 60);
@@ -238,6 +244,70 @@ app.get("/", (_req: Request, res: Response) => {
 </body>
 </html>`);
 });
+
+// ── Dashboard SPA ─────────────────────────────────────────────────────────────
+//
+// The built client. In the image it is ./public (see the Dockerfile's COPY of
+// federated-hosting/dist); running from a checkout it sits in the workspace.
+// Overridable so a node can serve a different build without a rebuild.
+// Resolved by looking for index.html rather than assuming a layout. The client's
+// vite config emits into dist/public, so the Dockerfile's
+// `COPY .../federated-hosting/dist ./public` lands it at ./public/public — a
+// nesting that is easy to miss and silently serves nothing. Candidates are
+// ordered most-specific first; an explicit SPA_DIR always wins.
+const SPA_DIR = [
+  process.env["SPA_DIR"],
+  path.resolve(process.cwd(), "public/public"),
+  path.resolve(process.cwd(), "public"),
+  path.resolve(process.cwd(), "../federated-hosting/dist/public"),
+  path.resolve(process.cwd(), "../federated-hosting/dist"),
+].find((dir): dir is string => !!dir && existsSync(path.join(dir, "index.html")))
+  ?? path.resolve(process.cwd(), "public");
+
+if (existsSync(path.join(SPA_DIR, "index.html"))) {
+  // Hashed assets are immutable and safe to cache hard; index.html must not be,
+  // or a browser keeps asking for a bundle that no longer exists after a deploy.
+  app.use(
+    express.static(SPA_DIR, {
+      index: false,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith("index.html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    }),
+  );
+
+  // Client-side routes resolve to index.html so a deep link or a refresh works.
+  //
+  // Deliberately narrow. Anything under /api, /metrics or /.well-known that got
+  // this far is a genuine 404 and must say so — answering HTML there turns a
+  // mistyped API call into a caller parsing "<!doctype html>" as JSON. Same for
+  // non-GET, and for requests that did not ask for HTML.
+  app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
+    if (
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/metrics") ||
+      req.path.startsWith("/.well-known") ||
+      !req.accepts("html")
+    ) {
+      return next();
+    }
+    // Explicit: sendFile does not pass through the static middleware above, so
+    // it would otherwise inherit a plain max-age and could be served stale —
+    // an entry point pointing at a bundle hash that no longer exists.
+    res.setHeader("Cache-Control", "no-cache");
+    return res.sendFile(path.join(SPA_DIR, "index.html"));
+  });
+} else {
+  // Say so rather than silently serving 404s for every dashboard route.
+  logger.warn(
+    { spaDir: SPA_DIR },
+    "Dashboard build not found — the hosting UI will not be served. Build artifacts/federated-hosting, or set SPA_DIR.",
+  );
+}
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use(notFoundHandler);
