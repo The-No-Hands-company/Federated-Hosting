@@ -42,7 +42,14 @@ router.get("/nodes", asyncHandler(async (req, res) => {
     .limit(limit)
     .offset(offset);
 
-  const safeNodes = nodes.map(({ privateKey: _pk, ...node }) => node);
+  // operatorEmail goes with privateKey. GET /nodes is unauthenticated — it is
+  // the federation directory — so every listing was handing out the operator's
+  // email address to anyone who asked. Discovery needs the domain and the
+  // public key, never a person's contact details. publicKey stays: signed
+  // handshakes are the point of it.
+  const safeNodes = nodes.map(
+    ({ privateKey: _pk, operatorEmail: _oe, ...node }) => node,
+  );
   res.json(buildPaginatedResponse(serializeDates(safeNodes), Number(total), { limit, offset, page }));
 }));
 
@@ -76,7 +83,15 @@ router.get("/nodes/:id", asyncHandler(async (req, res) => {
   if (!node) throw AppError.notFound(`Node ${params.data.id} not found`);
 
   const { privateKey: _pk, ...safeNode } = node;
-  res.json(GetNodeResponse.parse(serializeDates(safeNode)));
+  // Validated against the schema, then the email is dropped before it goes
+  // out. The generated schema still marks operatorEmail required — openapi.yaml
+  // no longer does, but orval cannot regenerate right now (see the note in
+  // lib/api-spec). Parsing first keeps the contract check honest; stripping
+  // after keeps the address unpublished.
+  const { operatorEmail: _oe, ...publicNode } = GetNodeResponse.parse(
+    serializeDates(safeNode),
+  );
+  res.json(publicNode);
 }));
 
 router.patch("/nodes/:id", writeLimiter, asyncHandler(async (req, res) => {

@@ -1,3 +1,21 @@
+# NOTE: `pnpm codegen` (orval) does not currently run.
+#
+# Two separate problems. The first is fixed: this file was not valid YAML — a
+# flow mapping under /admin/sites/{id}/logs was missing a closing brace, so
+# every parse failed and nothing downstream could be regenerated. The second is
+# not: orval still exits with "Failed to resolve input" against a spec that now
+# parses cleanly, which points at the orval/config version rather than the spec.
+#
+# Consequence while that stands: lib/api-zod and lib/api-client-react are STALE.
+# They cannot be regenerated from this file, and orval *cleans its output
+# directory before it fails*, so running codegen deletes them. If you try it and
+# it fails, `git checkout -- lib/api-zod lib/api-client-react` to get them back.
+#
+# Where that matters today: the Node response schema below no longer carries
+# operatorEmail, but the generated zod schema still requires it. The server
+# validates against the generated schema and strips the field afterwards — see
+# artifacts/api-server/src/routes/nodes.ts.
+
 openapi: 3.1.0
 info:
   title: Nexus Hosting API
@@ -1486,7 +1504,13 @@ components:
 
     Node:
       type: object
-      required: [id, name, domain, status, region, operatorName, operatorEmail, storageCapacityGb, bandwidthCapacityGb, joinedAt]
+      # operatorEmail is not part of the public Node response. GET /nodes and
+      # GET /nodes/:id are unauthenticated — this is the federation directory —
+      # and a directory does not need a person's email address to let peers
+      # discover each other. The domain identifies the node and the public key
+      # authenticates it. CreateNodeBody still accepts the address; the server
+      # keeps it, it just is not published.
+      required: [id, name, domain, status, region, operatorName, storageCapacityGb, bandwidthCapacityGb, joinedAt]
       properties:
         id:
           type: integer
@@ -1502,8 +1526,6 @@ components:
         region:
           type: string
         operatorName:
-          type: string
-        operatorEmail:
           type: string
         storageCapacityGb:
           type: number
@@ -3479,7 +3501,7 @@ components:
           description: Log lines array
           content:
             application/json:
-              schema: {type: object, properties: {lines: {type: array, items: {type: string}}, count: {type: integer}}
+              schema: {type: object, properties: {lines: {type: array, items: {type: string}}, count: {type: integer}}}
 
   /admin/processes:
     get:

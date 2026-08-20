@@ -27,7 +27,13 @@ const SITE_SELECT = {
   image: sitesTable.image,
   tag: sitesTable.tag,
   ownerName: sitesTable.ownerName,
-  ownerEmail: sitesTable.ownerEmail,
+  // ownerEmail is deliberately absent. GET /sites and GET /sites/:id are
+  // unauthenticated — the public site directory — and this select feeds both.
+  // Every site listed was publishing its owner's email address to anyone who
+  // asked, which is personal data given away for nothing and the exact
+  // behaviour this project exists to refuse. Nothing needed it: the client
+  // collects the address on the create form and the admin view reads it from
+  // the admin route, which has its own select and its own authorisation.
   ownerId: sitesTable.ownerId,
   primaryNodeId: sitesTable.primaryNodeId,
   primaryNodeDomain: nodesTable.domain,
