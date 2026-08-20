@@ -198,7 +198,7 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading, error: statsError } = useGetFederationStats();
   const { data: nodes, isLoading: nodesLoading } = useNodes();
   const { data: hourly, isLoading: hourlyLoading } = useStatsHourly();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, user } = useAuth();
   const { shouldShow } = useOnboarding();
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const { t } = useTranslation();
@@ -230,9 +230,12 @@ export default function Dashboard() {
       )}
       {/* Sibling, not nested. This was placed inside the block above, which is
           a syntax error — two elements in one expression with no fragment, and a
-          {...} container directly inside another — and unreachable regardless,
-          since it needs `user` while the outer condition requires
-          !isAuthenticated. */}
+          {...} container directly inside another.
+          Moving it out left `user` referenced in a component that never
+          destructured it: PersonalDashboard takes `user` from useAuth, this one
+          did not. That threw ReferenceError on every render, and since the
+          error boundary caught it the whole dashboard read "Something went
+          wrong" with nothing naming the cause. */}
       {user && !(user as any).emailVerified && (user as any).email && (
         <EmailVerificationBanner email={(user as any).email} />
       )}
