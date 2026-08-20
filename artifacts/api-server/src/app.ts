@@ -291,6 +291,14 @@ if (existsSync(path.join(SPA_DIR, "index.html"))) {
       req.path.startsWith("/api") ||
       req.path.startsWith("/metrics") ||
       req.path.startsWith("/.well-known") ||
+      // A path with an extension is asking for a file, not a route. Without
+      // this, a missing .js/.json/.css answers 200 with index.html: `fetch`
+      // and dynamic `import()` both send `Accept: */*`, which counts as
+      // accepting HTML, so the check below waves them through. A dynamic
+      // import that receives HTML throws, and since every page here is a lazy
+      // chunk, one missing asset breaks all of them with an error that names
+      // nothing useful. A 404 is the honest answer and says where to look.
+      path.extname(req.path) !== "" ||
       !req.accepts("html")
     ) {
       return next();
