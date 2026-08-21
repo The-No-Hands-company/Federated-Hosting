@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import nodesRouter from "./nodes";
 import nodeEnrollmentRouter from "./nodeEnrollment";
+import notificationsRouter from "./notifications";
 import sitesRouter from "./sites";
 import statsRouter from "./stats";
 import authRouter from "./auth";
@@ -49,6 +50,7 @@ router.use(capacityRouter);
 // id="enroll" and fail as a malformed node lookup rather than enrolling
 // anything.
 router.use(nodeEnrollmentRouter);
+router.use(notificationsRouter);
 router.use(nodesRouter);
 router.use(sitesRouter);
 router.use(statsRouter);

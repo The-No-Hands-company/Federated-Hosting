@@ -1,6 +1,7 @@
 export * from "./auth";
 export * from "./nodes";
 export * from "./nodeEnrollment";
+export * from "./notifications";
 export * from "./sites";
 export * from "./siteHealth";
 export * from "./deployments";

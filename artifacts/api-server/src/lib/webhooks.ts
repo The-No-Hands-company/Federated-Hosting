@@ -21,6 +21,7 @@ import { db, nodesTable, webhooksTable, webhookDeliveriesTable } from "@workspac
 import { eq, and, lte, lt, isNull } from "drizzle-orm";
 import { signMessage } from "./federation";
 import logger from "./logger";
+import { notify } from "./notify";
 
 export type WebhookEventType =
   | "node_offline" | "node_online" | "deploy" | "deploy_failed"
@@ -85,6 +86,19 @@ async function attemptDelivery(
  * logging each attempt and scheduling retries on failure.
  */
 export async function deliverWebhook(payload: WebhookPayload): Promise<void> {
+  // Record it for the people who should know, before any network work.
+  //
+  // Every emitter in this service already comes through here, so hanging
+  // notifications off this point means there is one event path rather than two
+  // to keep in step — and any future event that learns to call deliverWebhook
+  // gets notifications without touching this file again.
+  //
+  // Deliberately before the HTTP delivery below and deliberately awaited:
+  // an outbound webhook can hang for its full timeout, and the person who
+  // needs to know their site is down should not wait on somebody else's
+  // endpoint. notify() never throws, so this cannot break delivery.
+  await notify(payload);
+
   const [localNode] = await db.select().from(nodesTable).where(eq(nodesTable.isLocalNode, 1));
   const signature = localNode?.privateKey
     ? signMessage(localNode.privateKey, JSON.stringify(payload))
