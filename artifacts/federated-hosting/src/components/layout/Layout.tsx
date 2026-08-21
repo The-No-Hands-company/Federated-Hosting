@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Activity, LayoutDashboard, Server, Globe, Menu, Upload, LogOut, LogIn, Radio, BookMarked, Key, Shield, Wifi, FileCode, BarChart2, User } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { isEmbedded } from "@/embed";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, isAuthenticated, login, logout } = useAuth();
+
+  // Inside the shell, identity belongs to the shell. It has already signed the
+  // user in and shows who they are, so Hosting's own sign-in button and user
+  // menu are a second, contradictory set of controls on the same screen —
+  // which is what app.tnhc.dev/hosting showed until now.
+  //
+  // Page navigation is deliberately NOT hidden: the shell's sidebar lists
+  // apps, not Hosting's own pages, so removing this nav would strand someone
+  // inside the frame with no way to reach my-sites or deploy.
+  const embedded = isEmbedded();
   const { data: health } = useHealthStatus();
 
   const NavLinks = () => (
@@ -94,7 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <span className="font-display font-bold text-lg tracking-tight">NexusHosting</span>
         </div>
         <div className="flex items-center gap-2">
-          <UserMenu user={user} isAuthenticated={isAuthenticated} login={login} logout={logout} />
+          {!embedded && <UserMenu user={user} isAuthenticated={isAuthenticated} login={login} logout={logout} />}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-foreground">
@@ -155,7 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
-          ) : (
+          ) : embedded ? null : (
             <Button variant="outline" className="w-full border-primary/20 text-primary hover:bg-primary/10" onClick={login}>
               <LogIn className="w-4 h-4 mr-2" />
               Sign In

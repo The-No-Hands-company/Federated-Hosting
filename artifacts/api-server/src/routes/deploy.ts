@@ -134,7 +134,27 @@ router.post("/sites/:id/deploy", deployLimiter, requireScope("deploy"), asyncHan
       .where(eq(usersTable.id, req.user.id))
       .limit(1);
 
-    if (userRecord && !userRecord.isAdmin && !userRecord.emailVerified) {
+    // Only enforce this when verification is actually achievable.
+    //
+    // The gate blocks unverified accounts after 30 days and tells the user to
+    // "check your inbox for a verification link". On this node that inbox will
+    // never receive one: outbound port 25 is blocked by the ISP, there is no
+    // IPv6 fallback, and tnhc.dev publishes no MX, SPF, DKIM or DMARC. Mail
+    // cannot leave this machine by any route we control.
+    //
+    // So this was not anti-abuse, it was a thirty-day timer after which every
+    // non-admin account became permanently unable to deploy, with the only
+    // stated remedy impossible to perform. The one real account was still
+    // inside that window when this was found.
+    //
+    // Abuse is already controlled upstream: access is invite-only and an
+    // operator approves each request before an account exists.
+    //
+    // Tied to SMTP_HOST rather than deleted, so the check returns by itself
+    // the day outbound mail becomes possible again.
+    const canSendMail = Boolean(process.env.SMTP_HOST);
+
+    if (canSendMail && userRecord && !userRecord.isAdmin && !userRecord.emailVerified) {
       const accountAgeMs = Date.now() - new Date(userRecord.createdAt).getTime();
       const accountAgeDays = accountAgeMs / (1000 * 60 * 60 * 24);
 
