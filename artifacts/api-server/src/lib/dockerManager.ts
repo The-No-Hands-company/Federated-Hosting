@@ -128,7 +128,11 @@ function docker(args: string[]): Promise<{ code: number; stdout: string; stderr:
     });
 
     dockerProc.on("close", (code) => {
-      resolve({ code, stdout, stderr });
+      // code is null when the process was terminated by a signal rather than
+      // exiting. Callers compare against 0, and null would silently read as a
+      // non-zero failure only by accident; -1 says "did not exit normally"
+      // explicitly and cannot be confused with a real exit status.
+      resolve({ code: code ?? -1, stdout, stderr });
     });
   });
 }

@@ -15,7 +15,11 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, nodesTable, federationEventsTable } from "@workspace/db";
 import { eq, and, ne, desc } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
-import { signMessage, verifyMessage, generateKeyPair } from "../lib/federation";
+// verifyMessage and generateKeyPair were imported here and never used;
+// verifyMessage does not exist in federation.ts at all (the real one is
+// verifySignature). An import of a missing binding throws at module load, so
+// this file could not have been loaded as written.
+import { signMessage } from "../lib/federation";
 import logger from "../lib/logger";
 import { z } from "zod/v4";
 import { notifyNewPeer } from "../lib/webhooks";
@@ -101,9 +105,21 @@ router.post("/federation/gossip/push", asyncHandler(async (req: Request, res: Re
       await db.insert(nodesTable).values({
         name: peer.name ?? peer.domain,
         domain: peer.domain,
-        publicKey: peer.publicKey ?? "",
-        privateKey: "",
+        publicKey: peer.publicKey ?? null,
+        // No privateKey. This wrote an empty string, which is both a lie —
+        // we hold no key for a peer we merely discovered — and the same
+        // pattern that had this service storing node private keys at all.
+        // A discovered peer's identity is its public key or nothing.
         region: peer.region ?? "unknown",
+        // These four are notNull and were omitted entirely, so every one of
+        // these inserts would have failed at the database: gossip discovery
+        // has never actually registered a peer. A discovered peer is not
+        // self-reporting capacity yet, so it records honest unknowns rather
+        // than invented numbers.
+        operatorName: "unknown",
+        operatorEmail: "unknown@" + peer.domain,
+        storageCapacityGb: 0,
+        bandwidthCapacityGb: 0,
         status: "pending",
         isLocalNode: 0,
       }).onConflictDoNothing();
@@ -175,9 +191,14 @@ router.post("/federation/gossip/discover", writeLimiter, asyncHandler(async (req
           await db.insert(nodesTable).values({
             name: peer.name ?? peer.domain,
             domain: peer.domain,
-            publicKey: peer.publicKey ?? "",
-            privateKey: "",
+            publicKey: peer.publicKey ?? null,
+            // Same as the discovery path above: no fabricated private key, and
+            // the notNull columns this omitted made every insert fail.
             region: peer.region ?? "unknown",
+            operatorName: "unknown",
+            operatorEmail: "unknown@" + peer.domain,
+            storageCapacityGb: 0,
+            bandwidthCapacityGb: 0,
             status: "pending",
             isLocalNode: 0,
           }).onConflictDoNothing();

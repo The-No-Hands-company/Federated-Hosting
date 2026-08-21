@@ -154,7 +154,7 @@ router.delete("/sites/:id/invitations/:inviteId", writeLimiter, asyncHandler(asy
 // ── Get invitation details (unauthenticated) ──────────────────────────────────
 
 router.get("/invitations/:token", asyncHandler(async (req: Request, res: Response) => {
-  const { token } = req.params;
+  const { token } = req.params as { token: string };
 
   const [inv] = await db
     .select({
@@ -187,7 +187,7 @@ router.get("/invitations/:token", asyncHandler(async (req: Request, res: Respons
 router.post("/invitations/:token/accept", writeLimiter, asyncHandler(async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) throw AppError.unauthorized("Sign in to accept this invitation");
 
-  const { token } = req.params;
+  const { token } = req.params as { token: string };
 
   const [inv] = await db
     .select()

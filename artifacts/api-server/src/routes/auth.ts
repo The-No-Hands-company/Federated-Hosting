@@ -16,6 +16,7 @@ import {
   createSession,
   deleteSession,
   SESSION_COOKIE,
+  setSessionCookie,
   SESSION_TTL,
   ISSUER_URL,
   type SessionData,
@@ -33,15 +34,8 @@ function getOrigin(req: Request): string {
   return `${proto}://${host}`;
 }
 
-function setSessionCookie(res: Response, sid: string) {
-  res.cookie(SESSION_COOKIE, sid, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_TTL,
-  });
-}
+// setSessionCookie now lives in lib/auth so twoFactor.ts can use the same
+// flags. It is re-exported through the import list below.
 
 function setOidcCookie(res: Response, name: string, value: string) {
   res.cookie(name, value, {

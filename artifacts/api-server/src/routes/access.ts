@@ -11,7 +11,7 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 const unlockLimiter = rateLimit({
   windowMs: 15 * 60_000,
   max: process.env.NODE_ENV === "production" ? 5 : 1000,
-  keyGenerator: (req) => `${ipKeyGenerator(req.ip)}:${req.params.id}`,
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "0.0.0.0")}:${req.params.id}`,
   handler: (_req, res) =>
     res.status(429).json({ error: "Too many unlock attempts. Try again in 15 minutes.", code: "UNLOCK_RATE_LIMITED" }),
   standardHeaders: "draft-7",
@@ -96,7 +96,10 @@ router.post("/sites/:id/members", writeLimiter, asyncHandler(async (req: Request
       siteId,
       userId: parsed.data.userId,
       role: parsed.data.role,
-      invitedByUserId: req.user.id,
+      // Non-null is guaranteed: requireSiteOwner above throws
+      // AppError.unauthorized() when req.isAuthenticated() is false, so
+      // reaching this line means a user is attached.
+      invitedByUserId: req.user!.id,
       acceptedAt: new Date(),
     })
     .returning();

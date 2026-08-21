@@ -4,6 +4,9 @@ import { getRedisClient } from "../lib/redis";
 import logger from "../lib/logger";
 import { GLOBAL_RATE_LIMIT, UPLOAD_RATE_LIMIT } from "../lib/resourceConfig";
 
+/** Shared bucket for requests whose IP Express could not determine. */
+const UNKNOWN_IP = "0.0.0.0";
+
 const isProd = process.env.NODE_ENV === "production";
 
 // Build optional Redis store for rate limiting.
@@ -131,7 +134,12 @@ export const userWriteLimiter = rateLimit({
   store,
   keyGenerator: (req) => {
     const user = (req as any).user as { id?: string } | undefined;
-    return user?.id ?? ipKeyGenerator(req.ip);
+    // req.ip is string | undefined — undefined when Express cannot determine
+    // it, which a client behind a misconfigured proxy can cause. Every such
+    // request shares the UNKNOWN_IP bucket deliberately: giving each one its
+    // own key would hand an attacker a fresh quota per request simply by
+    // arriving without a resolvable address.
+    return user?.id ?? ipKeyGenerator(req.ip ?? UNKNOWN_IP);
   },
   handler: makeHandler("Too many requests from this account. Please slow down.", "USER_RATE_LIMITED"),
   skip: (req) => !(req as any).user, // skip if not authenticated (IP limiter handles it)
@@ -146,7 +154,7 @@ export const deployLimiter = rateLimit({
   store,
   keyGenerator: (req) => {
     const user = (req as any).user as { id?: string } | undefined;
-    return `deploy:${user?.id ?? ipKeyGenerator(req.ip)}`;
+    return `deploy:${user?.id ?? ipKeyGenerator(req.ip ?? UNKNOWN_IP)}`;
   },
   handler: makeHandler("Deploy limit reached (20 per hour). Please wait before deploying again.", "DEPLOY_RATE_LIMITED"),
 });

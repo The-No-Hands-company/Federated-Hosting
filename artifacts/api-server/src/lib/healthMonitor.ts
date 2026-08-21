@@ -1,7 +1,13 @@
 import { db, nodesTable, federationEventsTable } from "@workspace/db";
 import { eq, ne } from "drizzle-orm";
 import logger from "./logger";
-import { webhookNodeOffline, webhookNodeOnline } from "./webhooks";
+// deliverWebhook is the real API. webhookNodeOffline/webhookNodeOnline were
+// imported here and never existed in webhooks.ts — this module would have
+// thrown on import had anything imported it, and nothing does. "node_online"
+// and "node_offline" are already valid WebhookEventType values, so the events
+// this file wanted to send were always supported; only these two wrappers were
+// imaginary.
+import { deliverWebhook } from "./webhooks";
 
 const HEALTH_CHECK_INTERVAL_MS = 2 * 60 * 1000; // every 2 minutes
 const REQUEST_TIMEOUT_MS = 8_000;
@@ -39,7 +45,7 @@ async function checkNode(
 
     if (currentStatus !== "active") {
       logger.info({ nodeId, domain }, "[health] Node back online");
-      webhookNodeOnline(domain);
+      void deliverWebhook({ event: "node_online", nodeDomain: domain, timestamp: new Date().toISOString() });
     }
   } catch (err: any) {
     const failures = (failureCount.get(domain) ?? 0) + 1;
@@ -62,7 +68,7 @@ async function checkNode(
       });
 
       logger.info({ nodeId, domain, error: err.message, failures }, "[health] Node went offline after consecutive failures");
-      webhookNodeOffline(domain);
+      void deliverWebhook({ event: "node_offline", nodeDomain: domain, timestamp: new Date().toISOString() });
       failureCount.delete(domain);
     } else if (failures < CONSECUTIVE_FAILURES_THRESHOLD) {
       logger.debug({ nodeId, domain, failures }, "[health] Node unreachable — waiting for threshold");

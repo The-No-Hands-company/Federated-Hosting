@@ -1,10 +1,13 @@
-import { Router, Request, Response } from "express";
+import { Router, type IRouter, Request, Response } from "express";
 import { asyncHandler } from "../lib/errors.js";
 import { AppError } from "../lib/errors.js";
 import { sendVerificationEmail, verifyEmailToken } from "../lib/emailVerification.js";
 import { rateLimiter } from "../middleware/rateLimiter.js";
 
-const router = Router();
+// Annotated because the inferred Express router type cannot be named
+// without referencing a private import — the same idiom every other route
+// file in this package uses.
+const router: IRouter = Router();
 
 const PUBLIC_DOMAIN = process.env.PUBLIC_DOMAIN ?? "localhost:8080";
 
@@ -31,7 +34,12 @@ router.post(
     const user = req.user as { id: string; email?: string; emailVerified?: number };
 
     if (user.emailVerified) {
-      return res.json({ ok: true, message: "Email already verified." });
+      // Express handlers return void. One arm returned res.json() and another
+      // did not, so the handler's inferred return type was
+      // `Response | undefined` — which asyncHandler does not accept, and which
+      // TS flags as "not all code paths return a value".
+      res.json({ ok: true, message: "Email already verified." });
+      return;
     }
     if (!user.email) throw AppError.badRequest("No email address on your account.");
 

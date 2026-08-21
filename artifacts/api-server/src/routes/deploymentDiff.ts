@@ -46,8 +46,17 @@ router.get("/sites/:id/deployments/:depId/diff", asyncHandler(async (req: Reques
     baseDepId = prev?.id ?? 0;
   }
 
-  // Get file lists for both deployments
-  const [targetFiles, baseFiles] = await Promise.all([
+  // Get file lists for both deployments.
+  //
+  // The row type is named and the tuple annotated because the second element
+  // is a ternary whose empty branch is Promise.resolve([]) — inferred as
+  // never[]. Without this, Promise.all gives both destructured arrays the
+  // union `DiffFile[] | never[]`, and pushing into a union of array types
+  // requires their intersection: never. Six of this package's type errors came
+  // from that, and they made the diff body invisible to the compiler.
+  type DiffFile = { filePath: string; contentHash: string | null; sizeBytes: number };
+
+  const [targetFiles, baseFiles]: [DiffFile[], DiffFile[]] = await Promise.all([
     db.select({ filePath: siteFilesTable.filePath, contentHash: siteFilesTable.contentHash, sizeBytes: siteFilesTable.sizeBytes })
       .from(siteFilesTable)
       .where(and(eq(siteFilesTable.siteId, siteId), eq(siteFilesTable.deploymentId, depId))),
@@ -55,16 +64,16 @@ router.get("/sites/:id/deployments/:depId/diff", asyncHandler(async (req: Reques
       ? db.select({ filePath: siteFilesTable.filePath, contentHash: siteFilesTable.contentHash, sizeBytes: siteFilesTable.sizeBytes })
           .from(siteFilesTable)
           .where(and(eq(siteFilesTable.siteId, siteId), eq(siteFilesTable.deploymentId, baseDepId)))
-      : Promise.resolve([]),
+      : Promise.resolve([] as DiffFile[]),
   ]);
 
   const targetMap = new Map(targetFiles.map(f => [f.filePath, f]));
   const baseMap   = new Map(baseFiles.map(f => [f.filePath, f]));
 
-  const added:     typeof targetFiles = [];
-  const changed:   typeof targetFiles = [];
-  const unchanged: typeof targetFiles = [];
-  const removed:   typeof baseFiles   = [];
+  const added:     DiffFile[] = [];
+  const changed:   DiffFile[] = [];
+  const unchanged: DiffFile[] = [];
+  const removed:   DiffFile[] = [];
 
   for (const [path, file] of targetMap) {
     const base = baseMap.get(path);

@@ -42,7 +42,7 @@ const router: IRouter = Router();
 const formSubmitLimiter = rateLimit({
   windowMs: 60_000,
   max: process.env.NODE_ENV === "production" ? 5 : 1000,
-  keyGenerator: (req) => ipKeyGenerator(req.ip),
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? "0.0.0.0"),
   handler: (_req, res) => res.status(429).json({ error: "Too many submissions. Please wait." }),
   standardHeaders: "draft-7",
   legacyHeaders: false,
@@ -52,7 +52,7 @@ const formSubmitLimiter = rateLimit({
 const formSiteLimiter = rateLimit({
   windowMs: 60 * 60_000,
   max: process.env.NODE_ENV === "production" ? 3 : 1000,
-  keyGenerator: (req) => `${ipKeyGenerator(req.ip)}:${req.params.domain ?? ""}:${req.params.formName ?? ""}`,
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "0.0.0.0")}:${req.params.domain ?? ""}:${req.params.formName ?? ""}`,
   handler: (_req, res) => res.status(429).json({ error: "Submission limit reached for this form. Please try again later." }),
   standardHeaders: "draft-7",
   legacyHeaders: false,
@@ -234,7 +234,7 @@ router.get("/sites/:id/forms/:formName/export", asyncHandler(async (req: Request
   if (!site) throw AppError.notFound("Site not found");
   if (site.ownerId !== req.user.id) throw AppError.forbidden();
 
-  const { formName } = req.params;
+  const { formName } = req.params as { formName: string };
   const submissions = await db.select().from(formSubmissionsTable)
     .where(and(eq(formSubmissionsTable.siteId, siteId), eq(formSubmissionsTable.formName, formName)))
     .orderBy(desc(formSubmissionsTable.createdAt));

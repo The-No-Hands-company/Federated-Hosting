@@ -20,7 +20,9 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 const serveLimiter = rateLimit({
   windowMs: 60_000,
   max: process.env.NODE_ENV === "production" ? 600 : 100_000,
-  keyGenerator: (req) => `${ipKeyGenerator(req.ip)}:${req.hostname}`,
+  // req.ip is string | undefined; requests without a resolvable address share
+  // one bucket rather than each getting a fresh quota.
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "0.0.0.0")}:${req.hostname}`,
   handler: (_req, res) => res.status(429).send("Too Many Requests"),
   standardHeaders: "draft-7",
   legacyHeaders: false,

@@ -122,8 +122,17 @@ async function runHealthChecks(): Promise<void> {
       const prev = healthResults.get(site.id);
       if (result.status === "down" && prev?.status !== "down") {
         // Notify site owner by email
-        import("./email").then(({ emailSiteDown }) => {
-          emailSiteDown?.({ siteId: site.id, domain: site.domain }).catch(() => {});
+        // emailSiteDown does not exist in lib/email — this module referenced
+        // it and could not compile. "site_down" is already a WebhookEventType,
+        // so the notification path it wanted was always supported; it was
+        // reaching for a function nobody wrote instead of the one that exists.
+        import("./webhooks").then(({ deliverWebhook }) => {
+          void deliverWebhook({
+            event: "site_down",
+            siteId: site.id,
+            siteDomain: site.domain,
+            timestamp: new Date().toISOString(),
+          }).catch(() => {});
         }).catch(() => {});
       }
     }).catch(() => {});

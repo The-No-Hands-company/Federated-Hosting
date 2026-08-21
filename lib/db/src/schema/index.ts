@@ -2,6 +2,7 @@ export * from "./auth";
 export * from "./nodes";
 export * from "./nodeEnrollment";
 export * from "./sites";
+export * from "./siteHealth";
 export * from "./deployments";
 export * from "./federation";
 export * from "./federationBlocks";

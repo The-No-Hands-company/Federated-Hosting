@@ -350,11 +350,24 @@ router.post("/federation/sync", asyncHandler(async (req, res) => {
     .from(nodesTable)
     .where(and(eq(nodesTable.status, "active"), eq(nodesTable.isLocalNode, 0)));
 
-  let manifestData: {
+  // Named, rather than inlined on the `let`. The assignment below used
+  // `as typeof manifestData`, and at that point the compiler has narrowed
+  // manifestData to `null` — so the cast was to null, and every property
+  // access afterwards resolved on `never`. The whole sync body went
+  // unchecked: sixteen of this package's type errors came from this one line.
+  type SiteManifest = {
     site: typeof sitesTable.$inferSelect;
     deployment: typeof siteDeploymentsTable.$inferSelect;
-    files: Array<{ filePath: string; contentType: string; sizeBytes: number; downloadUrl: string; contentHash?: string }>;
-  } | null = null;
+    files: Array<{
+      filePath: string;
+      contentType: string;
+      sizeBytes: number;
+      downloadUrl: string;
+      contentHash?: string;
+    }>;
+  };
+
+  let manifestData: SiteManifest | null = null;
 
   let originDomain: string | null = null;
 
@@ -366,7 +379,7 @@ router.post("/federation/sync", asyncHandler(async (req, res) => {
         { signal: AbortSignal.timeout(10_000) },
       );
       if (manifestRes.ok) {
-        manifestData = await manifestRes.json() as typeof manifestData;
+        manifestData = await manifestRes.json() as SiteManifest;
         originDomain = peer.domain;
         break;
       }

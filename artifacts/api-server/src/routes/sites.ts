@@ -96,10 +96,22 @@ router.post("/sites", writeLimiter, asyncHandler(async (req, res) => {
     );
   }
 
-  // Additional validation: if siteType is docker, image is required
-  if (parsed.data.siteType === "docker" && !parsed.data.image) {
-    throw AppError.badRequest("Docker image is required for docker site type", "DOCKER_IMAGE_REQUIRED");
-  }
+  // NOTE: there was a docker-specific validation here and it could never run.
+  //
+  // The database's site_type enum includes "docker" and "nlpl", but the API
+  // contract (CreateSiteBody, generated from lib/api-spec/openapi.yaml) allows
+  // only static | dynamic | blog | portfolio | other, and has no `image` field
+  // at all. So a request with siteType "docker" is rejected by schema
+  // validation long before reaching this line, and the check was dead code
+  // guarding a state the endpoint cannot produce.
+  //
+  // Docker sites can still be *deployed* — routes/dockerDeploy.ts reads
+  // siteType from the database row, which does support it — they just cannot
+  // be *created* through this endpoint. Closing that gap means adding "docker"
+  // and `image` to the OpenAPI spec and regenerating lib/api-zod, which is
+  // blocked on the orval codegen failure documented at the top of openapi.yaml.
+  // Deleting the check rather than leaving it is the honest option: it was not
+  // protecting anything.
 
   const [existing] = await db.select().from(sitesTable).where(eq(sitesTable.domain, parsed.data.domain));
   if (existing) throw AppError.conflict(`Domain '${parsed.data.domain}' is already registered`);
@@ -157,14 +169,11 @@ router.patch("/sites/:id", writeLimiter, requireScope("write"), asyncHandler(asy
     );
   }
 
-  // Additional validation: if siteType is docker, image is required (if provided)
-  if (parsed.data.siteType === "docker" && parsed.data.image === undefined) {
-    // If the update does not include image, we need to check the current value
-    const [currentSite] = await db.select({ image: sitesTable.image }).from(sitesTable).where(eq(sitesTable.id, params.data.id));
-    if (!currentSite || currentSite.image === null) {
-      throw AppError.badRequest("Docker image is required for docker site type", "DOCKER_IMAGE_REQUIRED");
-    }
-  }
+  // NOTE: a docker-image check stood here and was unreachable for the same
+  // reason as the one in the create route above — UpdateSiteBody's siteType
+  // union has no "docker" and the body has no `image` field, so the condition
+  // could never be true. Removed rather than disabled: dead code that looks
+  // like a guard is worse than no guard, because it reads as protection.
 
   const [updated] = await db
     .update(sitesTable)

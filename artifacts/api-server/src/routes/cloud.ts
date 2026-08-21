@@ -188,8 +188,11 @@ export function buildNexusCloudRegistrationResponse(input: NexusCloudRegistratio
   };
 }
 
-function json(data: unknown, status = 200): Response {
-  return Response.json(data, { status });
+// globalThis.Response, not Express's Response — both names are in scope here
+// and the annotation was resolving to the Express one, which this does not
+// return.
+function json(data: unknown, status = 200): globalThis.Response {
+  return globalThis.Response.json(data, { status });
 }
 
 router.get("/.well-known/nexus-cloud", asyncHandler(async (_req: Request, res: Response) => {

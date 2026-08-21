@@ -29,6 +29,37 @@ export interface SessionData {
   access_token: string;
   refresh_token?: string;
   expires_at?: number;
+
+  /**
+   * Set while a login is waiting on a second factor. A session carrying this
+   * has authenticated a password but must not be treated as fully signed in.
+   * routes/auth.ts writes it and routes/twoFactor.ts clears it on success;
+   * neither typechecked before, because SessionData did not admit the field.
+   */
+  twoFactorPending?: boolean;
+
+  /** The session id being upgraded, held across the 2FA challenge. */
+  pendingSid?: string;
+}
+
+/**
+ * Set the session cookie.
+ *
+ * Lives here rather than in a route because two routes need it and its flags
+ * are security-relevant: httpOnly keeps the session out of scripts, secure
+ * keeps it off plaintext, sameSite=lax blunts CSRF. routes/twoFactor.ts
+ * imported this from lib/auth and it was not here — it was a private function
+ * in routes/auth.ts — so the 2FA session upgrade could not have run. Defining
+ * it once means the two paths cannot drift into different flags.
+ */
+export function setSessionCookie(res: import("express").Response, sid: string): void {
+  res.cookie(SESSION_COOKIE, sid, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL,
+  });
 }
 
 let oidcConfig: client.Configuration | null = null;
@@ -150,8 +181,17 @@ export async function updateSession(sid: string, data: SessionData): Promise<voi
     .where(eq(sessionsTable.sid, sid));
 }
 
-export async function clearSession(res: Response, sid: string): Promise<void> {
-  await destroySession(sid);
+/**
+ * Destroy a session and clear its cookie.
+ *
+ * `sid` is nullable because every caller gets it from getSessionId, which
+ * returns string | null — a request with no session cookie has no id. Clearing
+ * must still remove the cookie in that case: a browser holding an unparseable
+ * or already-destroyed session cookie should end up without one, not keep it
+ * because the server could not find a matching record.
+ */
+export async function clearSession(res: Response, sid: string | null): Promise<void> {
+  if (sid) await destroySession(sid);
   res.clearCookie(SESSION_COOKIE);
 }
 

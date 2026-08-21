@@ -32,6 +32,8 @@ import { promisify } from "util";
 import fs from "fs";
 import path from "path";
 import os from "os";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore -- mime-types ships no types and @types/mime-types is not a dep
 import mime from "mime-types";
 import crypto from "crypto";
 
@@ -337,7 +339,7 @@ router.post("/sites/:id/builds", deployLimiter, asyncHandler(async (req: Request
     buildCommand: parsed.data.buildCommand,
     outputDir: parsed.data.outputDir,
     environment: isPreview ? "preview" : parsed.data.environment,
-    userId: req.user.id, userEmail: req.user.email,
+    userId: req.user.id, userEmail: req.user.email ?? undefined,
     siteName: site.name,
     siteDomain: previewDomain ?? site.domain,
   }).catch(err => logger.error({ err, buildId: job.id }, "[build] Unhandled error"));

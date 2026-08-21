@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db, sitesTable, siteDeploymentsTable, siteEnvVarsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { asyncHandler, AppError } from "../lib/errors";
 import { requireScope } from "../middleware/tokenAuth";
 import { startDockerContainer } from "../lib/dockerManager";
@@ -64,7 +64,11 @@ router.post(
 
     // Create a new deployment record
     // We'll get the current version count for this site and increment
-    const [[{ version: currentVersion }]] = await db
+    // db.select() resolves to a row array, not an array of row arrays. The
+    // extra destructuring level made TypeScript try to iterate a row object,
+    // and `sql` was never imported at all — this file could not have compiled,
+    // so the Docker deploy path has never been typechecked.
+    const [{ version: currentVersion }] = await db
       .select({ version: sql<number>`MAX(${siteDeploymentsTable.version})` })
       .from(siteDeploymentsTable)
       .where(eq(siteDeploymentsTable.siteId, siteId));
@@ -92,8 +96,12 @@ router.post(
         siteId: site.id,
         siteDomain: site.domain,
         image,
-        tag: normalizedTag,
-        env, // Pass the environment variables
+        // startDockerContainer takes string | null — null means "use the
+        // image's default tag" — so the null is meaningful and kept. Only the
+        // undefined needed removing, which arrives when the request omits tag
+        // entirely rather than sending an empty one.
+        tag: normalizedTag ?? null,
+        env: env ?? undefined, // Pass the environment variables
       });
 
       // Update the deployment to active

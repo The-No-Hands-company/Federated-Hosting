@@ -14,7 +14,7 @@
  *   DELETE /api/admin/ip-bans/:id  — Remove ban
  */
 
-import { Router, Request, Response } from "express";
+import { Router, type IRouter, Request, Response } from "express";
 import { z } from "zod/v4";
 import { db } from "@workspace/db";
 import {
@@ -27,7 +27,9 @@ import { requireAdmin } from "../middleware/requireAdmin.js";
 import { invalidateBanCache } from "../middleware/ipBan.js";
 import { rateLimiter } from "../middleware/rateLimiter.js";
 
-export const router = Router();
+// Annotated for the same reason as the other route modules: the inferred
+// type cannot be named across the package boundary.
+export const router: IRouter = Router();
 
 // ── Public: submit an abuse report ────────────────────────────────────────────
 
@@ -146,10 +148,20 @@ router.post("/reports/:id/takedown", requireAdmin, asyncHandler(async (req: Requ
 
   // Audit log
   await db.insert(adminAuditLogTable).values({
-    adminId: (req as any).user?.id,
-    action:  "site_takedown",
-    target:  `site:${report.siteId}:${report.siteDomain}`,
-    detail:  `Abuse report #${id} (${report.reason})`,
+    // admin_audit_log has actor_id / target_type / target_id / after. This
+    // wrote adminId, target and detail — none of which are columns. actor_id
+    // is notNull, so every one of these inserts would have failed at the
+    // database: abuse takedowns and IP bans were not being audited at all.
+    // The route is behind requireAdmin, so req.user is present.
+    actorId:    (req as any).user.id as string,
+    action:     "site_takedown",
+    targetType: "site",
+    targetId:   String(report.siteId),
+    after:      JSON.stringify({
+      siteDomain: report.siteDomain,
+      abuseReportId: id,
+      reason: report.reason,
+    }),
   }).catch(() => {});
 
   res.json({ ok: true, message: `Site ${report.siteDomain} suspended.` });
@@ -191,10 +203,20 @@ router.post("/ip-bans", requireAdmin, asyncHandler(async (req: Request, res: Res
   invalidateBanCache(parsed.data.cidrRange ? undefined : parsed.data.ipAddress);
 
   await db.insert(adminAuditLogTable).values({
-    adminId: (req as any).user?.id,
-    action:  "ip_ban",
-    target:  parsed.data.ipAddress,
-    detail:  parsed.data.reason ?? "",
+    // admin_audit_log has actor_id / target_type / target_id / after. This
+    // wrote adminId, target and detail — none of which are columns. actor_id
+    // is notNull, so every one of these inserts would have failed at the
+    // database: abuse takedowns and IP bans were not being audited at all.
+    // The route is behind requireAdmin, so req.user is present.
+    actorId:    (req as any).user.id as string,
+    action:     "ip_ban",
+    targetType: "ip",
+    targetId:   parsed.data.ipAddress,
+    after:      JSON.stringify({
+      ipAddress: parsed.data.ipAddress,
+      cidrRange: parsed.data.cidrRange ?? null,
+      reason: parsed.data.reason ?? "",
+    }),
   }).catch(() => {});
 
   res.status(201).json(ban);

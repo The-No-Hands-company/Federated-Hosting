@@ -37,6 +37,25 @@ import { db, customDomainsTable, sitesTable, usersTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { emailCertExpiring, emailCertRenewed } from "./email";
 
+/**
+ * The DNS-01 TXT value for a key authorization: base64url(SHA-256(keyAuth)).
+ *
+ * RFC 8555 §8.4. This was written as `acme.crypto.digest("SHA-256", ...)`,
+ * which does not exist — acme-client's CryptoInterface has no digest method in
+ * any version this package has depended on. The DNS-01 branch would have
+ * thrown "acme.crypto.digest is not a function" the first time a certificate
+ * was issued that way, so DNS-01 issuance has never worked. HTTP-01, which is
+ * the path actually in use, is unaffected.
+ *
+ * Node computes it directly, and base64url is the required encoding — the
+ * previous code called .toString("base64url") on the digest buffer, so the
+ * intent was right.
+ */
+function dns01TxtValue(keyAuthorization: string): string {
+  return crypto.createHash("sha256").update(keyAuthorization).digest("base64url");
+}
+
+
 // Shared challenge token store — read by GET /.well-known/acme-challenge/:token
 export const acmeChallenges = new Map<string, string>();
 
@@ -165,8 +184,7 @@ export async function provisionCertificate(domain: string): Promise<ProvisionRes
           logger.debug({ domain, token: challengeToken }, "[acme] HTTP-01 challenge registered");
         } else if (challenge.type === "dns-01") {
           // DNS-01: create _acme-challenge.<domain> TXT record
-          const txtValue = (await acme.crypto.digest("SHA-256", Buffer.from(keyAuthorization)))
-            .toString("base64url");
+          const txtValue = dns01TxtValue(keyAuthorization);
           await dnsCreateHook!(domain, txtValue);
           logger.debug({ domain }, "[acme] DNS-01 TXT record created — waiting for propagation");
           // Wait for DNS propagation (30s min — operators can increase via env)
@@ -179,8 +197,7 @@ export async function provisionCertificate(domain: string): Promise<ProvisionRes
         if (challenge.type === "http-01") {
           acmeChallenges.delete(challengeToken);
         } else if (challenge.type === "dns-01") {
-          const txtValue = (await acme.crypto.digest("SHA-256", Buffer.from(keyAuthorization)))
-            .toString("base64url");
+          const txtValue = dns01TxtValue(keyAuthorization);
           await dnsCleanupHook!(domain, txtValue).catch(() => {});
           logger.debug({ domain }, "[acme] DNS-01 TXT record cleaned up");
         }
