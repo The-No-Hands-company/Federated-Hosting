@@ -13,7 +13,6 @@ import {
 import { serializeDates } from "../lib/serialize";
 import { asyncHandler, AppError } from "../lib/errors";
 import { parsePagination, buildPaginatedResponse } from "../lib/pagination";
-import { generateKeyPair } from "../lib/federation";
 import { writeLimiter } from "../middleware/rateLimiter";
 
 const router: IRouter = Router();
@@ -59,14 +58,28 @@ router.post("/nodes", writeLimiter, asyncHandler(async (req, res) => {
   const parsed = CreateNodeBody.safeParse(req.body);
   if (!parsed.success) throw AppError.badRequest(parsed.error.message);
 
-  const keyPair = parsed.data.publicKey ? null : generateKeyPair();
+  // This used to generate a keypair when the caller supplied no publicKey, and
+  // write the private half to the nodes table. A federation node's private key
+  // is its identity, so that database could impersonate every node it had
+  // minted, and the operator had no way to know their key had ever existed
+  // outside their own machine.
+  //
+  // Nothing here mints identities any more. A caller that already holds a key
+  // may register its public half directly; a caller that does not should use
+  // POST /nodes/enroll, which issues a single-use token for the installer to
+  // redeem after generating a key on the node itself.
+  if (!parsed.data.publicKey) {
+    throw AppError.badRequest(
+      "publicKey is required. This service does not generate node keys — a node's private key must never leave the machine it identifies. Use POST /nodes/enroll to get an enrolment token and run the installer on the node.",
+    );
+  }
 
   const [node] = await db
     .insert(nodesTable)
     .values({
       ...parsed.data,
-      publicKey: parsed.data.publicKey ?? keyPair?.publicKey,
-      privateKey: keyPair?.privateKey,
+      publicKey: parsed.data.publicKey,
+      privateKey: null,
       lastSeenAt: new Date(),
     })
     .returning();

@@ -97,6 +97,10 @@ COPY --from=builder /app/artifacts/api-server/dist         ./dist
 COPY --from=builder /app/artifacts/federated-hosting/dist  ./public
 
 # A minimal package.json so Node can resolve the bundle
+# The enrolment installer. It cannot go in ./public — that path is the client
+# build, copied above — so it gets its own directory that app.ts also looks in.
+COPY artifacts/api-server/public/install-node.sh ./installer/install-node.sh
+
 COPY --from=builder /app/artifacts/api-server/package.json ./package.json
 COPY --from=builder /app/prod-deps/node_modules ./node_modules
 

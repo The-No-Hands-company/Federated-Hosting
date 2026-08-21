@@ -247,6 +247,33 @@ app.get("/status", (_req: Request, res: Response) => {
 
 // ── Dashboard SPA ─────────────────────────────────────────────────────────────
 //
+// The node enrolment installer.
+//
+// Served explicitly rather than from the SPA directory: it lives with the API
+// source, not the client build, and it must keep working whether or not a
+// frontend has been built into this image at all. The enrolment response tells
+// operators to curl this exact path, so it cannot depend on the SPA layout.
+//
+// text/plain, deliberately: an operator being asked to run a script on a
+// machine they own should be able to click the URL and read every line of it
+// in a browser before they do. Nothing here is minified or obscured.
+const INSTALLER_PATH = [
+  // Where the Dockerfile puts it. ./public is the client build, so it needs
+  // its own directory.
+  path.resolve(process.cwd(), "installer/install-node.sh"),
+  path.resolve(process.cwd(), "public/install-node.sh"),
+  path.resolve(process.cwd(), "src/../public/install-node.sh"),
+  path.resolve(process.cwd(), "artifacts/api-server/public/install-node.sh"),
+].find((candidate) => existsSync(candidate));
+
+app.get("/install-node.sh", (_req, res) => {
+  if (!INSTALLER_PATH) {
+    res.status(404).type("text/plain").send("Installer not found on this node.\n");
+    return;
+  }
+  res.type("text/plain").sendFile(INSTALLER_PATH);
+});
+
 // The built client. In the image it is ./public (see the Dockerfile's COPY of
 // federated-hosting/dist); running from a checkout it sits in the workspace.
 // Overridable so a node can serve a different build without a rebuild.

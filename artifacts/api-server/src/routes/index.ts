@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import nodesRouter from "./nodes";
+import nodeEnrollmentRouter from "./nodeEnrollment";
 import sitesRouter from "./sites";
 import statsRouter from "./stats";
 import authRouter from "./auth";
@@ -43,6 +44,11 @@ router.use(dockerDeployRouter);
 router.use(federationRouter);
 router.use(gossipRouter);
 router.use(capacityRouter);
+// Before nodesRouter, and that ordering is load-bearing: nodes.ts defines
+// /nodes/:id, so a request for /nodes/enroll would otherwise match it with
+// id="enroll" and fail as a malformed node lookup rather than enrolling
+// anything.
+router.use(nodeEnrollmentRouter);
 router.use(nodesRouter);
 router.use(sitesRouter);
 router.use(statsRouter);

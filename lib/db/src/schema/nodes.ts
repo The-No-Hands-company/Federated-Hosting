@@ -2,7 +2,16 @@ import { pgTable, text, serial, timestamp, real, integer, pgEnum, index } from "
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const nodeStatusEnum = pgEnum("node_status", ["active", "inactive", "maintenance"]);
+// "pending" is a node that has been created but has not yet proven it holds a
+// key. It exists so a node can be enrolled without the server ever minting its
+// identity: the row is created first, empty of keys, and the operator's machine
+// supplies the public half when it claims the enrolment token.
+//
+// Before this, a node was born "active" with a server-generated keypair whose
+// private half was written to this table. Anyone with the database could
+// impersonate every node it had issued, and the operator had no way to know
+// their key had ever existed anywhere but their own machine.
+export const nodeStatusEnum = pgEnum("node_status", ["pending", "active", "inactive", "maintenance"]);
 
 export const nodesTable = pgTable("nodes", {
   id: serial("id").primaryKey(),

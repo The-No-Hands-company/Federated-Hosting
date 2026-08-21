@@ -187,11 +187,30 @@ router.post("/nodes/:id/generate-keys", writeLimiter, asyncHandler(async (req, r
   const [node] = await db.select().from(nodesTable).where(eq(nodesTable.id, nodeId));
   if (!node) throw AppError.notFound(`Node ${nodeId} not found`);
 
+  // Only this node's own key may be generated here, and the reason is narrow:
+  // signMessage is called with localNode.privateKey and nothing else, so the
+  // local node's private key genuinely has to live on this server. A remote
+  // node's private key is never read by any code path — it was stored, never
+  // used, and could impersonate that peer to the whole federation if the
+  // database leaked. That is liability with no corresponding function.
+  //
+  // A remote operator generates their key on their own machine and claims it
+  // through POST /nodes/claim.
+  if (node.isLocalNode !== 1) {
+    throw AppError.badRequest(
+      `Node ${nodeId} is a remote peer. This service does not generate keys for peers — a node's private key must never leave the machine it identifies. Use POST /nodes/enroll and run the installer on that node.`,
+    );
+  }
+
   const { publicKey, privateKey } = generateKeyPair();
   await db.update(nodesTable).set({ publicKey, privateKey }).where(eq(nodesTable.id, nodeId));
 
-  logger.info({ nodeId }, "Ed25519 key pair generated for node");
-  res.json({ nodeId, publicKey, message: "Ed25519 key pair generated. Private key stored securely." });
+  logger.info({ nodeId }, "Ed25519 key pair generated for the local node");
+  res.json({
+    nodeId,
+    publicKey,
+    message: "Ed25519 key pair generated for this node. The private key is held by this server because it signs this node's outgoing federation handshakes.",
+  });
 }));
 
 router.get("/federation/peers", asyncHandler(async (req, res) => {
