@@ -29,7 +29,10 @@ CREATE TABLE IF NOT EXISTS "node_enrollment_tokens" (
     "id"          serial PRIMARY KEY NOT NULL,
     "node_id"     integer NOT NULL REFERENCES "nodes"("id") ON DELETE CASCADE,
     "token_hash"  text NOT NULL UNIQUE,
-    "created_by"  integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    -- text, matching users.id which is a varchar UUID. An integer column here
+    -- is a type mismatch Postgres refuses, so this migration would have failed
+    -- on a real database.
+    "created_by"  text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
     "expires_at"  timestamp with time zone NOT NULL,
     "claimed_at"  timestamp with time zone,
     "revoked_at"  timestamp with time zone,

@@ -29,7 +29,11 @@ export const nodeEnrollmentTokensTable = pgTable("node_enrollment_tokens", {
   /** SHA-256 of the token, hex. The token itself is never stored. */
   tokenHash: text("token_hash").notNull().unique(),
 
-  createdBy: integer("created_by")
+  // text, not integer: users.id is a varchar UUID, not a serial. Declaring
+  // this integer made the FK reference a column of a different type, which
+  // Postgres rejects — the migration would have failed on the live database,
+  // and the insert did not typecheck either.
+  createdBy: text("created_by")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
 
