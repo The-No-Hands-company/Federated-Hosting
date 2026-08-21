@@ -31,7 +31,7 @@ type Rendered = { title: string; body?: string; href?: string };
  * table is that a person understands it at a glance, and an event name is not
  * a sentence.
  */
-function render(p: WebhookPayload): Rendered | null {
+export function render(p: WebhookPayload): Rendered | null {
   const site = p.siteDomain ? String(p.siteDomain) : "a site";
   const node = p.nodeDomain ? String(p.nodeDomain) : "a node";
 

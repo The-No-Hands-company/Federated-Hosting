@@ -122,13 +122,10 @@ router.post("/webhooks/test", webhookLimiter, asyncHandler(async (req: Request, 
   const raw = process.env.WEBHOOK_URLS ?? "";
   const urls = raw.split(",").map((u) => u.trim()).filter((u) => u.startsWith("http"));
 
-  if (urls.length === 0) {
-    throw AppError.badRequest(
-      "No webhook URLs configured. Set the WEBHOOK_URLS environment variable.",
-      "NO_WEBHOOKS_CONFIGURED",
-    );
-  }
-
+  // No longer a precondition. deliverWebhook's first act is to write in-app
+  // notifications, which need no URL at all — so refusing here would make the
+  // one endpoint built for testing event delivery unable to test the only
+  // delivery path a node with no external webhooks actually has.
   await deliverWebhook({
     event: "deploy",
     timestamp: new Date().toISOString(),
@@ -143,7 +140,10 @@ router.post("/webhooks/test", webhookLimiter, asyncHandler(async (req: Request, 
   res.json({
     sent: true,
     targets: urls.length,
-    message: "Test webhook delivered to all configured URLs. Check your endpoint logs.",
+    notified: true,
+    message: urls.length > 0
+      ? `Test event delivered to ${urls.length} webhook URL(s) and to in-app notifications.`
+      : "No webhook URLs configured, so the test event was delivered to in-app notifications only.",
   });
 }));
 
