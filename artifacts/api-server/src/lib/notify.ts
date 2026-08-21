@@ -111,7 +111,23 @@ export async function notify(p: WebhookPayload): Promise<void> {
     if (!rendered) return;
 
     const targets = await recipients(p);
-    if (targets.length === 0) return;
+    if (targets.length === 0) {
+      // An event that renders fine and reaches nobody is the failure mode
+      // this whole module exists to avoid, and it is invisible from the
+      // outside: the emitter succeeded, no error was thrown, and the row was
+      // simply never written.
+      //
+      // Measured on this node 2026-08-21: zero users had is_admin=1, so every
+      // node_online / node_offline / new_peer would have vanished silently,
+      // and two sites had an owner_id matching no user. Nothing in the code
+      // was wrong — there was just nobody to tell, which is exactly the state
+      // an operator needs to be able to discover.
+      logger.warn(
+        { event: p.event, siteId: p.siteId ?? null },
+        "[notify] event had no recipients — no admin users, or the site has no owner",
+      );
+      return;
+    }
 
     await db.insert(notificationsTable).values(
       targets.map((userId) => ({
