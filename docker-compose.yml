@@ -92,8 +92,18 @@ services:
     # Drizzle migrations ... never `db push` in production" — and push infers the
     # schema from the ORM rather than applying the reviewed SQL in
     # lib/db/migrations/, which is the file set actually committed.
+    # Runs the migration script directly rather than through `pnpm --filter`.
+    #
+    # `pnpm --filter @workspace/db run migrate` fails with "Cannot find package
+    # 'tsx' imported from /app/lib/db/", while the identical command run from
+    # that directory succeeds — pnpm's filtered run does not give node the
+    # resolution base the --import flag needs. So this service failed on every
+    # start, and because app depends_on it with
+    # service_completed_successfully, any `docker compose up -d --build app`
+    # aborted and left hosting.tnhc.dev stopped. That is exactly how it went
+    # down on 2026-08-21.
     command: >
-      sh -c "pnpm --filter @workspace/db run migrate"
+      sh -c "cd lib/db && node --import tsx/esm ./src/migrate.ts"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nexus}
     depends_on:
