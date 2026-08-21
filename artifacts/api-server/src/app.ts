@@ -252,6 +252,38 @@ function isSegment(path: string, prefix: string): boolean {
   return path === prefix || path.startsWith(prefix + "/");
 }
 
+// The OpenAPI description.
+//
+// The spec has lived in lib/api-spec/openapi.yaml for as long as this service
+// has existed and was never served, so every openapi.json on every Nexus host
+// answered 404 and no client could be generated against any of them. It is
+// 13,000 lines of valid OpenAPI 3.1 that nothing could reach.
+//
+// Served as YAML rather than converted: js-yaml is not a dependency here, and
+// adding one purely to re-emit the same document in another syntax buys
+// nothing — Swagger UI, orval and openapi-generator all read YAML.
+//
+// It describes 50 of this service's 127 routes. That is not hidden: the
+// x-nexus-coverage extension in the document records it, and a test in
+// tests/unit/specCoverage.test.ts fails if the gap widens without anyone
+// noticing. A partial spec is far more useful than none; a partial spec
+// presented as complete is how the next person gets misled.
+const OPENAPI_PATH = [
+  path.resolve(process.cwd(), "api-spec/openapi.yaml"),
+  path.resolve(process.cwd(), "lib/api-spec/openapi.yaml"),
+  path.resolve(process.cwd(), "../../lib/api-spec/openapi.yaml"),
+].find((candidate) => existsSync(candidate));
+
+app.get(["/openapi.yaml", "/openapi.yml"], (_req, res) => {
+  if (!OPENAPI_PATH) {
+    res.status(404).type("text/plain").send("No OpenAPI description on this node.\n");
+    return;
+  }
+  // Explicit charset: the spec contains em dashes and arrows in its
+  // descriptions, and a bare text/yaml lets a browser guess latin-1.
+  res.type("application/yaml; charset=utf-8").sendFile(OPENAPI_PATH);
+});
+
 // The node enrolment installer.
 //
 // Served explicitly rather than from the SPA directory: it lives with the API

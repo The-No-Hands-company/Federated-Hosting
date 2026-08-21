@@ -107,6 +107,10 @@ COPY --from=builder /app/artifacts/federated-hosting/dist  ./public
 # build, copied above — so it gets its own directory that app.ts also looks in.
 COPY artifacts/api-server/public/install-node.sh ./installer/install-node.sh
 
+# The OpenAPI description, served at /openapi.yaml. Only the runtime stage of
+# the source tree survives, so it needs copying explicitly like the installer.
+COPY lib/api-spec/openapi.yaml ./api-spec/openapi.yaml
+
 COPY --from=builder /app/artifacts/api-server/package.json ./package.json
 COPY --from=builder /app/prod-deps/node_modules ./node_modules
 
