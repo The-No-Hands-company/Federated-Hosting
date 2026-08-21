@@ -45,5 +45,16 @@ e2e/playwright-report/
 # Build artefacts that are regenerated inside the image.
 dist/
 **/dist/
+
+# Build-info files must go with the dist they describe.
+#
+# These record what a composite project last emitted. Copying one in while
+# excluding the dist/ it refers to makes tsc conclude the output is already up
+# to date and emit nothing — so lib/db and lib/api-zod produced no declaration
+# files in the image, and api-server's typecheck failed with 72 TS6305
+# "has not been built" errors. Nothing noticed before 2026-08-21 because the
+# bundler reads TypeScript source directly and never needed the declarations.
+*.tsbuildinfo
+**/*.tsbuildinfo
 .turbo/
 .cache/

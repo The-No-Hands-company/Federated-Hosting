@@ -247,6 +247,11 @@ app.get("/status", (_req: Request, res: Response) => {
 
 // ── Dashboard SPA ─────────────────────────────────────────────────────────────
 //
+/** True when `path` is `prefix` itself or sits beneath it as a path segment. */
+function isSegment(path: string, prefix: string): boolean {
+  return path === prefix || path.startsWith(prefix + "/");
+}
+
 // The node enrolment installer.
 //
 // Served explicitly rather than from the SPA directory: it lives with the API
@@ -315,9 +320,15 @@ if (existsSync(path.join(SPA_DIR, "index.html"))) {
   // non-GET, and for requests that did not ask for HTML.
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (
-      req.path.startsWith("/api") ||
-      req.path.startsWith("/metrics") ||
-      req.path.startsWith("/.well-known") ||
+      // Segment-aware, not prefix. `startsWith("/api")` also matches
+      // "/api-docs", so the API-docs page was excluded from the SPA fallback
+      // and fell through to the API 404 handler — the route rendered in a
+      // browser but answered 404, because Express mounts the router
+      // segment-aware and nothing actually served it. Any future
+      // "/api-something" page would have hit the same wall.
+      isSegment(req.path, "/api") ||
+      isSegment(req.path, "/metrics") ||
+      isSegment(req.path, "/.well-known") ||
       // A path with an extension is asking for a file, not a route. Without
       // this, a missing .js/.json/.css answers 200 with index.html: `fetch`
       // and dynamic `import()` both send `Accept: */*`, which counts as

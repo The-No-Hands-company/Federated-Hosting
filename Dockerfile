@@ -54,8 +54,14 @@ WORKDIR /app
 COPY . .
 
 # Build shared libs
-RUN pnpm --filter @workspace/db          run build 2>/dev/null || true
-RUN pnpm --filter @workspace/api-zod     run build 2>/dev/null || true
+# These two publish the declaration files api-server typechecks against. They
+# had no build script until 2026-08-21, so `|| true` was quietly swallowing a
+# no-op and `2>/dev/null` was hiding it — which is why the first build with a
+# typecheck gate failed with 72 TS6305 "has not been built" errors. api-server's
+# build now builds its own references too, so this is belt and braces; the
+# suppression is gone either way, because a failure here should be visible.
+RUN pnpm --filter @workspace/db          run build
+RUN pnpm --filter @workspace/api-zod     run build
 
 # Build API server
 RUN pnpm --filter @workspace/api-server  run build
