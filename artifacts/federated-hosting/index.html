@@ -10,9 +10,11 @@
          /api/health endpoint, or operators can set it at build time.
          Format: AWS-style region e.g. ap-southeast-3 (Jakarta), us-east-1 -->
     <meta name="fh-node-region" content="%VITE_NODE_REGION%" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- No font <link> here on purpose. Inter used to be fetched from Google
+         at this point; nothing in the design system referenced it (--font-sans
+         is Manrope), so it was a request to a third party for a font that was
+         never used. The real faces are self-hosted via @fontsource in
+         src/index.css. -->
   </head>
   <body>
     <div id="root"></div>

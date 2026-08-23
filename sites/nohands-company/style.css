@@ -1,17 +1,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #09090b;
-  --bg-card: #111113;
-  --bg-dark: #060607;
-  --border: rgba(255,255,255,0.08);
-  --text: #f0f0f2;
-  --text-muted: #71717a;
-  --accent: #f97316;
-  --accent2: #ec4899;
+  --bg: #030303;
+  --bg-card: #0a0a0a;
+  --bg-dark: #050505;
+  --border: rgba(255,255,255,0.1);
+  --text: #ffffff;
+  --text-muted: #a0a0a0;
+  --accent: #ccff00;
+  --accent2: #b8e600;
   --green: #22c55e;
   --yellow: #eab308;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
