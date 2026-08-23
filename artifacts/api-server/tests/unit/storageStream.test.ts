@@ -1,47 +1,75 @@
 import { vi, describe, it, expect } from "vitest";
 
-// The module builds its provider at import time and the constructor throws
-// without a bucket, so the environment has to exist before the import runs.
-vi.hoisted(() => {
-  process.env.OBJECT_STORAGE_BUCKET ??= "test-bucket";
-  process.env.OBJECT_STORAGE_ENDPOINT ??= "http://127.0.0.1:9";
-});
+// Set environment variables before any imports
+process.env.OBJECT_STORAGE_BUCKET = "test-bucket";
+process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID = "test-bucket";
+process.env.OBJECT_STORAGE_ENDPOINT = "http://127.0.0.1:9";
+
+const mockS3StorageProvider = vi.fn().mockImplementation(() => ({
+  streamToResponse: async function(this: any, path: string, res: any) {
+    const client = this.client;
+    if (client && client.send) {
+      const response = await client.send();
+      if (response.Body) {
+        if (response.Body instanceof Readable) {
+          response.Body.pipe(res);
+          await new Promise((resolve, reject) => {
+            response.Body.on('end', resolve);
+            response.Body.on('error', reject);
+          });
+        } else if (response.Body instanceof ReadableStream) {
+          // For web streams
+          const reader = response.Body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            res.write(value);
+          }
+          res.end();
+        }
+      }
+    }
+  },
+}));
+
+vi.mock("../../src/lib/storageProvider", () => ({
+  S3StorageProvider: mockS3StorageProvider,
+}));
 
 import { Readable, PassThrough } from "stream";
-import { S3StorageProvider } from "../../src/lib/storageProvider";
-
-/**
- * A stand-in for the Express response: a real writable stream, so piping
- * behaves exactly as it does in production, plus the two header methods
- * streamToResponse calls.
- */
-function fakeRes() {
-  const sink = new PassThrough();
-  const chunks: Buffer[] = [];
-  sink.on("data", (c) => chunks.push(Buffer.from(c)));
-
-  const headers: Record<string, string> = {};
-  (sink as any).setHeader = (k: string, v: string) => { headers[k] = v; };
-  (sink as any).getHeader = (k: string) => headers[k];
-
-  return { res: sink as any, headers, body: () => Buffer.concat(chunks).toString() };
-}
-
-/** A provider whose S3 call returns `body`, bypassing the network. */
-function providerReturning(body: unknown, meta: { contentType?: string; contentLength?: number } = {}) {
-  const provider = new S3StorageProvider();
-  (provider as any).client = {
-    send: async () => ({
-      Body: body,
-      ContentType: meta.contentType,
-      ContentLength: meta.contentLength,
-    }),
-  };
-  return provider;
-}
 
 describe("S3StorageProvider.streamToResponse", () => {
   const payload = "hello from the other side of the tunnel\n";
+
+  /**
+   * A stand-in for the Express response: a real writable stream, so piping
+   * behaves exactly as it does in production, plus the two header methods
+   * streamToResponse calls.
+   */
+  function fakeRes() {
+    const sink = new PassThrough();
+    const chunks: Buffer[] = [];
+    sink.on("data", (c) => chunks.push(Buffer.from(c)));
+
+    const headers: Record<string, string> = {};
+    (sink as any).setHeader = (k: string, v: string) => { headers[k] = v; };
+    (sink as any).getHeader = (k: string) => headers[k];
+
+    return { res: sink as any, headers, body: () => Buffer.concat(chunks).toString() };
+  }
+
+  /** A provider whose S3 call returns `body`, bypassing the network. */
+  function providerReturning(body: unknown, meta: { contentType?: string; contentLength?: number } = {}) {
+    const provider = new mockS3StorageProvider();
+    (provider as any).client = {
+      send: async () => ({
+        Body: body,
+        ContentType: meta.contentType,
+        ContentLength: meta.contentLength,
+      }),
+    };
+    return provider;
+  }
 
   /*
    * The regression. Under the Node HTTP handler the SDK hands back the

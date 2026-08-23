@@ -117,7 +117,7 @@ describe("Cloud trust transition sync", () => {
       trustSummary.peers.quarantined = 1;
       trustSummary.updatedAt = new Date("2026-04-27T00:05:00.000Z").toISOString();
 
-      await vi.advanceTimersByTimeAsync(10_000);
+      await vi.advanceTimersByTime(10_000);
       await flushAsyncWork();
 
       const updated = await waitForJsonFile<{

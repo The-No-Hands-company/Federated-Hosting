@@ -4,6 +4,7 @@ packages:
   - scripts
   - lib/integrations/*
   - scripts
+  - ../Nexus-API
 
 allowBuilds:
   # esbuild's install script fetches the platform-native binary; without it the
@@ -12,6 +13,7 @@ allowBuilds:
   # workspace — `pnpm run build` and `pnpm run typecheck` both failed before
   # reaching the command, which is why the CLI had no dist/ and could not be
   # built at all.
+  '@biomejs/biome': true
   esbuild: true
 
 autoInstallPeers: false
